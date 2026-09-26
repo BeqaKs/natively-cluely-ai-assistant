@@ -257,6 +257,7 @@ import {
 import { decideStreamingHeightCommit } from '../lib/streamingHeightDecision.mjs';
 import { mergeTranscriptChunks } from '../lib/transcriptMerge.mjs';
 import { createTranscriptTailWaiter } from '../lib/answerTailWait.mjs';
+import { audioWarningAction } from '../lib/audioWarningAction.mjs';
 import { backspace, deleteWord, editCommand, editShortcutLetter, isWordDelete, paste, pastedText, typed } from '../lib/stealthEdit.mjs';
 import {
   applyWhatToAnswerNullFeedbackMessages,
@@ -11576,37 +11577,20 @@ Provide only the answer, nothing else.`;
                   payload.channel).
                 */
                 const rawTitleKey = systemAudioWarning.titleKey ?? '';
-                const reasonIsMicrophone = rawTitleKey.toLowerCase().includes('microphone');
-                const reasonIsScreenRecording = rawTitleKey
-                  .toLowerCase()
-                  .includes('screen recording');
-                // Neither pane fixes a same-device input/output loop: the user
-                // has to change the OUTPUT device. No verified deep link for
-                // the Sound pane exists in this codebase, so this falls to the
-                // already-wired internal-Settings fallback rather than sending
-                // the user somewhere confidently wrong.
-                const reasonIsAudioDeviceConfig = rawTitleKey
-                  .toLowerCase()
-                  .includes('same device');
-                const wantsMicrophonePane =
-                  reasonIsMicrophone ||
-                  (!reasonIsScreenRecording &&
-                    !reasonIsAudioDeviceConfig &&
-                    systemAudioWarning.kind === 'audio-capture-failure' &&
-                    systemAudioWarning.channel === 'mic');
-                const wantsScreenCapturePane =
-                  !wantsMicrophonePane &&
-                  !reasonIsAudioDeviceConfig &&
-                  (reasonIsScreenRecording ||
-                    systemAudioWarning.kind === 'screen-recording-permission' ||
-                    systemAudioWarning.channel === 'system');
-                const deepLinkUrl = !isMac
-                  ? null
-                  : wantsMicrophonePane
-                  ? 'x-apple.systempreferences:com.apple.preference.security?Privacy_Microphone'
-                  : wantsScreenCapturePane
-                  ? 'x-apple.systempreferences:com.apple.preference.security?Privacy_ScreenCapture'
-                  : null;
+                // Where the one action goes, per platform (audioWarningAction.mjs):
+                // a macOS privacy pane, Windows mic privacy settings, or
+                // Natively Settings → Audio. The old fallback opened the
+                // quick-settings popover off-screen (-10000,-10000), so on
+                // Windows every "Open Settings" did nothing visible.
+                const warningAction = audioWarningAction({
+                  platform: isMac ? 'darwin' : isWindows ? 'win32' : 'other',
+                  kind: systemAudioWarning.kind,
+                  channel: systemAudioWarning.channel,
+                  titleKey: systemAudioWarning.titleKey,
+                  message: systemAudioWarning.message,
+                });
+                const deepLinkUrl = warningAction.type === 'external' ? warningAction.url : null;
+                const wantsMicrophonePane = warningAction.type === 'external' && warningAction.pane === 'microphone';
 
                 // Identity of THIS warning, so visiting a pane for one problem
                 // does not promote the button on a different problem that
@@ -11691,10 +11675,10 @@ Provide only the answer, nothing else.`;
                                 // restart meaningful, so that click is what
                                 // promotes the button.
                                 setPermissionPaneVisited(warningIdentity);
-                              } else {
-                                // Windows / unknown channel / device-config
-                                // faults: fall back to internal Settings.
-                                window.electronAPI?.toggleSettingsWindow?.();
+                              } else if (warningAction.type === 'mic-privacy') {
+                                window.electronAPI?.openMicSettings?.();
+                              } else if (warningAction.type === 'settings-tab') {
+                                window.electronAPI?.openSettingsTab?.(warningAction.tab);
                               }
                             }}
                             title={
@@ -11702,14 +11686,18 @@ Provide only the answer, nothing else.`;
                                 ? wantsMicrophonePane
                                   ? t('Open macOS Microphone privacy settings')
                                   : t('Open macOS Screen Recording privacy settings')
-                                : t('Open Natively Settings')
+                                : warningAction.type === 'mic-privacy'
+                                ? t('Open Windows microphone privacy settings')
+                                : t('Open Natively audio settings')
                             }
                           >
                             {deepLinkUrl
                               ? wantsMicrophonePane
                                 ? t('Open Mic Settings')
                                 : t('Open Screen Settings')
-                              : t('Open Settings')}
+                              : warningAction.type === 'mic-privacy'
+                              ? t('Open Mic Settings')
+                              : t('Open Audio Settings')}
                           </OverlayBannerButton>
                         )}
                         {/*
@@ -12469,6 +12457,33 @@ Provide only the answer, nothing else.`;
                   isLightTheme={isLightTheme}
                   t={t}
                 />
+
+                {/* Windows: the same failure (the keyboard hook would not
+                    start) used to set this state behind the macOS-only banner
+                    above, so stealth typing just did nothing. There is no
+                    permission to grant; the usual cause is security software
+                    blocking the low-level hook. */}
+                {isWindows && stealthPermissionMissing && (
+                  <OverlayBanner
+                    className="mb-2"
+                    data-stealth-ignore="true"
+                    title={t('Stealth Typing Blocked')}
+                    message={t('Windows did not let Natively capture typing. This is usually security software blocking the keyboard hook. Allow Natively there, then try again.')}
+                    onDismiss={() => setStealthPermissionMissing(false)}
+                    dismissLabel={t('Dismiss')}
+                    dismissButtonProps={{ 'data-stealth-ignore': 'true' }}
+                    actions={
+                      <OverlayBannerButton
+                        variant="primary"
+                        onClick={() => { void window.electronAPI.stealthTapStart?.(); }}
+                        title={t('Try to start stealth typing again')}
+                        data-stealth-ignore="true"
+                      >
+                        {t('Try Again')}
+                      </OverlayBannerButton>
+                    }
+                  />
+                )}
 
                 {/* data-stealth-engage marks this subtree as
                                     the ONLY clickable region that engages the
