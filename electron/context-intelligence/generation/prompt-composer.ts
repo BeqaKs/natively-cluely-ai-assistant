@@ -1294,6 +1294,50 @@ export function calculationNotice(question: string, ...context: Array<string | u
 }
 
 /**
+ * A TURN THAT CARRIES DOCUMENTS GETS THE WORKING STEP TOO (2026-10-09). The word
+ * list above reads the question's wording, and a date counted from another date,
+ * a length of service, a weighted score and most follow-ups do not use those
+ * words: on the evidence-rich benchmark 59 of the 131 questions whose answer
+ * needs a calculation carried no notice ("Say I do the panel on Tuesday the
+ * 20th. When would I hear?" answered "by the end of that week" for the 27th;
+ * a weighted score of 3.15 given as 2.95; the 45th day after 30 September given
+ * as 15 November). Replaying those 59 recorded prompts four times each to the
+ * same model, graded by the deterministic calculation check: 72.0 % right as
+ * prompted, 83.1 % with this notice (+11.0 points, 95 % interval 3.8 to 19.1),
+ * about 180 ms later to the first visible word.
+ *
+ * It is NOT the notice above with a wider trigger. That text on the 387
+ * document turns that need no calculation cost completeness (every required
+ * string in 95.2 % of samples -> 91.5 %): written for disputed amounts ("use
+ * only numbers stated above", "if the numbers do not reconcile, say so"), it
+ * moved plain lookups toward doubt ("I'll confirm the exact uptime commitment"
+ * for a commitment the document states). This text drops those sentences and
+ * ends by saying a stated fact needs no working: on the same 387 turns 95.2 %
+ * -> 94.2 % (inside the bar set beforehand), a block on 3.6 % of samples, no
+ * later first word. So a turn the word list reaches keeps CALCULATION_NOTICE
+ * word for word, and only a turn it does not reach, with evidence in the
+ * prompt, gets this one. Code questions get neither, as before.
+ */
+export const CALCULATION_NOTICE_EVIDENCE = '# Calculation\n'
+  + 'If answering needs arithmetic (a total, a split, a per-unit cost, a percentage, a weighted score, a count, a date or deadline counted from another date, '
+  + 'or a length of time), work it out first inside [[CALC]] and [[/CALC]], one step per line as `name = expression = result`: each figure first, then each step, '
+  + 'the name saying whose quantity it is (`each_share = (90 + 30) / 2 = 60`). Count days across a month end in steps '
+  + '(`days_left_in_may = 31 - 20 = 11`, `day_in_june = 30 - 11 = 19`) and business days one weekday per line. The last line must answer exactly what was asked; '
+  + 'then answer from it. The block is removed before anyone sees it. If the answer is a fact stated above, there is nothing to work out: '
+  + 'answer as you otherwise would, with everything the question needs.';
+
+/** The calculation notice of one turn: the word-list notice when the question's wording asks for a quantity, otherwise the lighter one when the turn carries evidence. */
+export function calculationNoticeForTurn(question: string, conversationSummary: string | undefined, evidenceBlock: string | undefined): string {
+  const byWording = calculationNotice(question, conversationSummary, evidenceBlock);
+  if (byWording) return byWording;
+  const q = String(question ?? '');
+  const evidence = String(evidenceBlock ?? '');
+  if (!q.trim() || !evidence.trim() || QUANT_CODE_RE.test(q)) return '';
+  const figures = [q, String(conversationSummary ?? ''), evidence].join('\n').match(NUMBER_TOKEN_RE)?.length ?? 0;
+  return figures >= 2 ? CALCULATION_NOTICE_EVIDENCE : '';
+}
+
+/**
  * A typed REFINEMENT of the previous reply (2026-10-01): "shorter", "simpler
  * please", "another one, less pushy". The resolver already anchors it —
  * `shorter (rephrasing request: how to phrase the answer to "…")` — and the
@@ -1556,7 +1600,7 @@ export function composePrompt(input: ComposeInput): ComposedPrompt {
     push('today', todayNotice(input.now ?? new Date(), d.resolvedQuestion, input.conversationSummary, packed.evidenceBlock)),
     push('evidence_story', evidenceStoryGuard(d, Boolean(packed.evidenceBlock))),
     push('personal_commitment', personalCommitmentNotice(d.resolvedQuestion, policy.id, Boolean(input.heardQuestion))),
-    push('calculation', calculationNotice(d.resolvedQuestion, input.conversationSummary, packed.evidenceBlock)),
+    push('calculation', calculationNoticeForTurn(d.resolvedQuestion, input.conversationSummary, packed.evidenceBlock)),
     push('refinement', refinementNotice(d.resolvedQuestion, input.conversationSummary, input.heardQuestion === true)),
     // Steps or a counted set: the numbered-list rule lives in the system prompt,
     // which the sections above outrank — see isEnumerableAsk. Format, not

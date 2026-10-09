@@ -83,7 +83,7 @@ describe('everything else is left exactly as it was', () => {
 
 describe('where it sits in the prompt', () => {
   test('with the other per-turn notices, after the calculation notice, typed turns only', () => {
-    const i = COMPOSER.indexOf("push('calculation', calculationNotice(");
+    const i = COMPOSER.indexOf("push('calculation', calculationNoticeForTurn(");
     const j = COMPOSER.indexOf("push('refinement', refinementNotice(d.resolvedQuestion, input.conversationSummary, input.heardQuestion === true))");
     const k = COMPOSER.indexOf("push('list_form'");
     assert.ok(i > 0 && j > i && k > j);
