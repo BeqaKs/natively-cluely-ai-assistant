@@ -335,7 +335,9 @@ export function isSmallReferenceCorpus(files: ReadonlyArray<{ content?: string |
 // corpus is read on a FAST turn, see the orchestrator), and a larger corpus
 // keeps retrieval as it was.
 /** Whole-pack threshold, in the packer's estimateTokens units (~4 chars/token). */
-export const WHOLE_PACK_MAX_TOKENS = 12000;
+// EXPERIMENT X1 ONLY (branch exp/x1-whole-pack-threshold, never for main): the threshold under test is read from the
+// environment so that one build serves the 12,000 / 24,000 / 48,000 arms. Unset, it is main's 12,000.
+export const WHOLE_PACK_MAX_TOKENS = Number(process.env.NATIVELY_X_WHOLE_PACK_MAX_TOKENS) > 0 ? Number(process.env.NATIVELY_X_WHOLE_PACK_MAX_TOKENS) : 12000;
 
 /**
  * What the prompt packer charges for one evidence item beyond its text: the
