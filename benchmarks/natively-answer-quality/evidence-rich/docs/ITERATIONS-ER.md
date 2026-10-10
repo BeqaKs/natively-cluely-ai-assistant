@@ -3507,3 +3507,12 @@ while main is `cdaedfad`; if main has moved: rebase, type check and the four sui
 fails it is not landed and the numbers are reported. Pushing the landed commit is a new question for him.
 **State at 21:22 UTC:** nothing of E30 is measured. The DeepSeek account still answers `is_available: false`
 (asked every 5 minutes since 20:03 UTC); the waiting chain and the window script are both alive.
+
+### Both waiting scripts stopped until 07:15 IST (2026-10-10 21:50 UTC), on Evin's word
+"only start the session by 7:15, till then keep the unnecessary background process of this session killed, since
+its making the laptop hot". Stopped: `window-oct11.mjs`, `chain-e30-wait.sh`, `wait-balance.mjs` (each was at
+0.0 % CPU; the load on the machine at that minute was other programs and another session's build, none of them
+mine and none touched). Nothing of this work runs now. `~/natively-er-backup/restart-0715.sh` starts both again
+(the window still waits for 02:00:30 UTC); a session job at 07:15 IST runs it and then reads the window. Cost: if
+the DeepSeek balance returns before 07:15 IST, the E30 app runs start at 07:15 and not earlier, so E30 will most
+likely be judged in the window after this one. Last balance answer before the stop: 21:48 UTC, not available.
