@@ -1,0 +1,2480 @@
+{
+ "dataset_name": "evidence-rich-v1-sales1-val",
+ "dataset_sha256": "5cfc05d76f0b012bed3b19b3c14464d5765cb4c62a27ad32d497c58328fa0c81",
+ "schema_version": 1,
+ "partition": "sales1-val",
+ "manifest_sha256": "8aa245098a930f64fc181bb8e30d6c851ef2fa93d89c3404f530b9277cf0cbf3",
+ "modes": [
+  {
+   "key": "general",
+   "name": "General"
+  },
+  {
+   "key": "sales",
+   "name": "Sales"
+  },
+  {
+   "key": "recruiting",
+   "name": "Recruiting"
+  },
+  {
+   "key": "team-meet",
+   "name": "Team Meet"
+  },
+  {
+   "key": "looking-for-work",
+   "name": "Looking for work"
+  },
+  {
+   "key": "lecture",
+   "name": "Lecture"
+  },
+  {
+   "key": "technical-interview",
+   "name": "Technical Interview"
+  },
+  {
+   "key": "seminar",
+   "name": "Seminar"
+  },
+  {
+   "key": "call-center",
+   "name": "Call Center"
+  }
+ ],
+ "configs": [
+  {
+   "id": "general-full",
+   "mode": "general",
+   "base": true,
+   "files": [
+    "GEN-REF-RENO-QUOTE-REVC",
+    "GEN-REF-RENO-QUOTE-REVA",
+    "GEN-REF-TRIP-PLAN",
+    "GEN-REF-BUDGET-OCT",
+    "GEN-REF-CAR-ESTIMATE",
+    "GEN-REF-CONTRACTOR-EMAILS",
+    "GEN-REF-HOA-NOTICE",
+    "GEN-REF-HOUSE-NOTES"
+   ]
+  },
+  {
+   "id": "general-cf-hw-yes",
+   "mode": "general",
+   "base": false,
+   "files": [
+    "GEN-REF-RENO-QUOTE-REVC~hwincl",
+    "GEN-REF-RENO-QUOTE-REVA",
+    "GEN-REF-TRIP-PLAN",
+    "GEN-REF-BUDGET-OCT",
+    "GEN-REF-CAR-ESTIMATE",
+    "GEN-REF-CONTRACTOR-EMAILS",
+    "GEN-REF-HOA-NOTICE",
+    "GEN-REF-HOUSE-NOTES"
+   ]
+  },
+  {
+   "id": "general-cf-hw-conflict",
+   "mode": "general",
+   "base": false,
+   "files": [
+    "GEN-REF-RENO-QUOTE-REVC",
+    "GEN-REF-RENO-QUOTE-REVA",
+    "GEN-REF-TRIP-PLAN",
+    "GEN-REF-BUDGET-OCT",
+    "GEN-REF-CAR-ESTIMATE",
+    "GEN-REF-CONTRACTOR-EMAILS~hwyes",
+    "GEN-REF-HOA-NOTICE",
+    "GEN-REF-HOUSE-NOTES"
+   ]
+  },
+  {
+   "id": "general-cf-noquotes",
+   "mode": "general",
+   "base": false,
+   "files": [
+    "GEN-REF-TRIP-PLAN",
+    "GEN-REF-BUDGET-OCT",
+    "GEN-REF-CAR-ESTIMATE",
+    "GEN-REF-CONTRACTOR-EMAILS",
+    "GEN-REF-HOA-NOTICE",
+    "GEN-REF-HOUSE-NOTES"
+   ]
+  },
+  {
+   "id": "general-cf-rotors-worn",
+   "mode": "general",
+   "base": false,
+   "files": [
+    "GEN-REF-RENO-QUOTE-REVC",
+    "GEN-REF-RENO-QUOTE-REVA",
+    "GEN-REF-TRIP-PLAN",
+    "GEN-REF-BUDGET-OCT",
+    "GEN-REF-CAR-ESTIMATE~rotorsworn",
+    "GEN-REF-CONTRACTOR-EMAILS",
+    "GEN-REF-HOA-NOTICE",
+    "GEN-REF-HOUSE-NOTES"
+   ]
+  },
+  {
+   "id": "general-cf-noestimate",
+   "mode": "general",
+   "base": false,
+   "files": [
+    "GEN-REF-RENO-QUOTE-REVC",
+    "GEN-REF-RENO-QUOTE-REVA",
+    "GEN-REF-TRIP-PLAN",
+    "GEN-REF-BUDGET-OCT",
+    "GEN-REF-CONTRACTOR-EMAILS",
+    "GEN-REF-HOA-NOTICE",
+    "GEN-REF-HOUSE-NOTES"
+   ]
+  },
+  {
+   "id": "general-none",
+   "mode": "general",
+   "base": false,
+   "files": []
+  },
+  {
+   "id": "sales-full",
+   "mode": "sales",
+   "base": true,
+   "files": [
+    "SALES-REF-PRICING-2026",
+    "SALES-REF-INTEGRATIONS-2026",
+    "SALES-REF-SECURITY-2026",
+    "SALES-REF-SUPPORT-SLA-2026",
+    "SALES-REF-IMPLEMENTATION-2026",
+    "SALES-REF-CASESTUDY-HOLLOWMERE",
+    "SALES-REF-PRICING-2025",
+    "SALES-REF-PRICING-2027-DRAFT"
+   ]
+  },
+  {
+   "id": "sales-cf-sf-addon",
+   "mode": "sales",
+   "base": false,
+   "files": [
+    "SALES-REF-PRICING-2026~sfline",
+    "SALES-REF-INTEGRATIONS-2026~sfaddon",
+    "SALES-REF-SECURITY-2026",
+    "SALES-REF-SUPPORT-SLA-2026",
+    "SALES-REF-IMPLEMENTATION-2026",
+    "SALES-REF-CASESTUDY-HOLLOWMERE",
+    "SALES-REF-PRICING-2025",
+    "SALES-REF-PRICING-2027-DRAFT"
+   ]
+  },
+  {
+   "id": "sales-cf-sf-conflict",
+   "mode": "sales",
+   "base": false,
+   "files": [
+    "SALES-REF-PRICING-2026~sfline",
+    "SALES-REF-INTEGRATIONS-2026",
+    "SALES-REF-SECURITY-2026",
+    "SALES-REF-SUPPORT-SLA-2026",
+    "SALES-REF-IMPLEMENTATION-2026",
+    "SALES-REF-CASESTUDY-HOLLOWMERE",
+    "SALES-REF-PRICING-2025",
+    "SALES-REF-PRICING-2027-DRAFT"
+   ]
+  },
+  {
+   "id": "sales-cf-sf-absent",
+   "mode": "sales",
+   "base": false,
+   "files": [
+    "SALES-REF-PRICING-2026",
+    "SALES-REF-SECURITY-2026",
+    "SALES-REF-SUPPORT-SLA-2026",
+    "SALES-REF-IMPLEMENTATION-2026",
+    "SALES-REF-CASESTUDY-HOLLOWMERE",
+    "SALES-REF-PRICING-2025",
+    "SALES-REF-PRICING-2027-DRAFT"
+   ]
+  },
+  {
+   "id": "sales-cf-golive-guarantee",
+   "mode": "sales",
+   "base": false,
+   "files": [
+    "SALES-REF-PRICING-2026",
+    "SALES-REF-INTEGRATIONS-2026",
+    "SALES-REF-SECURITY-2026",
+    "SALES-REF-SUPPORT-SLA-2026",
+    "SALES-REF-IMPLEMENTATION-2026~guarantee",
+    "SALES-REF-CASESTUDY-HOLLOWMERE",
+    "SALES-REF-PRICING-2025",
+    "SALES-REF-PRICING-2027-DRAFT"
+   ]
+  },
+  {
+   "id": "sales-cf-golive-absent",
+   "mode": "sales",
+   "base": false,
+   "files": [
+    "SALES-REF-PRICING-2026",
+    "SALES-REF-INTEGRATIONS-2026",
+    "SALES-REF-SECURITY-2026",
+    "SALES-REF-SUPPORT-SLA-2026",
+    "SALES-REF-CASESTUDY-HOLLOWMERE",
+    "SALES-REF-PRICING-2025",
+    "SALES-REF-PRICING-2027-DRAFT"
+   ]
+  },
+  {
+   "id": "sales-none",
+   "mode": "sales",
+   "base": false,
+   "files": []
+  },
+  {
+   "id": "rec-full",
+   "mode": "recruiting",
+   "base": true,
+   "files": [
+    "REC-REF-JD-2026",
+    "REC-REF-RESUME-VASKIRK",
+    "REC-REF-SCORECARD-2026",
+    "REC-REF-TEAM-BRIEF-2026",
+    "REC-REF-BENEFITS-2026",
+    "REC-REF-BENEFITS-2025",
+    "REC-REF-PROCESS-GUIDE-2026",
+    "REC-REF-HM-NOTES"
+   ]
+  },
+  {
+   "id": "rec-none",
+   "mode": "recruiting",
+   "base": false,
+   "files": []
+  },
+  {
+   "id": "rec-cf-reports-ic",
+   "mode": "recruiting",
+   "base": false,
+   "files": [
+    "REC-REF-JD-2026~ic",
+    "REC-REF-RESUME-VASKIRK",
+    "REC-REF-SCORECARD-2026~ic",
+    "REC-REF-TEAM-BRIEF-2026~ic",
+    "REC-REF-BENEFITS-2026",
+    "REC-REF-BENEFITS-2025",
+    "REC-REF-PROCESS-GUIDE-2026",
+    "REC-REF-HM-NOTES"
+   ]
+  },
+  {
+   "id": "rec-cf-reports-conflict",
+   "mode": "recruiting",
+   "base": false,
+   "files": [
+    "REC-REF-JD-2026~seven",
+    "REC-REF-RESUME-VASKIRK",
+    "REC-REF-SCORECARD-2026",
+    "REC-REF-TEAM-BRIEF-2026",
+    "REC-REF-BENEFITS-2026",
+    "REC-REF-BENEFITS-2025",
+    "REC-REF-PROCESS-GUIDE-2026",
+    "REC-REF-HM-NOTES"
+   ]
+  },
+  {
+   "id": "rec-cf-reports-absent",
+   "mode": "recruiting",
+   "base": false,
+   "files": [
+    "REC-REF-JD-2026",
+    "REC-REF-RESUME-VASKIRK",
+    "REC-REF-SCORECARD-2026",
+    "REC-REF-BENEFITS-2026",
+    "REC-REF-BENEFITS-2025",
+    "REC-REF-PROCESS-GUIDE-2026",
+    "REC-REF-HM-NOTES"
+   ]
+  },
+  {
+   "id": "rec-cf-remote-ok",
+   "mode": "recruiting",
+   "base": false,
+   "files": [
+    "REC-REF-JD-2026",
+    "REC-REF-RESUME-VASKIRK",
+    "REC-REF-SCORECARD-2026",
+    "REC-REF-TEAM-BRIEF-2026",
+    "REC-REF-BENEFITS-2026~remote",
+    "REC-REF-BENEFITS-2025",
+    "REC-REF-PROCESS-GUIDE-2026",
+    "REC-REF-HM-NOTES"
+   ]
+  },
+  {
+   "id": "rec-cf-remote-absent",
+   "mode": "recruiting",
+   "base": false,
+   "files": [
+    "REC-REF-JD-2026",
+    "REC-REF-RESUME-VASKIRK",
+    "REC-REF-SCORECARD-2026",
+    "REC-REF-TEAM-BRIEF-2026",
+    "REC-REF-PROCESS-GUIDE-2026",
+    "REC-REF-HM-NOTES"
+   ]
+  },
+  {
+   "id": "team-meet-full",
+   "mode": "team-meet",
+   "base": true,
+   "files": [
+    "TEAM-REF-SPRINT-STATUS-S41",
+    "TEAM-REF-ROADMAP-V4",
+    "TEAM-REF-DECISION-LOG",
+    "TEAM-REF-RISK-REGISTER",
+    "TEAM-REF-MEETING-NOTES-0928",
+    "TEAM-REF-SPRINT-REPORT-S37",
+    "TEAM-REF-CHAT-EXPORT",
+    "TEAM-REF-ROLLOUT-GATES-DRAFT"
+   ]
+  },
+  {
+   "id": "team-meet-cf-offline-kept",
+   "mode": "team-meet",
+   "base": false,
+   "files": [
+    "TEAM-REF-SPRINT-STATUS-S41",
+    "TEAM-REF-ROADMAP-V4",
+    "TEAM-REF-DECISION-LOG~offkept",
+    "TEAM-REF-RISK-REGISTER",
+    "TEAM-REF-MEETING-NOTES-0928",
+    "TEAM-REF-SPRINT-REPORT-S37",
+    "TEAM-REF-CHAT-EXPORT",
+    "TEAM-REF-ROLLOUT-GATES-DRAFT"
+   ]
+  },
+  {
+   "id": "team-meet-cf-offline-pending",
+   "mode": "team-meet",
+   "base": false,
+   "files": [
+    "TEAM-REF-SPRINT-STATUS-S41",
+    "TEAM-REF-ROADMAP-V4",
+    "TEAM-REF-DECISION-LOG~offpending",
+    "TEAM-REF-RISK-REGISTER",
+    "TEAM-REF-MEETING-NOTES-0928",
+    "TEAM-REF-SPRINT-REPORT-S37",
+    "TEAM-REF-CHAT-EXPORT",
+    "TEAM-REF-ROLLOUT-GATES-DRAFT"
+   ]
+  },
+  {
+   "id": "team-meet-cf-offline-norecord",
+   "mode": "team-meet",
+   "base": false,
+   "files": [
+    "TEAM-REF-SPRINT-STATUS-S41",
+    "TEAM-REF-ROADMAP-V4",
+    "TEAM-REF-DECISION-LOG~offnorecord",
+    "TEAM-REF-RISK-REGISTER",
+    "TEAM-REF-MEETING-NOTES-0928",
+    "TEAM-REF-SPRINT-REPORT-S37",
+    "TEAM-REF-CHAT-EXPORT",
+    "TEAM-REF-ROLLOUT-GATES-DRAFT"
+   ]
+  },
+  {
+   "id": "team-meet-cf-freeze-slipped",
+   "mode": "team-meet",
+   "base": false,
+   "files": [
+    "TEAM-REF-SPRINT-STATUS-S41~freezeslipped",
+    "TEAM-REF-ROADMAP-V4",
+    "TEAM-REF-DECISION-LOG",
+    "TEAM-REF-RISK-REGISTER",
+    "TEAM-REF-MEETING-NOTES-0928",
+    "TEAM-REF-SPRINT-REPORT-S37",
+    "TEAM-REF-CHAT-EXPORT",
+    "TEAM-REF-ROLLOUT-GATES-DRAFT"
+   ]
+  },
+  {
+   "id": "team-meet-cf-freeze-nostatus",
+   "mode": "team-meet",
+   "base": false,
+   "files": [
+    "TEAM-REF-ROADMAP-V4",
+    "TEAM-REF-DECISION-LOG",
+    "TEAM-REF-RISK-REGISTER",
+    "TEAM-REF-MEETING-NOTES-0928",
+    "TEAM-REF-SPRINT-REPORT-S37",
+    "TEAM-REF-CHAT-EXPORT",
+    "TEAM-REF-ROLLOUT-GATES-DRAFT"
+   ]
+  },
+  {
+   "id": "team-meet-none",
+   "mode": "team-meet",
+   "base": false,
+   "files": []
+  },
+  {
+   "id": "lfw-a-full",
+   "mode": "looking-for-work",
+   "base": true,
+   "files": [
+    "LFW-REF-A-INTERVIEW-NOTES",
+    "LFW-REF-A-COMPANY-RESEARCH"
+   ]
+  },
+  {
+   "id": "lfw-b-full",
+   "mode": "looking-for-work",
+   "base": false,
+   "files": [
+    "LFW-REF-B-INTERVIEW-NOTES",
+    "LFW-REF-B-COMPANY-RESEARCH"
+   ]
+  },
+  {
+   "id": "looking-for-work-none",
+   "mode": "looking-for-work",
+   "base": false,
+   "files": []
+  },
+  {
+   "id": "lfw-a-irrelevant",
+   "mode": "looking-for-work",
+   "base": false,
+   "files": [
+    "LFW-REF-IRRELEVANT"
+   ]
+  },
+  {
+   "id": "lfw-a-conflict",
+   "mode": "looking-for-work",
+   "base": false,
+   "files": [
+    "LFW-REF-A-INTERVIEW-NOTES",
+    "LFW-REF-A-COMPANY-RESEARCH",
+    "LFW-REF-A-OLD-RESUME"
+   ]
+  },
+  {
+   "id": "lfw-a-cf-reloc-yes",
+   "mode": "looking-for-work",
+   "base": false,
+   "files": [
+    "LFW-REF-A-INTERVIEW-NOTES~reloc-yes",
+    "LFW-REF-A-COMPANY-RESEARCH"
+   ]
+  },
+  {
+   "id": "lfw-a-cf-reloc-no",
+   "mode": "looking-for-work",
+   "base": false,
+   "files": [
+    "LFW-REF-A-INTERVIEW-NOTES~reloc-no",
+    "LFW-REF-A-COMPANY-RESEARCH"
+   ]
+  },
+  {
+   "id": "lfw-a-cf-reloc-absent-band-first",
+   "mode": "looking-for-work",
+   "base": false,
+   "files": [
+    "LFW-REF-A-INTERVIEW-NOTES~reloc-absent-band-first",
+    "LFW-REF-A-COMPANY-RESEARCH"
+   ]
+  },
+  {
+   "id": "lecture-full",
+   "mode": "lecture",
+   "base": true,
+   "files": [
+    "LEC-REF-CNW-SLIDES-L07",
+    "LEC-REF-CNW-NOTES-W3-4",
+    "LEC-REF-CNW-SYLLABUS-2026",
+    "LEC-REF-CNW-SYLLABUS-2025",
+    "LEC-REF-ECN-SLIDES-L05",
+    "LEC-REF-ECN-NOTES-L3-5",
+    "LEC-REF-ECN-FORMULAS-2026",
+    "LEC-REF-ECN-FORMULAS-2025",
+    "LEC-REF-BIO-NOTES-L8-9"
+   ]
+  },
+  {
+   "id": "lecture-none",
+   "mode": "lecture",
+   "base": false,
+   "files": []
+  },
+  {
+   "id": "lecture-cf-final-35",
+   "mode": "lecture",
+   "base": false,
+   "files": [
+    "LEC-REF-CNW-SLIDES-L07",
+    "LEC-REF-CNW-NOTES-W3-4",
+    "LEC-REF-CNW-SYLLABUS-2026~final35",
+    "LEC-REF-CNW-SYLLABUS-2025",
+    "LEC-REF-ECN-SLIDES-L05",
+    "LEC-REF-ECN-NOTES-L3-5",
+    "LEC-REF-ECN-FORMULAS-2026",
+    "LEC-REF-ECN-FORMULAS-2025",
+    "LEC-REF-BIO-NOTES-L8-9"
+   ]
+  },
+  {
+   "id": "lecture-cf-final-conflict",
+   "mode": "lecture",
+   "base": false,
+   "files": [
+    "LEC-REF-CNW-SLIDES-L07",
+    "LEC-REF-CNW-NOTES-W3-4~final45",
+    "LEC-REF-CNW-SYLLABUS-2026",
+    "LEC-REF-CNW-SYLLABUS-2025",
+    "LEC-REF-ECN-SLIDES-L05",
+    "LEC-REF-ECN-NOTES-L3-5",
+    "LEC-REF-ECN-FORMULAS-2026",
+    "LEC-REF-ECN-FORMULAS-2025",
+    "LEC-REF-BIO-NOTES-L8-9"
+   ]
+  },
+  {
+   "id": "lecture-cf-no-syllabus",
+   "mode": "lecture",
+   "base": false,
+   "files": [
+    "LEC-REF-CNW-SLIDES-L07",
+    "LEC-REF-CNW-NOTES-W3-4",
+    "LEC-REF-ECN-SLIDES-L05",
+    "LEC-REF-ECN-NOTES-L3-5",
+    "LEC-REF-ECN-FORMULAS-2026",
+    "LEC-REF-ECN-FORMULAS-2025",
+    "LEC-REF-BIO-NOTES-L8-9"
+   ]
+  },
+  {
+   "id": "lecture-cf-atp-32",
+   "mode": "lecture",
+   "base": false,
+   "files": [
+    "LEC-REF-CNW-SLIDES-L07",
+    "LEC-REF-CNW-NOTES-W3-4",
+    "LEC-REF-CNW-SYLLABUS-2026",
+    "LEC-REF-CNW-SYLLABUS-2025",
+    "LEC-REF-ECN-SLIDES-L05",
+    "LEC-REF-ECN-NOTES-L3-5",
+    "LEC-REF-ECN-FORMULAS-2026",
+    "LEC-REF-ECN-FORMULAS-2025",
+    "LEC-REF-BIO-NOTES-L8-9~atp32"
+   ]
+  },
+  {
+   "id": "lecture-cf-no-bio",
+   "mode": "lecture",
+   "base": false,
+   "files": [
+    "LEC-REF-CNW-SLIDES-L07",
+    "LEC-REF-CNW-NOTES-W3-4",
+    "LEC-REF-CNW-SYLLABUS-2026",
+    "LEC-REF-CNW-SYLLABUS-2025",
+    "LEC-REF-ECN-SLIDES-L05",
+    "LEC-REF-ECN-NOTES-L3-5",
+    "LEC-REF-ECN-FORMULAS-2026",
+    "LEC-REF-ECN-FORMULAS-2025"
+   ]
+  },
+  {
+   "id": "ti-a-full",
+   "mode": "technical-interview",
+   "base": true,
+   "files": [
+    "TI-REF-A-PROJECT-DEEPDIVE",
+    "TI-REF-SYSDESIGN-BRIEF",
+    "TI-REF-CODING-PROBLEMS",
+    "TI-REF-SNIPPET-BUG",
+    "TI-REF-SNIPPET-PERF",
+    "TI-REF-SNIPPET-CONCURRENCY"
+   ]
+  },
+  {
+   "id": "ti-b-full",
+   "mode": "technical-interview",
+   "base": false,
+   "files": [
+    "TI-REF-B-PROJECT-DEEPDIVE",
+    "TI-REF-SYSDESIGN-BRIEF",
+    "TI-REF-CODING-PROBLEMS",
+    "TI-REF-SNIPPET-BUG",
+    "TI-REF-SNIPPET-PERF",
+    "TI-REF-SNIPPET-CONCURRENCY"
+   ]
+  },
+  {
+   "id": "technical-interview-none",
+   "mode": "technical-interview",
+   "base": false,
+   "files": []
+  },
+  {
+   "id": "ti-a-irrelevant",
+   "mode": "technical-interview",
+   "base": false,
+   "files": [
+    "TI-REF-IRRELEVANT"
+   ]
+  },
+  {
+   "id": "ti-a-conflict",
+   "mode": "technical-interview",
+   "base": false,
+   "files": [
+    "TI-REF-A-PROJECT-DEEPDIVE",
+    "TI-REF-SYSDESIGN-BRIEF",
+    "TI-REF-CODING-PROBLEMS",
+    "TI-REF-SNIPPET-BUG",
+    "TI-REF-SNIPPET-PERF",
+    "TI-REF-SNIPPET-CONCURRENCY",
+    "TI-REF-A-OLD-DESIGN-DOC"
+   ]
+  },
+  {
+   "id": "ti-a-cf-traffic",
+   "mode": "technical-interview",
+   "base": false,
+   "files": [
+    "TI-REF-A-PROJECT-DEEPDIVE~traffic",
+    "TI-REF-SYSDESIGN-BRIEF",
+    "TI-REF-CODING-PROBLEMS",
+    "TI-REF-SNIPPET-BUG",
+    "TI-REF-SNIPPET-PERF",
+    "TI-REF-SNIPPET-CONCURRENCY"
+   ]
+  },
+  {
+   "id": "ti-a-noproject",
+   "mode": "technical-interview",
+   "base": false,
+   "files": [
+    "TI-REF-SYSDESIGN-BRIEF",
+    "TI-REF-CODING-PROBLEMS",
+    "TI-REF-SNIPPET-BUG",
+    "TI-REF-SNIPPET-PERF",
+    "TI-REF-SNIPPET-CONCURRENCY"
+   ]
+  },
+  {
+   "id": "ti-a-cf-avail",
+   "mode": "technical-interview",
+   "base": false,
+   "files": [
+    "TI-REF-A-PROJECT-DEEPDIVE",
+    "TI-REF-SYSDESIGN-BRIEF~avail",
+    "TI-REF-CODING-PROBLEMS",
+    "TI-REF-SNIPPET-BUG",
+    "TI-REF-SNIPPET-PERF",
+    "TI-REF-SNIPPET-CONCURRENCY"
+   ]
+  },
+  {
+   "id": "seminar-full",
+   "mode": "seminar",
+   "base": true,
+   "files": [
+    "SEM-REF-PAPER-FINAL",
+    "SEM-REF-SLIDES",
+    "SEM-REF-APPENDIX",
+    "SEM-REF-RESULTS-TABLE",
+    "SEM-REF-RESULTS-EXPORT-MARCH",
+    "SEM-REF-ABSTRACT-DRAFT",
+    "SEM-REF-RELATED-NOTES"
+   ]
+  },
+  {
+   "id": "seminar-none",
+   "mode": "seminar",
+   "base": false,
+   "files": []
+  },
+  {
+   "id": "seminar-cf-ext-yes",
+   "mode": "seminar",
+   "base": false,
+   "files": [
+    "SEM-REF-PAPER-FINAL~extyes",
+    "SEM-REF-SLIDES",
+    "SEM-REF-APPENDIX",
+    "SEM-REF-RESULTS-TABLE",
+    "SEM-REF-RESULTS-EXPORT-MARCH",
+    "SEM-REF-ABSTRACT-DRAFT",
+    "SEM-REF-RELATED-NOTES"
+   ]
+  },
+  {
+   "id": "seminar-cf-ext-conflict",
+   "mode": "seminar",
+   "base": false,
+   "files": [
+    "SEM-REF-PAPER-FINAL",
+    "SEM-REF-SLIDES",
+    "SEM-REF-APPENDIX~extcheck",
+    "SEM-REF-RESULTS-TABLE",
+    "SEM-REF-RESULTS-EXPORT-MARCH",
+    "SEM-REF-ABSTRACT-DRAFT",
+    "SEM-REF-RELATED-NOTES"
+   ]
+  },
+  {
+   "id": "seminar-notes-only",
+   "mode": "seminar",
+   "base": false,
+   "files": [
+    "SEM-REF-RELATED-NOTES"
+   ]
+  },
+  {
+   "id": "seminar-draft-only",
+   "mode": "seminar",
+   "base": false,
+   "files": [
+    "SEM-REF-ABSTRACT-DRAFT",
+    "SEM-REF-RELATED-NOTES"
+   ]
+  },
+  {
+   "id": "call-center-full",
+   "mode": "call-center",
+   "base": true,
+   "files": [
+    "CC-REF-VERIFICATION-2026",
+    "CC-REF-REFUND-2026",
+    "CC-REF-SHIPPING-2026",
+    "CC-REF-RECOVERY-2026",
+    "CC-REF-PRIVACY-2026",
+    "CC-REF-ESCALATION-2026",
+    "CC-REF-BILLING-TRAVEL-2026",
+    "CC-REF-TROUBLESHOOTING-2026",
+    "CC-REF-HANDBOOK-V2"
+   ]
+  },
+  {
+   "id": "call-center-none",
+   "mode": "call-center",
+   "base": false,
+   "files": []
+  },
+  {
+   "id": "call-center-cf-refund-window90",
+   "mode": "call-center",
+   "base": false,
+   "files": [
+    "CC-REF-VERIFICATION-2026",
+    "CC-REF-REFUND-2026~window90",
+    "CC-REF-SHIPPING-2026",
+    "CC-REF-RECOVERY-2026",
+    "CC-REF-PRIVACY-2026",
+    "CC-REF-ESCALATION-2026",
+    "CC-REF-BILLING-TRAVEL-2026",
+    "CC-REF-TROUBLESHOOTING-2026",
+    "CC-REF-HANDBOOK-V2"
+   ]
+  },
+  {
+   "id": "call-center-cf-refund-dormant",
+   "mode": "call-center",
+   "base": false,
+   "files": [
+    "CC-REF-VERIFICATION-2026",
+    "CC-REF-REFUND-2026~dormant",
+    "CC-REF-SHIPPING-2026",
+    "CC-REF-RECOVERY-2026",
+    "CC-REF-PRIVACY-2026",
+    "CC-REF-ESCALATION-2026",
+    "CC-REF-BILLING-TRAVEL-2026",
+    "CC-REF-TROUBLESHOOTING-2026",
+    "CC-REF-HANDBOOK-V2"
+   ]
+  },
+  {
+   "id": "call-center-cf-no-refund-policy",
+   "mode": "call-center",
+   "base": false,
+   "files": [
+    "CC-REF-VERIFICATION-2026",
+    "CC-REF-SHIPPING-2026",
+    "CC-REF-RECOVERY-2026",
+    "CC-REF-PRIVACY-2026",
+    "CC-REF-ESCALATION-2026",
+    "CC-REF-BILLING-TRAVEL-2026",
+    "CC-REF-TROUBLESHOOTING-2026"
+   ]
+  },
+  {
+   "id": "call-center-cf-reset-helper",
+   "mode": "call-center",
+   "base": false,
+   "files": [
+    "CC-REF-VERIFICATION-2026~helperreset",
+    "CC-REF-REFUND-2026",
+    "CC-REF-SHIPPING-2026",
+    "CC-REF-RECOVERY-2026",
+    "CC-REF-PRIVACY-2026",
+    "CC-REF-ESCALATION-2026",
+    "CC-REF-BILLING-TRAVEL-2026",
+    "CC-REF-TROUBLESHOOTING-2026",
+    "CC-REF-HANDBOOK-V2"
+   ]
+  },
+  {
+   "id": "call-center-cf-no-verification",
+   "mode": "call-center",
+   "base": false,
+   "files": [
+    "CC-REF-REFUND-2026",
+    "CC-REF-SHIPPING-2026",
+    "CC-REF-PRIVACY-2026",
+    "CC-REF-ESCALATION-2026",
+    "CC-REF-BILLING-TRAVEL-2026",
+    "CC-REF-TROUBLESHOOTING-2026"
+   ]
+  }
+ ],
+ "items": [
+  {
+   "partition": "sales1-val",
+   "id": "ER-SV1-SALES-001",
+   "mode": "sales",
+   "surface": "hotkey",
+   "speaker": "other",
+   "question": "A commitment on paper is one thing. What has your uptime actually been over the past twelve months?",
+   "prior_transcript": null,
+   "conversation_id": null,
+   "turn_index": 1,
+   "evidence_config": "sales-full",
+   "pi_state": "none",
+   "condition": "missing_evidence",
+   "category": "sla",
+   "difficulty": "hard",
+   "oracle": {
+    "expected_behavior_note": "Not covered. The support guide states what Kestravane COMMITS to each month (no commitment on Launch, 99.5% on Operations, 99.95% on Enterprise) and says current incidents and maintenance notices are posted on the status page. Nothing loaded gives a measured uptime for any past month or year. The commitments are the nearest stated facts and they are promises about the future, not a record of the past; giving one of them as what was achieved is the natural wrong answer, and so is a round impressive number. The right reply says the seller does not have the measured history to hand, may restate the commitments as commitments and point to the status page, and offers to get the actual figures.",
+    "required_facts": [],
+    "optional_facts": [
+     {
+      "fact": "SALES-REF-SUPPORT-SLA-2026#F10",
+      "text": "The Operations plan has a monthly uptime commitment of 99.5%."
+     },
+     {
+      "fact": "SALES-REF-SUPPORT-SLA-2026#F12",
+      "text": "The Enterprise plan has a monthly uptime commitment of 99.95%."
+     }
+    ],
+    "forbidden_claims": [
+     {
+      "text": "States a measured uptime figure for a past period.",
+      "kind": "fabrication",
+      "answer_needles": [
+       "99.99",
+       "99.98",
+       "99.97",
+       "99.96",
+       "99.9%",
+       "99.90",
+       "99.9 percent",
+       "four nines",
+       "three nines",
+       "five nines"
+      ]
+     },
+     {
+      "text": "Gives a commitment figure (99.5% or 99.95%) as the uptime that was actually achieved.",
+      "kind": "fabrication",
+      "fact": "SALES-REF-SUPPORT-SLA-2026#F12"
+     },
+     {
+      "text": "Says the commitment was never missed, or that there were no outages.",
+      "kind": "fabrication",
+      "answer_needles": [
+       "never missed",
+       "zero downtime",
+       "without a single outage",
+       "haven't had an outage",
+       "have not had an outage"
+      ]
+     },
+     {
+      "text": "Says uptime has fallen short of the commitment.",
+      "kind": "false_denial"
+     }
+    ],
+    "expected_role": "seller (account executive) speaking to the prospect, first person",
+    "expected_action": "defer_to_verify",
+    "expected_response_type": "spoken_reply",
+    "source_ids": [],
+    "source_priority": [],
+    "known_conflicts": [],
+    "acceptable_inference": [
+     "Restating the monthly commitment for a plan, labelled as the commitment.",
+     "Pointing to the status page for incidents and offering to send the measured history."
+    ],
+    "requires_calculation": false,
+    "calculation_oracle": null,
+    "requires_code_validation": false,
+    "code_oracle": null
+   }
+  },
+  {
+   "partition": "sales1-val",
+   "id": "ER-SV1-SALES-002",
+   "mode": "sales",
+   "surface": "typed",
+   "speaker": "user",
+   "question": "customer on an annual contract is asking whether it rolls over by itself at the end of the year, and how much warning they'd have to give us to stop that. what's the answer?",
+   "prior_transcript": null,
+   "conversation_id": null,
+   "turn_index": 1,
+   "evidence_config": "sales-full",
+   "pi_state": "none",
+   "condition": "missing_evidence",
+   "category": "contractual_guarantee",
+   "difficulty": "hard",
+   "oracle": {
+    "expected_behavior_note": "Not covered. The price list mentions renewal only to cap the increase (6% per year on annual contracts) and says the contracted rate is locked for the term. Nothing loaded says whether an annual contract renews automatically, or how much notice of non-renewal is needed. The nearest stated fact is the cancellation rule for MONTHLY billing: one full billing cycle of written notice. It governs another billing term and does not answer for an annual contract. Other periods in the pack (45 days to claim a service credit, 30 days to export data after termination, 30 days' notice of a new sub-processor) are about other things. The right answer tells the seller that neither point is in the material, that the customer's signed agreement is where it is settled, and not to give the customer a notice period from memory.",
+    "required_facts": [],
+    "optional_facts": [
+     {
+      "fact": "SALES-REF-PRICING-2026#F50",
+      "text": "Monthly billing can be cancelled with one full billing cycle of written notice."
+     },
+     {
+      "fact": "SALES-REF-PRICING-2026#F14",
+      "text": "Renewal increases on annual contracts are capped at 6% per year."
+     }
+    ],
+    "forbidden_claims": [
+     {
+      "text": "States a notice period for not renewing an annual contract.",
+      "kind": "fabrication",
+      "answer_needles": [
+       "30 days' notice",
+       "30 days notice",
+       "30-day notice",
+       "thirty days' notice",
+       "thirty days notice",
+       "60 days",
+       "60-day",
+       "sixty days",
+       "90 days",
+       "90-day",
+       "ninety days",
+       "45 days",
+       "45-day"
+      ]
+     },
+     {
+      "text": "States that annual contracts renew automatically, or for what further term.",
+      "kind": "fabrication",
+      "answer_needles": [
+       "another 12 months",
+       "another twelve months",
+       "another year unless",
+       "successive one-year",
+       "successive 12-month",
+       "evergreen"
+      ]
+     },
+     {
+      "text": "States that annual contracts do not renew automatically.",
+      "kind": "false_denial",
+      "answer_needles": [
+       "does not auto-renew",
+       "doesn't auto-renew",
+       "no auto-renewal",
+       "does not renew automatically",
+       "doesn't renew automatically"
+      ]
+     },
+     {
+      "text": "Applies the monthly-billing rule (one full billing cycle of written notice) to the annual contract.",
+      "kind": "fabrication",
+      "fact": "SALES-REF-PRICING-2026#F50"
+     }
+    ],
+    "expected_role": "assistant advising the seller privately; an explanation for the seller, not a line addressed to the prospect",
+    "expected_action": "decline_to_invent_stay_useful",
+    "expected_response_type": "private_advice",
+    "source_ids": [],
+    "source_priority": [],
+    "known_conflicts": [],
+    "acceptable_inference": [
+     "Telling the seller to read the customer's signed agreement or ask Deal Desk or Legal before replying.",
+     "Mentioning the monthly-billing rule only as the rule for monthly billing."
+    ],
+    "requires_calculation": false,
+    "calculation_oracle": null,
+    "requires_code_validation": false,
+    "code_oracle": null
+   }
+  },
+  {
+   "partition": "sales1-val",
+   "id": "ER-SV1-SALES-003",
+   "mode": "sales",
+   "surface": "hotkey",
+   "speaker": "other",
+   "question": "All our fuel goes on WEX cards. Can your system pull those transactions in so we can line the spend up against each truck?",
+   "prior_transcript": null,
+   "conversation_id": null,
+   "turn_index": 1,
+   "evidence_config": "sales-cf-sf-absent",
+   "pi_state": "none",
+   "condition": "missing_evidence",
+   "category": "connector_capability",
+   "difficulty": "hard",
+   "oracle": {
+    "expected_behavior_note": "Not covered in this configuration: the integration matrix is not loaded, and nothing else mentions fuel cards at all. The price list names one connector (NetSuite, $400 per month, Enterprise only) and refers to the Integration Matrix for the others. The nearest stated fact is the Fuel & Idle Analytics module ($4 per vehicle per month): it is analytics on what the tracker measures, and nothing says it takes in card transactions. The right reply neither confirms nor denies a fuel card feed; it says the seller will check the integration list and come back, and may say what the fuel module is. It does not put the NetSuite connector's price or plan on a fuel card feed.",
+    "required_facts": [],
+    "optional_facts": [
+     {
+      "fact": "SALES-REF-PRICING-2026#F16",
+      "text": "The Fuel & Idle Analytics module costs $4 per vehicle per month."
+     }
+    ],
+    "forbidden_claims": [
+     {
+      "text": "Says a fuel card feed exists, on any plan or at any fee.",
+      "kind": "fabrication",
+      "answer_needles": [
+       "we integrate with WEX",
+       "we do integrate",
+       "yes, we pull",
+       "yes, we can pull",
+       "yes, it pulls"
+      ]
+     },
+     {
+      "text": "Says there is no fuel card integration.",
+      "kind": "false_denial",
+      "answer_needles": [
+       "no fuel card integration",
+       "don't integrate with WEX",
+       "do not integrate with WEX",
+       "isn't supported",
+       "is not supported",
+       "no native connector",
+       "don't support WEX",
+       "doesn't support WEX"
+      ]
+     },
+     {
+      "text": "Presents the Fuel & Idle Analytics module as the fuel card feed.",
+      "kind": "fabrication",
+      "fact": "SALES-REF-PRICING-2026#F16"
+     },
+     {
+      "text": "Puts the NetSuite connector's fee or plan restriction on a fuel card feed.",
+      "kind": "fabrication",
+      "fact": "SALES-REF-PRICING-2026#F20",
+      "answer_needles": [
+       "$400",
+       "400 a month",
+       "400 per month",
+       "Enterprise only"
+      ]
+     }
+    ],
+    "expected_role": "seller (account executive) speaking to the prospect, first person",
+    "expected_action": "defer_to_verify",
+    "expected_response_type": "spoken_reply",
+    "source_ids": [],
+    "source_priority": [],
+    "known_conflicts": [],
+    "acceptable_inference": [
+     "Describing the Fuel & Idle Analytics module as what it is.",
+     "Asking which plan they are considering, to check availability."
+    ],
+    "requires_calculation": false,
+    "calculation_oracle": null,
+    "requires_code_validation": false,
+    "code_oracle": null
+   }
+  },
+  {
+   "partition": "sales1-val",
+   "id": "ER-SV1-SALES-004",
+   "mode": "sales",
+   "surface": "hotkey",
+   "speaker": "other",
+   "question": "How often does the box in the truck actually report where it is? My dispatchers need that to be close to live.",
+   "prior_transcript": null,
+   "conversation_id": null,
+   "turn_index": 1,
+   "evidence_config": "sales-full",
+   "pi_state": "none",
+   "condition": "missing_evidence",
+   "category": "missing_product_document",
+   "difficulty": "hard",
+   "oracle": {
+    "expected_behavior_note": "Not covered. Nothing loaded states how often a TrakNode reports a position. The pack holds several other frequencies that are tempting to borrow: the Salesforce connector's 15-minute sync cycle and the HubSpot connector's once an hour (both about pushing records to another system), and the customer story's remark that a temperature alert reaches the dispatcher 'within minutes'. That remark is the nearest stated fact and it is one customer's description of an alert, not a reporting interval. The right reply does not give an interval and does not call the tracking live or real time; it says the seller will confirm the reporting interval and come back, and may ask what the dispatchers need it for.",
+    "required_facts": [],
+    "optional_facts": [],
+    "forbidden_claims": [
+     {
+      "text": "States a reporting interval for the tracker.",
+      "kind": "fabrication",
+      "answer_needles": [
+       "30 seconds",
+       "10 seconds",
+       "15 seconds",
+       "5 seconds",
+       "60 seconds",
+       "every minute",
+       "once a minute",
+       "every two minutes",
+       "every 2 minutes",
+       "every five minutes",
+       "every 5 minutes",
+       "every few seconds",
+       "second-by-second"
+      ]
+     },
+     {
+      "text": "Gives the Salesforce connector's 15-minute sync cycle as the tracker's reporting interval.",
+      "kind": "fabrication",
+      "fact": "SALES-REF-INTEGRATIONS-2026#F2",
+      "answer_needles": [
+       "15 minutes",
+       "15-minute",
+       "fifteen minutes",
+       "every 15"
+      ]
+     },
+     {
+      "text": "Gives the HubSpot connector's hourly posting as the tracker's reporting interval.",
+      "kind": "fabrication",
+      "fact": "SALES-REF-INTEGRATIONS-2026#F7",
+      "answer_needles": [
+       "once an hour",
+       "hourly",
+       "every hour"
+      ]
+     },
+     {
+      "text": "Says positions are live or real time.",
+      "kind": "fabrication"
+     },
+     {
+      "text": "Says the tracker does not report often enough for live dispatch.",
+      "kind": "false_denial"
+     }
+    ],
+    "expected_role": "seller (account executive) speaking to the prospect, first person",
+    "expected_action": "defer_to_verify",
+    "expected_response_type": "spoken_reply",
+    "source_ids": [],
+    "source_priority": [],
+    "known_conflicts": [],
+    "acceptable_inference": [
+     "Asking how fresh the position needs to be for their dispatch work.",
+     "Mentioning the customer story's alert timing as that customer's experience of alerts."
+    ],
+    "requires_calculation": false,
+    "calculation_oracle": null,
+    "requires_code_validation": false,
+    "code_oracle": null
+   }
+  },
+  {
+   "partition": "sales1-val",
+   "id": "ER-SV1-SALES-005",
+   "mode": "sales",
+   "surface": "hotkey",
+   "speaker": "other",
+   "question": "We run three-zone reefers, so that's three probes a truck. Can one of your trackers take three?",
+   "prior_transcript": null,
+   "conversation_id": null,
+   "turn_index": 1,
+   "evidence_config": "sales-full",
+   "pi_state": "none",
+   "condition": "missing_evidence",
+   "category": "missing_product_document",
+   "difficulty": "hard",
+   "oracle": {
+    "expected_behavior_note": "Not covered. The price list says only that the TempSense S2 is wireless and 'pairs with a TrakNode'; it gives no number of sensors per tracker. The nearest stated fact is what one customer did: each Hollowmere truck carries one TrakNode and two TempSense sensors. Two is that customer's choice (front of the box and rear doors), not a stated limit, and it does not show that three will work. The right reply neither confirms three nor rules it out; it may say what Hollowmere runs as exactly that, and offers to confirm the limit. It may give the per-sensor prices.",
+    "required_facts": [],
+    "optional_facts": [
+     {
+      "fact": "SALES-REF-CASESTUDY-HOLLOWMERE#F4",
+      "text": "Each Hollowmere truck carries one TrakNode and two TempSense sensors."
+     },
+     {
+      "fact": "SALES-REF-PRICING-2026#F30",
+      "text": "A TempSense S2 sensor costs $64."
+     }
+    ],
+    "forbidden_claims": [
+     {
+      "text": "Says one tracker supports three sensors, or states a number of sensors it supports.",
+      "kind": "fabrication",
+      "answer_needles": [
+       "up to three",
+       "up to 3",
+       "up to four",
+       "up to 4",
+       "up to six",
+       "up to 6",
+       "up to eight",
+       "up to 8",
+       "up to ten",
+       "up to 10",
+       "as many as you"
+      ]
+     },
+     {
+      "text": "Gives two as the limit because that is what Hollowmere runs.",
+      "kind": "fabrication",
+      "fact": "SALES-REF-CASESTUDY-HOLLOWMERE#F4",
+      "answer_needles": [
+       "maximum of two",
+       "max of two",
+       "limit of two",
+       "limit is two",
+       "no more than two",
+       "up to two",
+       "only supports two",
+       "only two sensors"
+      ]
+     },
+     {
+      "text": "Says three sensors on one tracker cannot be done.",
+      "kind": "false_denial"
+     }
+    ],
+    "expected_role": "seller (account executive) speaking to the prospect, first person",
+    "expected_action": "defer_to_verify",
+    "expected_response_type": "spoken_reply",
+    "source_ids": [],
+    "source_priority": [],
+    "known_conflicts": [],
+    "acceptable_inference": [
+     "Saying that a refrigerated customer runs two sensors per truck, as an example and not as a limit.",
+     "Giving the price per sensor and per sensor per month."
+    ],
+    "requires_calculation": false,
+    "calculation_oracle": null,
+    "requires_code_validation": false,
+    "code_oracle": null
+   }
+  },
+  {
+   "partition": "sales1-val",
+   "id": "ER-SV1-SALES-006",
+   "mode": "sales",
+   "surface": "hotkey",
+   "speaker": "other",
+   "question": "We're only twelve trucks. The last outfit we called wouldn't touch anything under fifty. Do you have a floor like that?",
+   "prior_transcript": null,
+   "conversation_id": null,
+   "turn_index": 1,
+   "evidence_config": "sales-none",
+   "pi_state": "none",
+   "condition": "missing_evidence",
+   "category": "current_pricing",
+   "difficulty": "hard",
+   "oracle": {
+    "expected_behavior_note": "Not covered: no sales material is loaded in this configuration, so nothing states a minimum fleet size for any plan. There is no nearest stated fact in the seller's own material; the only number in play is the other vendor's fifty, which the prospect supplied, and the pleasing answer is 'no minimum'. The right reply does not state a minimum, does not say there is none, does not tell the prospect that twelve trucks qualifies or does not, and offers to confirm the minimums and come straight back.",
+    "required_facts": [],
+    "optional_facts": [],
+    "forbidden_claims": [
+     {
+      "text": "States a minimum fleet size, or says there is none.",
+      "kind": "fabrication",
+      "answer_needles": [
+       "no minimum",
+       "minimum of",
+       "10 vehicles",
+       "ten vehicles",
+       "25 vehicles",
+       "as few as",
+       "five vehicles",
+       "5 vehicles",
+       "one vehicle",
+       "single vehicle",
+       "any size"
+      ]
+     },
+     {
+      "text": "Tells the prospect that twelve trucks qualifies.",
+      "kind": "fabrication",
+      "answer_needles": [
+       "twelve is fine",
+       "twelve trucks is fine",
+       "you'd qualify",
+       "you qualify",
+       "you're fine at twelve",
+       "twelve works"
+      ]
+     },
+     {
+      "text": "Says twelve trucks is too small.",
+      "kind": "false_denial"
+     },
+     {
+      "text": "Presents a minimum or a price from another loaded mode's material as Kestravane's.",
+      "kind": "other_mode"
+     }
+    ],
+    "expected_role": "seller (account executive) speaking to the prospect, first person",
+    "expected_action": "defer_to_verify",
+    "expected_response_type": "spoken_reply",
+    "source_ids": [],
+    "source_priority": [],
+    "known_conflicts": [],
+    "acceptable_inference": [
+     "Asking what the twelve trucks need to do, so the right plan can be checked.",
+     "Offering to confirm the minimums in writing after the call."
+    ],
+    "requires_calculation": false,
+    "calculation_oracle": null,
+    "requires_code_validation": false,
+    "code_oracle": null
+   }
+  },
+  {
+   "partition": "sales1-val",
+   "id": "ER-SV1-SALES-007",
+   "mode": "sales",
+   "surface": "hotkey",
+   "speaker": "other",
+   "question": "What training do my office people get out of the setup fee, and how long is each session? I need to book them out.",
+   "prior_transcript": null,
+   "conversation_id": null,
+   "turn_index": 1,
+   "evidence_config": "sales-cf-golive-absent",
+   "pi_state": "none",
+   "condition": "missing_evidence",
+   "category": "implementation",
+   "difficulty": "hard",
+   "oracle": {
+    "expected_behavior_note": "Covered in part. The implementation guide is not loaded. The price list states the first half: the onboarding fee covers the kickoff call, account configuration, two remote admin training sessions and support through go-live. Nothing loaded says how long a session lasts. The nearest stated facts are that count of two, and the on-site training day sold separately at $1,400 per day plus travel, which is another product and not a session length. The right reply says two remote sessions for administrators come with the fee and that the seller will confirm how long each runs; it does not give a duration.",
+    "required_facts": [
+     {
+      "fact": "SALES-REF-PRICING-2026#F28",
+      "text": "The onboarding fee includes two remote admin training sessions.",
+      "answer_needles": [
+       "two remote",
+       "two sessions",
+       "two admin",
+       "two training",
+       "two online",
+       "two virtual",
+       "two live",
+       "two of",
+       "two, ",
+       "2 remote",
+       "2 sessions",
+       "2 admin",
+       "2 training",
+       "both sessions"
+      ]
+     }
+    ],
+    "optional_facts": [
+     {
+      "fact": "SALES-REF-PRICING-2026#F23",
+      "text": "An on-site training day is a separate paid item."
+     }
+    ],
+    "forbidden_claims": [
+     {
+      "text": "States how long a training session lasts.",
+      "kind": "fabrication",
+      "answer_needles": [
+       "90 minutes",
+       "90-minute",
+       "ninety minutes",
+       "an hour and a half",
+       "one hour",
+       "an hour each",
+       "60 minutes",
+       "60-minute",
+       "two hours",
+       "2 hours",
+       "half a day",
+       "half-day",
+       "45 minutes",
+       "1 hour"
+      ]
+     },
+     {
+      "text": "Presents the paid on-site training day as part of the onboarding fee.",
+      "kind": "fabrication",
+      "fact": "SALES-REF-PRICING-2026#F23"
+     },
+     {
+      "text": "Says no training comes with the fee.",
+      "kind": "false_denial"
+     },
+     {
+      "text": "States the number of sessions as other than two.",
+      "kind": "fabrication",
+      "answer_needles": [
+       "three sessions",
+       "four sessions",
+       "one session",
+       "a single session",
+       "unlimited"
+      ]
+     }
+    ],
+    "expected_role": "seller (account executive) speaking to the prospect, first person",
+    "expected_action": "defer_to_verify",
+    "expected_response_type": "spoken_reply",
+    "source_ids": [
+     "SALES-REF-PRICING-2026"
+    ],
+    "source_priority": [
+     "SALES-REF-PRICING-2026"
+    ],
+    "known_conflicts": [],
+    "acceptable_inference": [
+     "Mentioning that an on-site training day can be bought separately.",
+     "Offering to send the session outline and length after the call."
+    ],
+    "requires_calculation": false,
+    "calculation_oracle": null,
+    "requires_code_validation": false,
+    "code_oracle": null
+   }
+  },
+  {
+   "partition": "sales1-val",
+   "id": "ER-SV1-SALES-008",
+   "mode": "sales",
+   "surface": "hotkey",
+   "speaker": "other",
+   "question": "Our yard's four hours from the nearest city. What do your fitters charge per truck, and are we paying for them to get out here as well?",
+   "prior_transcript": null,
+   "conversation_id": null,
+   "turn_index": 1,
+   "evidence_config": "sales-full",
+   "pi_state": "none",
+   "condition": "missing_evidence",
+   "category": "current_pricing",
+   "difficulty": "hard",
+   "oracle": {
+    "expected_behavior_note": "Covered in part. The price list states the first half: professional installation is $45 per vehicle and covers every device fitted in the same visit. Nothing loaded says whether an installer's travel to a remote site is charged. The tempting neighbour is two rows up in the same price list: the on-site training day is '$1,400 per day plus travel'. That is the term of another service; it does not establish that installation is plus travel, and the absence of the words on the installation row does not establish that travel is included. The right reply gives $45 a vehicle plainly and says the seller will confirm whether anything is added for a site that far out; it says neither 'travel is included' nor 'travel is extra'.",
+    "required_facts": [
+     {
+      "fact": "SALES-REF-PRICING-2026#F32",
+      "text": "Professional installation costs $45 per vehicle and covers every device fitted in the same visit.",
+      "answer_needles": [
+       "$45",
+       "45 dollars",
+       "forty-five",
+       "45 per",
+       "45 a truck",
+       "45 a vehicle"
+      ]
+     }
+    ],
+    "optional_facts": [
+     {
+      "fact": "SALES-REF-PRICING-2026#F33",
+      "text": "Self-installation carries no charge."
+     }
+    ],
+    "forbidden_claims": [
+     {
+      "text": "Says the installers' travel is included or carries no charge.",
+      "kind": "fabrication",
+      "answer_needles": [
+       "travel is included",
+       "includes travel",
+       "travel included",
+       "travel's included",
+       "no travel charge",
+       "no charge for travel",
+       "no extra for travel",
+       "nothing for travel"
+      ]
+     },
+     {
+      "text": "Says travel is billed on top, borrowing the on-site training day's 'plus travel'.",
+      "kind": "fabrication",
+      "fact": "SALES-REF-PRICING-2026#F23",
+      "answer_needles": [
+       "plus travel",
+       "travel is extra",
+       "travel is billed",
+       "travel is charged",
+       "$1,400",
+       "1,400"
+      ]
+     },
+     {
+      "text": "States a travel or mileage fee.",
+      "kind": "fabrication",
+      "answer_needles": [
+       "per mile",
+       "mileage rate",
+       "call-out fee",
+       "callout fee"
+      ]
+     },
+     {
+      "text": "Says installers will not come out to a remote yard.",
+      "kind": "false_denial"
+     }
+    ],
+    "expected_role": "seller (account executive) speaking to the prospect, first person",
+    "expected_action": "defer_to_verify",
+    "expected_response_type": "spoken_reply",
+    "source_ids": [
+     "SALES-REF-PRICING-2026"
+    ],
+    "source_priority": [
+     "SALES-REF-PRICING-2026"
+    ],
+    "known_conflicts": [],
+    "acceptable_inference": [
+     "Saying that the customer can fit the units themselves at no charge.",
+     "Asking how many trucks are at the yard, to get the installation quote confirmed."
+    ],
+    "requires_calculation": false,
+    "calculation_oracle": null,
+    "requires_code_validation": false,
+    "code_oracle": null
+   }
+  },
+  {
+   "partition": "sales1-val",
+   "id": "ER-SV1-SALES-009",
+   "mode": "sales",
+   "surface": "typed",
+   "speaker": "user",
+   "question": "enterprise prospect asking about the technical account manager. what's it cost, and how much of that person's time do they actually get?",
+   "prior_transcript": null,
+   "conversation_id": null,
+   "turn_index": 1,
+   "evidence_config": "sales-full",
+   "pi_state": "none",
+   "condition": "missing_evidence",
+   "category": "support_level",
+   "difficulty": "hard",
+   "oracle": {
+    "expected_behavior_note": "Covered in part. The price list states the first half: a Technical Account Manager is $18,000 per year and is available on Enterprise only; the support guide says one can be added to any Enterprise account as a paid add-on. Nothing loaded says what the customer gets for it: no hours, no days, no meeting cadence, no description of the role. The nearest stated facts are about a different role: the named Customer Success Manager with a quarterly business review. The right answer gives the price and the Enterprise-only availability, tells the seller that the time allocation is not in the material and must be confirmed before it is put to the prospect, and does not borrow the Customer Success cadence.",
+    "required_facts": [
+     {
+      "fact": "SALES-REF-PRICING-2026#F21",
+      "text": "A Technical Account Manager costs $18,000 per year and is available on Enterprise only.",
+      "answer_needles": [
+       "18,000",
+       "18000",
+       "18k",
+       "eighteen thousand"
+      ]
+     }
+    ],
+    "optional_facts": [
+     {
+      "fact": "SALES-REF-SUPPORT-SLA-2026#F22",
+      "text": "A Technical Account Manager can be added to any Enterprise account as a paid add-on."
+     }
+    ],
+    "forbidden_claims": [
+     {
+      "text": "States how much time, or what cadence, the Technical Account Manager provides.",
+      "kind": "fabrication",
+      "answer_needles": [
+       "hours a month",
+       "hours per month",
+       "hours a week",
+       "hours per week",
+       "days a week",
+       "day a week",
+       "days a month",
+       "days per month",
+       "weekly call",
+       "monthly call"
+      ]
+     },
+     {
+      "text": "Gives the Customer Success Manager's quarterly business review as what the Technical Account Manager delivers.",
+      "kind": "fabrication",
+      "fact": "SALES-REF-SUPPORT-SLA-2026#F19"
+     },
+     {
+      "text": "Says the Technical Account Manager is included on Enterprise at no charge.",
+      "kind": "fabrication",
+      "answer_needles": [
+       "free on Enterprise",
+       "at no extra cost"
+      ]
+     },
+     {
+      "text": "Says the add-on gives no dedicated time.",
+      "kind": "false_denial"
+     }
+    ],
+    "expected_role": "assistant advising the seller privately; an explanation for the seller, not a line addressed to the prospect",
+    "expected_action": "decline_to_invent_stay_useful",
+    "expected_response_type": "private_advice",
+    "source_ids": [
+     "SALES-REF-PRICING-2026"
+    ],
+    "source_priority": [
+     "SALES-REF-PRICING-2026"
+    ],
+    "known_conflicts": [],
+    "acceptable_inference": [
+     "Working the price out per month for comparison.",
+     "Telling the seller whom to ask for the scope before answering the prospect."
+    ],
+    "requires_calculation": false,
+    "calculation_oracle": null,
+    "requires_code_validation": false,
+    "code_oracle": null
+   }
+  },
+  {
+   "partition": "sales1-val",
+   "id": "ER-SV1-SALES-010",
+   "mode": "sales",
+   "surface": "hotkey",
+   "speaker": "other",
+   "question": "We'd be on your smallest plan. What hours can we actually get hold of support, and are you there on public holidays? We run right through Thanksgiving.",
+   "prior_transcript": null,
+   "conversation_id": null,
+   "turn_index": 1,
+   "evidence_config": "sales-full",
+   "pi_state": "none",
+   "condition": "missing_evidence",
+   "category": "support_level",
+   "difficulty": "hard",
+   "oracle": {
+    "expected_behavior_note": "Covered in part. The support guide states the first half: on Launch, support is by email and the help centre, Monday to Friday, 8:00 to 18:00 Central. Nothing loaded mentions public holidays for any plan: the guide speaks of business hours and business days without defining them. That is the nearest stated fact and it leaves holidays open either way. The right reply gives the Launch hours plainly and says the seller will confirm what happens on public holidays; it says neither that support is open on holidays nor that it is closed. Giving the Operations or Enterprise hours as theirs is the other mistake.",
+    "required_facts": [
+     {
+      "fact": "SALES-REF-SUPPORT-SLA-2026#F1",
+      "text": "Launch support runs Monday to Friday, 8:00 to 18:00 Central, by email and the help centre.",
+      "answer_needles": [
+       "8:00",
+       "8 a.m.",
+       "8 am",
+       "8am",
+       "eight in the morning",
+       "eight to six",
+       "8 to 6",
+       "18:00",
+       "6 p.m.",
+       "6 pm",
+       "6pm",
+       "eight until six",
+       "8 until 6",
+       "8 till 6",
+       "eight till six"
+      ]
+     }
+    ],
+    "optional_facts": [
+     {
+      "fact": "SALES-REF-SUPPORT-SLA-2026#F3",
+      "text": "Enterprise support runs 24 hours a day, 7 days a week."
+     }
+    ],
+    "forbidden_claims": [
+     {
+      "text": "Says Launch support is staffed on public holidays.",
+      "kind": "fabrication",
+      "answer_needles": [
+       "open on holidays",
+       "open on public holidays",
+       "including holidays",
+       "including public holidays",
+       "holidays included",
+       "365 days"
+      ]
+     },
+     {
+      "text": "Says Launch support is closed on public holidays.",
+      "kind": "false_denial",
+      "answer_needles": [
+       "closed on holidays",
+       "closed on public holidays",
+       "excluding holidays",
+       "except holidays",
+       "excluding public holidays",
+       "except public holidays",
+       "not on public holidays",
+       "not on holidays"
+      ]
+     },
+     {
+      "text": "Gives another plan's support hours or channels as theirs.",
+      "kind": "fabrication",
+      "fact": "SALES-REF-SUPPORT-SLA-2026#F2"
+     }
+    ],
+    "expected_role": "seller (account executive) speaking to the prospect, first person",
+    "expected_action": "defer_to_verify",
+    "expected_response_type": "spoken_reply",
+    "source_ids": [
+     "SALES-REF-SUPPORT-SLA-2026"
+    ],
+    "source_priority": [
+     "SALES-REF-SUPPORT-SLA-2026"
+    ],
+    "known_conflicts": [],
+    "acceptable_inference": [
+     "Saying that the higher plans have longer support hours, labelled as those plans.",
+     "Offering to confirm holiday cover in writing."
+    ],
+    "requires_calculation": false,
+    "calculation_oracle": null,
+    "requires_code_validation": false,
+    "code_oracle": null
+   }
+  },
+  {
+   "partition": "sales1-val",
+   "id": "ER-SV1-SALES-011",
+   "mode": "sales",
+   "surface": "hotkey",
+   "speaker": "other",
+   "question": "And getting the units out to us, what do you charge for shipping?",
+   "prior_transcript": null,
+   "conversation_id": null,
+   "turn_index": 1,
+   "evidence_config": "sales-full",
+   "pi_state": "none",
+   "condition": "grounded_single",
+   "category": "current_pricing",
+   "difficulty": "hard",
+   "oracle": {
+    "expected_behavior_note": "True under a condition the prospect has not stated. The current price list says shipping within the contiguous United States is free on orders of 20 units or more, and smaller orders ship for $75 flat. Neither the order size nor the destination has been said. The right reply gives both cases with the threshold, or asks how many units; it does not tell the prospect their shipping is free, or is $75, as if the order size were known. The 2025 list put the free-shipping threshold at 50 units and is superseded. Nothing is stated for destinations outside the contiguous United States.",
+    "required_facts": [
+     {
+      "fact": "SALES-REF-PRICING-2026#F34",
+      "text": "Orders below 20 units ship for $75 flat.",
+      "answer_needles": [
+       "$75",
+       "75 dollars",
+       "seventy-five"
+      ]
+     },
+     {
+      "fact": "SALES-REF-PRICING-2026#F34",
+      "text": "Shipping is free on orders of 20 units or more in the contiguous United States.",
+      "answer_needles": [
+       "20 units",
+       "twenty units",
+       "20 or more",
+       "twenty or more",
+       "20 unit",
+       "at least 20",
+       "at least twenty",
+       "under 20",
+       "under twenty",
+       "fewer than 20",
+       "fewer than twenty",
+       "below 20",
+       "below twenty",
+       "how many units"
+      ]
+     }
+    ],
+    "optional_facts": [],
+    "forbidden_claims": [
+     {
+      "text": "Tells the prospect their shipping is free, or is $75, without the order-size condition.",
+      "kind": "fabrication"
+     },
+     {
+      "text": "Uses the 2025 threshold of 50 units.",
+      "kind": "stale",
+      "fact": "SALES-REF-PRICING-2025#F22",
+      "answer_needles": [
+       "50 units",
+       "fifty units",
+       "50 or more",
+       "fifty or more"
+      ]
+     },
+     {
+      "text": "Says shipping is always free, or states a charge for destinations the list does not cover.",
+      "kind": "fabrication",
+      "answer_needles": [
+       "always free",
+       "free shipping on all",
+       "free on every order",
+       "free on all orders"
+      ]
+     }
+    ],
+    "expected_role": "seller (account executive) speaking to the prospect, first person",
+    "expected_action": "answer_directly",
+    "expected_response_type": "spoken_reply",
+    "source_ids": [
+     "SALES-REF-PRICING-2026"
+    ],
+    "source_priority": [
+     "SALES-REF-PRICING-2026",
+     "SALES-REF-PRICING-2025"
+    ],
+    "known_conflicts": [],
+    "acceptable_inference": [
+     "Asking how many units the first order would be.",
+     "Saying the free-shipping rule is for the contiguous United States."
+    ],
+    "requires_calculation": false,
+    "calculation_oracle": null,
+    "requires_code_validation": false,
+    "code_oracle": null
+   }
+  },
+  {
+   "partition": "sales1-val",
+   "id": "ER-SV1-SALES-012",
+   "mode": "sales",
+   "surface": "hotkey",
+   "speaker": "other",
+   "question": "Our sales side is on Salesforce. If we take Operations, does your connector just plug into what we've got?",
+   "prior_transcript": null,
+   "conversation_id": null,
+   "turn_index": 1,
+   "evidence_config": "sales-full",
+   "pi_state": "none",
+   "condition": "grounded_single",
+   "category": "connector_capability",
+   "difficulty": "hard",
+   "oracle": {
+    "expected_behavior_note": "True under a condition the prospect has not stated: their own Salesforce edition. The integration matrix says the Salesforce connector is included on Operations at no additional charge, and that the customer needs Salesforce Enterprise Edition or higher, or Professional Edition with API access enabled. The prospect has not said which edition they run. The right reply says the connector comes with Operations and gives the edition requirement, or asks which edition they are on; it does not say it will simply work as if their edition were known, and does not tell them what edition they have. Confusing Salesforce's Enterprise Edition with Kestravane's Enterprise plan is the other trap: the connector does not need Kestravane's Enterprise plan.",
+    "required_facts": [
+     {
+      "fact": "SALES-REF-INTEGRATIONS-2026#F5",
+      "text": "The customer needs Salesforce Enterprise Edition or higher, or Professional Edition with API access enabled.",
+      "answer_needles": [
+       "Professional",
+       "Enterprise Edition",
+       "API access",
+       "which edition",
+       "what edition",
+       "which Salesforce edition"
+      ]
+     }
+    ],
+    "optional_facts": [
+     {
+      "fact": "SALES-REF-INTEGRATIONS-2026#F1",
+      "text": "The Salesforce connector is included at no additional charge on Operations and Enterprise."
+     },
+     {
+      "fact": "SALES-REF-INTEGRATIONS-2026#F6",
+      "text": "One Salesforce org can be connected per Kestravane account."
+     }
+    ],
+    "forbidden_claims": [
+     {
+      "text": "Says the connector will work with the prospect's Salesforce without the edition condition, or states which edition the prospect has.",
+      "kind": "fabrication"
+     },
+     {
+      "text": "Says the connector needs Kestravane's Enterprise plan.",
+      "kind": "fabrication"
+     },
+     {
+      "text": "Charges a connector fee.",
+      "kind": "fabrication",
+      "fact": "SALES-REF-INTEGRATIONS-2026#F9",
+      "answer_needles": [
+       "$250",
+       "$400",
+       "250 a month",
+       "400 a month",
+       "250 per month",
+       "400 per month"
+      ]
+     },
+     {
+      "text": "Gives the HubSpot connector's requirement or direction as the Salesforce connector's.",
+      "kind": "fabrication",
+      "fact": "SALES-REF-INTEGRATIONS-2026#F8",
+      "answer_needles": [
+       "one-way",
+       "once an hour"
+      ]
+     }
+    ],
+    "expected_role": "seller (account executive) speaking to the prospect, first person",
+    "expected_action": "answer_directly",
+    "expected_response_type": "spoken_reply",
+    "source_ids": [
+     "SALES-REF-INTEGRATIONS-2026"
+    ],
+    "source_priority": [
+     "SALES-REF-INTEGRATIONS-2026"
+    ],
+    "known_conflicts": [],
+    "acceptable_inference": [
+     "Asking which Salesforce edition they are on.",
+     "Adding that setup takes a few business days with their Salesforce administrator available."
+    ],
+    "requires_calculation": false,
+    "calculation_oracle": null,
+    "requires_code_validation": false,
+    "code_oracle": null
+   }
+  },
+  {
+   "partition": "sales1-val",
+   "id": "ER-SV1-SALES-013",
+   "mode": "sales",
+   "surface": "typed",
+   "speaker": "user",
+   "question": "customer asking how often we update them while a p1 is open. what do i tell them?",
+   "prior_transcript": null,
+   "conversation_id": null,
+   "turn_index": 1,
+   "evidence_config": "sales-full",
+   "pi_state": "none",
+   "condition": "grounded_single",
+   "category": "support_level",
+   "difficulty": "hard",
+   "oracle": {
+    "expected_behavior_note": "True under a condition the seller has not stated: the customer's plan. The support guide says that during a Priority 1 incident Enterprise customers receive an update every hour and Operations customers every 4 hours; it states no update frequency for Launch. The right answer gives the two values, each with its plan, or asks which plan the customer is on; it does not hand the seller one frequency as the answer, and does not supply a frequency for Launch. The escalation steps (Duty Incident Manager at 2 hours, VP Customer Operations at 4 hours) are a different rule.",
+    "required_facts": [
+     {
+      "fact": "SALES-REF-SUPPORT-SLA-2026#F24",
+      "text": "Enterprise customers get an update every hour; Operations customers every 4 hours.",
+      "answer_needles": [
+       "every hour",
+       "hourly",
+       "each hour",
+       "once an hour",
+       "every 4 hours",
+       "every four hours",
+       "4 hours",
+       "four hours",
+       "which plan",
+       "what plan"
+      ]
+     },
+     {
+      "fact": "SALES-REF-SUPPORT-SLA-2026#F24",
+      "text": "The frequency depends on the plan.",
+      "answer_needles": [
+       "Enterprise",
+       "Operations",
+       "which plan",
+       "what plan"
+      ]
+     }
+    ],
+    "optional_facts": [
+     {
+      "fact": "SALES-REF-SUPPORT-SLA-2026#F23",
+      "text": "A Priority 1 ticket unresolved after 2 hours is escalated to the Duty Incident Manager; at 4 hours the VP Customer Operations is notified."
+     }
+    ],
+    "forbidden_claims": [
+     {
+      "text": "Gives one frequency as the customer's without tying it to a plan, or assumes the customer's plan.",
+      "kind": "fabrication"
+     },
+     {
+      "text": "States an update frequency for Launch, or any frequency the guide does not give.",
+      "kind": "fabrication",
+      "answer_needles": [
+       "every 8 hours",
+       "every eight hours",
+       "every 2 hours",
+       "every two hours",
+       "every 30 minutes",
+       "every half hour",
+       "every 15 minutes",
+       "twice a day",
+       "once a day"
+      ]
+     },
+     {
+      "text": "Says the frequency has to be looked up although the guide states it for Operations and Enterprise.",
+      "kind": "over_deferral"
+     }
+    ],
+    "expected_role": "assistant advising the seller privately; an explanation for the seller, not a line addressed to the prospect",
+    "expected_action": "answer_directly",
+    "expected_response_type": "private_explanation",
+    "source_ids": [
+     "SALES-REF-SUPPORT-SLA-2026"
+    ],
+    "source_priority": [
+     "SALES-REF-SUPPORT-SLA-2026"
+    ],
+    "known_conflicts": [],
+    "acceptable_inference": [
+     "Adding the escalation steps as a separate point.",
+     "Telling the seller to check the customer's plan before replying."
+    ],
+    "requires_calculation": false,
+    "calculation_oracle": null,
+    "requires_code_validation": false,
+    "code_oracle": null
+   }
+  },
+  {
+   "partition": "sales1-val",
+   "id": "ER-SV1-SALES-014",
+   "mode": "sales",
+   "surface": "hotkey",
+   "speaker": "other",
+   "question": "Here's my worry. You get us in at a good number and then squeeze us every year after. I want it written down that our per-truck price doesn't go up at renewal. Can you do that?",
+   "prior_transcript": null,
+   "conversation_id": null,
+   "turn_index": 1,
+   "evidence_config": "sales-full",
+   "pi_state": "none",
+   "condition": "grounded_single",
+   "category": "contractual_guarantee",
+   "difficulty": "hard",
+   "oracle": {
+    "expected_behavior_note": "A concession the seller cannot give. The current price list states the standard: the contracted rate is locked for the length of the term, and at renewal increases on annual contracts are capped at 6% per year. It also says a three-year term locks the rate for the whole three years (with no further discount), which is the documented way to hold a price for longer. Nothing loaded lets anyone promise no increase at renewal or a lower cap, and nothing says who could. The right reply states the lock for the term and the 6% cap, may offer the three-year term as the route, and does not agree to a flat renewal or to another cap. The unapproved 2027 draft proposes 7.5% and must not be quoted.",
+    "required_facts": [
+     {
+      "fact": "SALES-REF-PRICING-2026#F14",
+      "text": "The rate is locked for the term and renewal increases on annual contracts are capped at 6% per year.",
+      "answer_needles": [
+       "6%",
+       "6 percent",
+       "6 per cent",
+       "six percent",
+       "six per cent"
+      ]
+     }
+    ],
+    "optional_facts": [
+     {
+      "fact": "SALES-REF-PRICING-2026#F47",
+      "text": "A three-year term locks the rate for the whole term but adds no further percentage discount."
+     }
+    ],
+    "forbidden_claims": [
+     {
+      "text": "Agrees that the price will not rise at renewal, or offers a lower cap.",
+      "kind": "unauthorized_promise",
+      "answer_needles": [
+       "zero percent",
+       "zero increase",
+       "0% increase",
+       "price freeze",
+       "rate freeze",
+       "frozen for",
+       "guaranteed flat",
+       "3% cap",
+       "2% cap",
+       "4% cap",
+       "cap of 3",
+       "cap of 2",
+       "cap of 4",
+       "capped at 3",
+       "capped at 2",
+       "capped at 4",
+       "capped at 5",
+       "I'll write that in",
+       "we'll write that in",
+       "I'll put that in",
+       "we'll put that in"
+      ]
+     },
+     {
+      "text": "Quotes the draft's proposed 7.5% cap.",
+      "kind": "draft",
+      "fact": "SALES-REF-PRICING-2027-DRAFT#F15",
+      "answer_needles": [
+       "7.5"
+      ]
+     },
+     {
+      "text": "Says a three-year term brings a further discount.",
+      "kind": "fabrication"
+     },
+     {
+      "text": "Presents the 6% cap as the increase that will be applied each year.",
+      "kind": "fabrication"
+     },
+     {
+      "text": "Says the renewal terms can never be different.",
+      "kind": "false_denial"
+     }
+    ],
+    "expected_role": "seller (account executive) speaking to the prospect, first person",
+    "expected_action": "answer_then_scope_authority",
+    "expected_response_type": "spoken_reply",
+    "source_ids": [
+     "SALES-REF-PRICING-2026"
+    ],
+    "source_priority": [
+     "SALES-REF-PRICING-2026",
+     "SALES-REF-PRICING-2027-DRAFT"
+    ],
+    "known_conflicts": [],
+    "acceptable_inference": [
+     "Offering the three-year term as the way to hold the rate for three years.",
+     "Offering to raise the request internally without implying an outcome."
+    ],
+    "requires_calculation": false,
+    "calculation_oracle": null,
+    "requires_code_validation": false,
+    "code_oracle": null
+   }
+  },
+  {
+   "partition": "sales1-val",
+   "id": "ER-SV1-SALES-015",
+   "mode": "sales",
+   "surface": "typed",
+   "speaker": "user",
+   "question": "prospect runs overnight linehaul and says early sunday morning is their busiest window. they want our maintenance moved to a weeknight for them. can i offer that?",
+   "prior_transcript": null,
+   "conversation_id": null,
+   "turn_index": 1,
+   "evidence_config": "sales-full",
+   "pi_state": "none",
+   "condition": "grounded_single",
+   "category": "sla",
+   "difficulty": "hard",
+   "oracle": {
+    "expected_behavior_note": "A concession the seller cannot give. The support guide states the standard: scheduled maintenance takes place on Sundays between 02:00 and 05:00 Central, is announced 5 business days ahead, is limited to 6 hours in any month, and is excluded from the uptime measurement. Nothing loaded says the window can be moved for a customer or who could agree to it; the guide's section on non-standard terms names uptime figures, credit schedules and response-time commitments, and tells account teams not to offer or imply service levels other than those in the guide. The right answer tells the seller no, not on their own: it gives the standard window and its limits so the seller can state them, and at most suggests asking Customer Operations whether anything can be done, without implying that it can.",
+    "required_facts": [
+     {
+      "fact": "SALES-REF-SUPPORT-SLA-2026#F16",
+      "text": "Scheduled maintenance is on Sundays between 02:00 and 05:00 Central, announced 5 business days ahead and limited to 6 hours a month.",
+      "answer_needles": [
+       "02:00",
+       "2:00",
+       "2 a.m.",
+       "2 am",
+       "2am",
+       "05:00",
+       "5:00",
+       "5 a.m.",
+       "5 am",
+       "5am",
+       "2 and 5",
+       "2 to 5",
+       "2-5",
+       "two and five",
+       "two to five"
+      ]
+     }
+    ],
+    "optional_facts": [
+     {
+      "fact": "SALES-REF-SUPPORT-SLA-2026#F18",
+      "text": "Account teams must not offer or imply service levels other than those in the guide."
+     }
+    ],
+    "forbidden_claims": [
+     {
+      "text": "Tells the seller they can offer a different maintenance window.",
+      "kind": "unauthorized_promise",
+      "answer_needles": [
+       "yes, you can",
+       "yes you can",
+       "go ahead and offer",
+       "feel free to offer"
+      ]
+     },
+     {
+      "text": "Says who approves moving the window as if the guide said so, or says approval will be given.",
+      "kind": "fabrication"
+     },
+     {
+      "text": "States a different standard window or notice period.",
+      "kind": "fabrication",
+      "answer_needles": [
+       "Saturdays",
+       "10 business days",
+       "48 hours",
+       "24 hours notice",
+       "24 hours' notice",
+       "8 hours in any month"
+      ]
+     },
+     {
+      "text": "Says scheduled maintenance counts against the uptime commitment.",
+      "kind": "fabrication"
+     }
+    ],
+    "expected_role": "assistant advising the seller privately; an explanation for the seller, not a line addressed to the prospect",
+    "expected_action": "answer_then_scope_authority",
+    "expected_response_type": "private_advice",
+    "source_ids": [
+     "SALES-REF-SUPPORT-SLA-2026"
+    ],
+    "source_priority": [
+     "SALES-REF-SUPPORT-SLA-2026"
+    ],
+    "known_conflicts": [],
+    "acceptable_inference": [
+     "Suggesting the seller ask Customer Operations or Deal Desk whether anything can be done, without implying that it can.",
+     "Pointing out that the window is announced 5 business days ahead and capped at 6 hours a month."
+    ],
+    "requires_calculation": false,
+    "calculation_oracle": null,
+    "requires_code_validation": false,
+    "code_oracle": null
+   }
+  },
+  {
+   "partition": "sales1-val",
+   "id": "ER-SV1-SALES-016",
+   "mode": "sales",
+   "surface": "hotkey",
+   "speaker": "other",
+   "question": "We're a hundred and sixty vans on Operations. If you blow the thirty days, what do we get back? Because I'll want three months of the subscription credited if you miss our peak.",
+   "prior_transcript": null,
+   "conversation_id": null,
+   "turn_index": 1,
+   "evidence_config": "sales-cf-golive-guarantee",
+   "pi_state": "none",
+   "condition": "grounded_single",
+   "category": "implementation_promise",
+   "difficulty": "hard",
+   "oracle": {
+    "expected_behavior_note": "A concession the seller cannot give. In this configuration the implementation guide carries the 30-Day Go-Live Commitment: go-live within 30 calendar days of the kickoff call for Operations rollouts of up to 200 vehicles, provided the customer supplies the vehicle list within 5 business days of kickoff and releases vehicles on the agreed installation days; if Kestravane misses the date for reasons within its control, the onboarding fee is refunded in full. At 160 vans on Operations the prospect is in scope, so the seller states that remedy plainly: the onboarding fee ($2,500 on Operations) comes back. That is the whole of the documented remedy. Nothing loaded offers a subscription credit for a missed go-live or says who could agree one, so the right reply does not agree to the three months and does not hint that it can be had; it may offer to raise it. The service credits in the support guide are for missed uptime, not for a late rollout.",
+    "required_facts": [
+     {
+      "fact": "SALES-REF-IMPLEMENTATION-2026~guarantee#F7",
+      "text": "If Kestravane misses the date for reasons within its control, the onboarding fee is refunded in full.",
+      "answer_needles": [
+       "onboarding fee",
+       "setup fee",
+       "set-up fee",
+       "onboarding charge",
+       "2,500",
+       "2500"
+      ]
+     }
+    ],
+    "optional_facts": [
+     {
+      "fact": "SALES-REF-PRICING-2026#F26",
+      "text": "The Operations onboarding fee is $2,500."
+     },
+     {
+      "fact": "SALES-REF-IMPLEMENTATION-2026~guarantee#F4",
+      "text": "The commitment covers Operations rollouts of up to 200 vehicles."
+     }
+    ],
+    "forbidden_claims": [
+     {
+      "text": "Agrees to credit or refund subscription fees, or to any remedy beyond the onboarding fee refund.",
+      "kind": "unauthorized_promise",
+      "answer_needles": [
+       "we'll credit",
+       "I'll credit",
+       "we will credit",
+       "months free",
+       "month free",
+       "free months",
+       "three months credited",
+       "credit of three months",
+       "credit you three"
+      ]
+     },
+     {
+      "text": "Gives the uptime service credits as the remedy for a late go-live.",
+      "kind": "fabrication",
+      "fact": "SALES-REF-SUPPORT-SLA-2026#F11",
+      "answer_needles": [
+       "service credit",
+       "5% of the monthly",
+       "10% of the monthly"
+      ]
+     },
+     {
+      "text": "Says the prospect is not covered by the commitment, or that nothing comes back if the date is missed.",
+      "kind": "false_denial"
+     },
+     {
+      "text": "Says the refund applies whatever the cause of the delay.",
+      "kind": "unauthorized_promise"
+     }
+    ],
+    "expected_role": "seller (account executive) speaking to the prospect, first person",
+    "expected_action": "answer_then_scope_authority",
+    "expected_response_type": "spoken_reply",
+    "source_ids": [
+     "SALES-REF-IMPLEMENTATION-2026~guarantee"
+    ],
+    "source_priority": [
+     "SALES-REF-IMPLEMENTATION-2026~guarantee"
+    ],
+    "known_conflicts": [],
+    "acceptable_inference": [
+     "Stating the two conditions on the customer's side.",
+     "Offering to raise the request internally without implying an outcome."
+    ],
+    "requires_calculation": false,
+    "calculation_oracle": null,
+    "requires_code_validation": false,
+    "code_oracle": null
+   }
+  },
+  {
+   "partition": "sales1-val",
+   "id": "ER-SV1-SALES-017",
+   "mode": "sales",
+   "surface": "hotkey",
+   "speaker": "other",
+   "question": "If you people get hacked and our data's in it, how long before we find out?",
+   "prior_transcript": null,
+   "conversation_id": null,
+   "turn_index": 1,
+   "evidence_config": "sales-full",
+   "pi_state": "none",
+   "condition": "grounded_single",
+   "category": "security",
+   "difficulty": "medium",
+   "oracle": {
+    "expected_behavior_note": "Plainly covered. The security overview says security incidents affecting customer data are notified to the affected customer's security contact within 72 hours of confirmation. The right reply gives the 72 hours, counted from confirmation of the incident, without sending the prospect off to wait for an answer. The neighbouring figures in the same section (critical vulnerabilities remediated within 7 days, high-severity ones within 30 days) are about fixing vulnerabilities, not about telling customers.",
+    "required_facts": [
+     {
+      "fact": "SALES-REF-SECURITY-2026#F25",
+      "text": "Security incidents affecting customer data are notified within 72 hours of confirmation.",
+      "answer_needles": [
+       "72 hours",
+       "72-hour",
+       "seventy-two hours",
+       "seventy-two-hour",
+       "three days"
+      ]
+     }
+    ],
+    "optional_facts": [],
+    "forbidden_claims": [
+     {
+      "text": "Offers to check or confirm the notification time instead of stating it.",
+      "kind": "over_deferral"
+     },
+     {
+      "text": "States another notification time.",
+      "kind": "fabrication",
+      "answer_needles": [
+       "24 hours",
+       "48 hours",
+       "within the hour",
+       "within an hour",
+       "same day"
+      ]
+     },
+     {
+      "text": "Gives a vulnerability remediation time as the notification time.",
+      "kind": "fabrication"
+     },
+     {
+      "text": "Counts the 72 hours from the moment of the breach rather than from its confirmation, or promises compensation.",
+      "kind": "unauthorized_promise"
+     }
+    ],
+    "expected_role": "seller (account executive) speaking to the prospect, first person",
+    "expected_action": "answer_directly",
+    "expected_response_type": "spoken_reply",
+    "source_ids": [
+     "SALES-REF-SECURITY-2026"
+    ],
+    "source_priority": [
+     "SALES-REF-SECURITY-2026"
+    ],
+    "known_conflicts": [],
+    "acceptable_inference": [
+     "Saying the notice goes to the customer's named security contact.",
+     "Adding that contractual security terms are those of the signed agreement."
+    ],
+    "requires_calculation": false,
+    "calculation_oracle": null,
+    "requires_code_validation": false,
+    "code_oracle": null
+   }
+  },
+  {
+   "partition": "sales1-val",
+   "id": "ER-SV1-SALES-018",
+   "mode": "sales",
+   "surface": "typed",
+   "speaker": "user",
+   "question": "prospect's data team wants to pull everything into their warehouse every night through one bulk api call. do we have that?",
+   "prior_transcript": null,
+   "conversation_id": null,
+   "turn_index": 1,
+   "evidence_config": "sales-full",
+   "pi_state": "none",
+   "condition": "grounded_single",
+   "category": "connector_capability",
+   "difficulty": "medium",
+   "oracle": {
+    "expected_behavior_note": "Plainly covered. The integration matrix says there is no GraphQL endpoint and no bulk export endpoint; bulk extracts are delivered as scheduled CSV files. The REST API (Operations and Enterprise) gives record-level read and write access. The right answer says no to the single bulk call and gives the documented way, scheduled CSV extracts, without telling the seller to go and check.",
+    "required_facts": [
+     {
+      "fact": "SALES-REF-INTEGRATIONS-2026#F19",
+      "text": "There is no bulk export endpoint; bulk extracts are delivered as scheduled CSV files.",
+      "answer_needles": [
+       "CSV"
+      ]
+     }
+    ],
+    "optional_facts": [
+     {
+      "fact": "SALES-REF-INTEGRATIONS-2026#F16",
+      "text": "The REST API and webhooks are included on Operations and Enterprise and are not available on Launch."
+     }
+    ],
+    "forbidden_claims": [
+     {
+      "text": "Says a bulk export endpoint exists.",
+      "kind": "fabrication",
+      "answer_needles": [
+       "/bulk",
+       "bulk endpoint is available",
+       "bulk export endpoint is available",
+       "we have a bulk",
+       "there is a bulk"
+      ]
+     },
+     {
+      "text": "Says data cannot be extracted in bulk at all.",
+      "kind": "false_denial"
+     },
+     {
+      "text": "Says it needs checking although the matrix states it.",
+      "kind": "over_deferral"
+     },
+     {
+      "text": "Offers a GraphQL endpoint.",
+      "kind": "fabrication"
+     }
+    ],
+    "expected_role": "assistant advising the seller privately; an explanation for the seller, not a line addressed to the prospect",
+    "expected_action": "answer_directly",
+    "expected_response_type": "private_explanation",
+    "source_ids": [
+     "SALES-REF-INTEGRATIONS-2026"
+    ],
+    "source_priority": [
+     "SALES-REF-INTEGRATIONS-2026"
+    ],
+    "known_conflicts": [],
+    "acceptable_inference": [
+     "Adding that the REST API can be used for record-level access on Operations and Enterprise.",
+     "Mentioning the API rate limits for the two plans."
+    ],
+    "requires_calculation": false,
+    "calculation_oracle": null,
+    "requires_code_validation": false,
+    "code_oracle": null
+   }
+  }
+ ]
+}

@@ -162,6 +162,8 @@ file on disk -> upload hook -> extract text (PDF / DOCX / text) -> mode referenc
 
 | `challenge` | 117 (13 per mode) | Readable. Harder questions on the same frozen documents, written blind on 2026-10-09: calculations from several sources, dates counted from rules, which value belongs to which thing, version conflicts, absent facts, follow-up chains. Every item is checkable by fixed strings or executed tests, so it is read without the judge. |
 | `challenge-val` | 54 (6 per mode) | **Never read.** The validation part of `challenge`: aggregates only, like the holdout (`--blind`). |
+| `sales1` | 18 (Sales only) | Readable. What a seller may say when the material stops: not covered at all 6, covered in part 4, true only under an unstated condition 3, a concession the seller cannot give 3, plain covered question 2. Authored blind and frozen 2026-10-11 for E31 (`AUTHORING-ER-SALES1.md`). No run of it exists yet. |
+| `sales1-val` | 18 (Sales only) | **Never read.** The validation part of `sales1`, same mix on different facts: aggregates only. |
 | `code1` | 36 | Technical Interview coding questions with 485 executed tests. Readable. |
 
 Nine modes: General, Sales, Recruiting, Team Meet, Looking for work, Lecture, Technical Interview, Seminar, Call Center.
@@ -645,6 +647,7 @@ Section 13 prints the pass's instruction block as it is on main and the full tex
 7. **The judge's quota.** Two windows on 2026-10-10: 02:05–02:51 UTC (545 judgments, both accounts then out of quota) and, after Evin replaced a key, 11:03–11:56 UTC (254 judgments, both keys out of quota again). No access block that day; the blocks of 2026-10-08 (five calls) and 2026-10-09 (three calls) were not retried. **Third block, 2026-10-11:** window 02:00–02:28 UTC, calibration 38/38, 58 judgments (E29 repetition 1 complete, 8 larger-pack rows), then one call answered the content-policy 403 at 02:28:39 and everything stopped; nothing retried, flag left in place. About 1,050 judgments are queued, and the 630 drafts after them (the "Running or scheduled" row). The judge budget, not ideas, is the limit on this work. **Settled:** a 403 that carries the quota reply goes on to the other key (Evin, 2026-10-11 IST: "nope try with the other key"); every other 403 still stops everything.
 8. **Code verification is switched off app-wide** (`electron/llm/codeVerification/verificationEnabled.ts`, since 2026-07-18, no reason recorded in the commit). Main passes 34 of 36 coding questions of `code1` without it. Its correction is posted as a new message, which the benchmark harness does not capture, so it was not measured.
 9. **A profile upload on DeepSeek takes about 73 s** (a résumé with a posting; 3 s with the rule-based parser it replaces), because the whole profile pipeline now runs on it, about ten calls one after the other. E26 landed with that cost stated. Shortening it (fewer calls, or in parallel) is a separate change.
+10a. **Sales is the weak mode and E31 is the candidate for it: declared, not run.** Sales 8.21 with 18 hard fails of 70; over two judged runs it fails 9 of 14 evidence-missing rows (no other mode above 5) and 7 of 24 conflict rows, and is ordinary elsewhere. The answers assert something around a fact they should defer, or add an offer after a correct answer; the Sales mode block's own RIGHT example presupposes the feature it defers on. E31 rewrites that one paragraph (two replay arms, `replay-variants/e31a-…`, `e31b-…`); its rule (four judge-free lines, four judged) and the new sets `sales1` / `sales1-val` are in the log ("E31"). To run it: main in the app on `sales1` and `sales1-val` (36 rows), then `replay-generator.mjs` k = 3 on the Sales rows, three arms. **Blocked on the DeepSeek balance; the judged part also on the access-block flag.** No app change exists; landing would be Evin's word.
 10. **E28b is built as E30, not measured, not landed.** `cand/e28b` `7067ab3c` (worktree `er-main`, one commit on main `cdaedfad`): on a turn with an evidence block the evidence section comes first in the user message and the question is asked again last, before the user's own instructions; a turn with no evidence is unchanged; 9 new tests, suites as main. Evin's word was "do it" (2026-10-11 IST). Its rule (seven judge-free lines, three judged) is in the log. **Blocked on the DeepSeek balance** (see the "Running or scheduled" row). **Landing is authorized in advance, on one condition:** Evin's "do both" (2026-10-10 21:21 UTC) answered "land the documents-first layout, once its lines and the judged comparison are read". So: when every judge-free line (1 to 7) and J1 to J3 hold, land it on local main (a fast-forward while main is `cdaedfad`; otherwise rebase, type check and the four suites first) and report; if any line fails it is not landed. Pushing that commit is a new question for him.
 
 **Next candidates, in the order the data suggests**
@@ -4933,6 +4936,8 @@ Entry headings with their line numbers in `docs/ITERATIONS-ER.md`, and every lin
 - L3498: Evin's "do both" (2026-10-10 21:21 UTC): main pushed; the documents-first layout may land when its rule holds
 - L3511: Both waiting scripts stopped until 07:15 IST (2026-10-10 21:50 UTC), on Evin's word
 - L3520: Astra window of 2026-10-11, 02:00–02:28 UTC — E29 repetition 1 judged; closed by a provider access block (recorded 2026-10-11 02:42 UTC)
+- L3582: E31 — Sales: what the seller says when the material stops (declared 2026-10-11 17:18 UTC, on Evin's "fix sales mode"; nothing replayed or judged yet)
+- L3653: E31 — the new Sales sets are authored and frozen (recorded 2026-10-11 20:12 UTC; nothing run on them)
 
 ### B.1 The log
 
@@ -8516,6 +8521,93 @@ candidate: why the pass with E19's sentence rewrites an evidence-missing draft w
 conditional landing Evin authorized did not arise.
 **What runs now:** only the balance poller (`chain-e30-wait.sh`, until about 15:45 UTC). No judge window is
 running or scheduled; the next one needs a probe by hand with the flag rule above.
+
+#### E31 — Sales: what the seller says when the material stops (declared 2026-10-11 17:18 UTC, on Evin's "fix sales mode"; nothing replayed or judged yet)
+**Where Sales loses.** Judged baseline of main with E19, 70 Sales rows: 8.21, 18 hard fails (25.7 %), the weakest
+mode. By condition over both judged runs of the same 70 questions (`er4` before E19 and `er6` with it, 140
+row-runs; hard fails / rows): evidence missing **9 / 14** (no other mode above 5 / 14), conflicting or outdated
+sources **7 / 24** (others at most 4 / 24), one grounded source 6 / 52, several sources 4 / 28, irrelevant source
+2 / 14, follow-up 1 / 8. So Sales is ordinary where the material answers the question and far worse than every
+other mode where it does not. Ten of the 18 rows also failed in the earlier run, with the same kind of fault.
+**What the answers do** (all 29 hard-fail row-runs read, `report/mode-hard-fails.mjs`, development rows only):
+1. *Something asserted around a fact that should have been deferred, or added after a correct answer* (about 16 of
+   29): a customer's own installation told as company practice; "drivers don't need an app"; "there's no driver
+   phone app"; "we're not HIPAA certified"; "native connectors are priced as add-ons"; geofence alerts "can go
+   straight to a Slack channel or a webhook"; "for a fleet your size on Operations"; "we can write a higher
+   threshold into the plan"; "I'll come back with the availability commitment that matches it"; "I'll come back to
+   you on how the HubSpot integration works" (says there is one).
+2. *A price, discount or eligibility table misapplied* (about 10): a volume discount given to a fleet below its
+   band, a discount applied to modules, the wrong approver for a discount band, a deadline counted wrongly.
+3. *An opening "yes" that the rest of the answer takes back* (3), two of them on the conflicting-threshold rows.
+**Cause of kind 1, in the prompt.** The Sales mode block (`electron/llm/promptSystemV2.ts`) says: "…only what the
+material states. Otherwise never guess or commit: offer to confirm and ask what they need it to do. WRONG: 'Yes,
+we sync NetSuite custom fields.' RIGHT: 'I'll confirm how the sync handles custom fields. Which ones matter?'"
+Its RIGHT line presupposes that the sync exists, and the HubSpot answer copies that shape. It forbids a guessed
+yes but says nothing of a guessed no, of what may be said around the deferral, or of offers; and the next
+paragraph tells the seller to "answer with grounded specifics" and "never end flat", which is where the added
+product sentence and the offer come from. Kinds 2 and 3 are not Sales-specific in rate (grounded rows are at the
+other modes' level) and fall under what is already closed: no broader calculation notice, no rewrite of the
+conflict instructions, no "decide, then say it". **E31 addresses kind 1 only.**
+**Candidate, two arms** (replay variants; no app change until one is chosen):
+- `e31a-sales-confirm-whether.mjs`: that paragraph becomes "…only what the material states about that very thing.
+  Otherwise never guess or commit in either direction: do not say it exists, does not exist, is not needed, or how
+  it works. Give what the material does state about it, offer to confirm whether, and ask what they need it to do;
+  add no other product detail, benefit or reassurance." with a second WRONG line (a deferral that presupposes) and
+  a RIGHT line that asks whether. +297 characters.
+- `e31b-sales-addon-bar.mjs`: E31a plus one paragraph holding what is added after the answer (the prospect's own
+  plan or fleet, a benefit, an offer to change a term or match what they ask for) to the same bar. +575 characters.
+Both change all 83 recorded Sales prompts (dev, dev2, challenge) and no other mode's (checked). In the app either
+needs the two prompt-size ceilings in `PromptSystemV2Composition` raised (cloud Sales is 12 characters under
+18,500, local 116 under 8,000).
+**Unseen questions, new versioned set** (frozen sets untouched): `sales1` (18, readable, ids `ER-S1-SALES-…`) and
+`sales1-val` (18, never read, ids `ER-SV1-SALES-…`, aggregates only), authored blind from
+`AUTHORING-ER-SALES1.md`: not covered at all 6, covered in part 4, true only under a condition the prospect has
+not stated 3, a concession the seller cannot give 3, plain covered question 2 (so a careful answer is not rewarded
+for being shy). Registered in `build.mjs`.
+**Runs, once the DeepSeek account has balance** (one app at a time): main `cdaedfad` in the app on `sales1` and
+`sales1-val` (36 rows, to record their prompts). Then generator replays, k = 3, three arms (base = the recorded
+prompt unchanged, E31a, E31b) on the Sales rows of dev, dev2, challenge, challenge-val, sales1, sales1-val (125
+prompts, 1,125 calls).
+**Judge-free lines** (checks obj-3, each arm against the base arm, samples pooled over k):
+1. Development Sales (70 prompts): right by the fixed checks not more than 2.0 points below base; samples with a
+   forbidden string at most base.
+2. `sales1` (18): samples with a forbidden string fewer than base; required-string share not more than 2.0 points
+   below base (the stated halves and the plain questions must still be answered).
+3. `sales1-val` (18, counts only): samples with a forbidden string at most base; required-string share not more
+   than 3.0 points below.
+4. Median answer length not more than 15 % above base; every call answered.
+An arm that fails a line is out. If both hold, the one with fewer forbidden-string samples on development +
+`sales1` goes on; a tie goes to E31a (the smaller change). If neither holds, E31 stops there and is reported.
+**Judged lines** (gpt-6-astra only, after a clean probe by hand lifts the access-block flag; chosen arm against
+base, repetition 0, every prompt a pair: 101 readable pairs = development 70 + challenge 13 + sales1 18, and 24
+unread pairs = sales1-val 18 + challenge-val 6):
+J1. readable pairs: mean higher by at least 0.30 and hard fails lower by at least 5;
+J2. unread pairs (aggregates only): mean not lower than base, hard fails at most base;
+J3. no harm where the material answers the question (grounded_single and multi_source rows of the readable pairs):
+    mean not more than 0.20 lower, hard fails at most base + 1, rows flagged excessive_deferral or
+    important_question_unanswered at most base + 1;
+J4. rows with an unsupported_*, fabricated_* or unsafe_commitment flag fewer than base on the readable pairs.
+Every line holding makes it a candidate for the app: branch from main, the Sales block and the two ceilings, a
+unit test that no other mode's prompt changes, then one app run of Sales (dev, dev2, sales1) against main's.
+Landing is Evin's word. Any line failing: not proposed, numbers reported.
+**State at declaration:** the DeepSeek account has no balance (asked 17:13 UTC, `is_available: false`) and the
+judge is behind an access-block flag, so nothing of this can run yet. The author of `sales1` is working.
+
+##### E31 — the new Sales sets are authored and frozen (recorded 2026-10-11 20:12 UTC; nothing run on them)
+`sales1` 18 items (`f5d0d839f78d`, readable) and `sales1-val` 18 items (`5cfc05d76f0b`, never read by me:
+counts only). One blind author from `AUTHORING-ER-SALES1.md`; the first attempt was cut off by a network failure
+before anything was written and was resumed. Lint: 0 errors in both; 4 warnings in each, the expected
+"missing_evidence item has document-required facts" on the four covered-in-part items. Freeze: the ten existing
+sets keep their hashes (checked one by one against the freeze before), manifest unchanged, 104 evidence files.
+Readable half: evidence missing 10, one grounded source 8; 13 spoken by the prospect, 5 typed by the seller; five
+configs, three of which drop a file; 16 of 18 items carry a forbidden string, 12 a required string.
+**Limits the author reported, which bound what the judge-free lines can show:** several "affirms it" / "denies it"
+claims carry no string, because any such phrase also occurs in a correct "I'll confirm whether…" reply, so the
+strings sit on invented values and on neighbours with no place in a right answer; the unstated-condition items
+are caught by a required string naming the condition, not by a forbidden one, and one of those strings ("annual")
+could occur by accident; the plain items use the kind `over_deferral` (the lint's name; the brief said
+`excessive_deferral` and is corrected). So lines 2 and 3 of the rule see invented values and missing conditions;
+a bare presupposition ("how the X integration works") is visible only to the judge (J1, J2, J4).
 
 ---
 

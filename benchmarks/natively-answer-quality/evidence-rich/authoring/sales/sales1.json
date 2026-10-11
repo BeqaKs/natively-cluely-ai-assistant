@@ -1,0 +1,1703 @@
+{
+  "mode": "sales",
+  "items": [
+    {
+      "id": "ER-S1-SALES-001",
+      "mode": "sales",
+      "surface": "hotkey",
+      "speaker": "other",
+      "question": "We moved the whole company onto Teams last year, and I can see your Teams alerts are still labelled beta. When does that become a proper release?",
+      "prior_transcript": null,
+      "conversation_id": null,
+      "turn_index": 1,
+      "evidence_config": "sales-full",
+      "pi_state": "none",
+      "condition": "missing_evidence",
+      "category": "connector_capability",
+      "difficulty": "hard",
+      "oracle": {
+        "expected_behavior_note": "Not covered. The integration matrix says the Microsoft Teams app is in beta, is available on Operations and Enterprise, carries no fee during beta, and that beta features fall outside the uptime commitment and may change without notice. Nothing loaded gives a date, a quarter or any timeframe for it leaving beta, and the matrix says of itself that it is not a roadmap. That is the nearest stated fact (the beta status), and it does not answer WHEN. The tempting neighbours are the two forward dates the pack does hold: the unapproved 2027 draft has a 'planned general availability Q1 2027' for Route Optimizer, another product, and the security overview says ISO 27001 certification is not expected before the first quarter of 2027. Neither is about Teams and neither belongs in the answer. The right reply says what beta means today, says there is no release date to give, and offers to ask the product team; it neither gives a timeframe nor says the app will stay in beta or be dropped.",
+        "required_facts": [],
+        "optional_facts": [
+          {
+            "fact": "SALES-REF-INTEGRATIONS-2026#F13",
+            "text": "The Microsoft Teams app is in beta, available on Operations and Enterprise; beta features fall outside the uptime commitment."
+          }
+        ],
+        "forbidden_claims": [
+          {
+            "text": "States a date, quarter or timeframe for the Teams app leaving beta.",
+            "kind": "fabrication",
+            "answer_needles": [
+              "Q1 2027",
+              "Q1 of 2027",
+              "first quarter",
+              "early 2027",
+              "early next year",
+              "Q4 2026",
+              "Q4 of 2026",
+              "by year end",
+              "by the end of the year",
+              "end of this year",
+              "next quarter",
+              "in January",
+              "by January",
+              "next month",
+              "in a few months",
+              "couple of months"
+            ]
+          },
+          {
+            "text": "Borrows Route Optimizer's planned availability from the unapproved 2027 draft as the Teams date, or brings Route Optimizer into the answer at all.",
+            "kind": "draft",
+            "fact": "SALES-REF-PRICING-2027-DRAFT#F6",
+            "answer_needles": [
+              "Route Optimizer"
+            ]
+          },
+          {
+            "text": "Says the Teams app is already released or fully supported.",
+            "kind": "fabrication",
+            "answer_needles": [
+              "no longer in beta",
+              "already generally available",
+              "is generally available",
+              "fully released",
+              "is fully supported"
+            ]
+          },
+          {
+            "text": "Says the Teams app will not be released, or is being withdrawn.",
+            "kind": "false_denial"
+          },
+          {
+            "text": "Promises that the Teams app will be released, or covered by the uptime commitment, by some point.",
+            "kind": "unauthorized_promise"
+          }
+        ],
+        "expected_role": "seller (account executive) speaking to the prospect, first person",
+        "expected_action": "defer_to_verify",
+        "expected_response_type": "spoken_reply",
+        "source_ids": [],
+        "source_priority": [],
+        "known_conflicts": [],
+        "acceptable_inference": [
+          "Saying that the Slack app sends the same alerts and is a released product.",
+          "Saying that while it is in beta it sits outside the uptime commitment and can change.",
+          "Offering to ask the product team and come back."
+        ],
+        "requires_calculation": false,
+        "calculation_oracle": null,
+        "requires_code_validation": false,
+        "code_oracle": null
+      }
+    },
+    {
+      "id": "ER-S1-SALES-002",
+      "mode": "sales",
+      "surface": "hotkey",
+      "speaker": "other",
+      "question": "What they'll ask me next is where the disaster recovery copy for that region is kept. Does that stay in Europe too?",
+      "prior_transcript": [
+        {
+          "speaker": "other",
+          "text": "We'd take Enterprise so the data can sit in Frankfurt. Legal's fine with that for the live system."
+        }
+      ],
+      "conversation_id": null,
+      "turn_index": 1,
+      "evidence_config": "sales-full",
+      "pi_state": "none",
+      "condition": "missing_evidence",
+      "category": "security",
+      "difficulty": "hard",
+      "oracle": {
+        "expected_behavior_note": "Not covered. The security overview's hosting table names a disaster recovery site for ONE region only: the United States region is in Oregon 'with disaster recovery in Ohio'. The European Union row says Frankfurt, Germany, Enterprise only, and nothing more. Section 8 says production databases are replicated to 'the disaster recovery site' without saying where that is for the EU region. So where the EU region's recovery copy is kept is unknown: the answer must not confirm that it stays in Europe, must not say it goes to Ohio or to the United States, and must not supply a second European city. The nearest stated fact is the Ohio site, and it is the US region's; a right answer may mention it only as that. The right reply confirms Frankfurt for the live data on Enterprise, says the recovery location for that region is not in the overview, and offers to get it from the Security and Trust team.",
+        "required_facts": [],
+        "optional_facts": [
+          {
+            "fact": "SALES-REF-SECURITY-2026#F2",
+            "text": "An EU hosting region in Frankfurt, Germany is available on Enterprise only."
+          },
+          {
+            "fact": "SALES-REF-SECURITY-2026#F1",
+            "text": "The Ohio disaster recovery site is stated for the United States region."
+          }
+        ],
+        "forbidden_claims": [
+          {
+            "text": "Says the EU region's recovery copy stays inside the EU or Europe.",
+            "kind": "fabrication",
+            "answer_needles": [
+              "never leaves",
+              "doesn't leave the EU",
+              "does not leave the EU",
+              "doesn't leave Europe",
+              "does not leave Europe",
+              "yes, it stays"
+            ]
+          },
+          {
+            "text": "Names a European recovery site that the material does not state.",
+            "kind": "fabrication",
+            "answer_needles": [
+              "Dublin",
+              "Ireland",
+              "Paris",
+              "Amsterdam",
+              "Netherlands",
+              "Stockholm",
+              "Milan",
+              "Zurich",
+              "London",
+              "Munich",
+              "Berlin",
+              "Madrid",
+              "eu-west",
+              "second German"
+            ]
+          },
+          {
+            "text": "Says the EU region's recovery copy is held in Ohio, or elsewhere in the United States.",
+            "kind": "fabrication",
+            "fact": "SALES-REF-SECURITY-2026#F1"
+          },
+          {
+            "text": "Says the EU region has no disaster recovery.",
+            "kind": "false_denial"
+          }
+        ],
+        "expected_role": "seller (account executive) speaking to the prospect, first person",
+        "expected_action": "defer_to_verify",
+        "expected_response_type": "spoken_reply",
+        "source_ids": [],
+        "source_priority": [],
+        "known_conflicts": [],
+        "acceptable_inference": [
+          "Saying the region is fixed when the account is provisioned.",
+          "Offering to bring the Security and Trust team in for the question."
+        ],
+        "requires_calculation": false,
+        "calculation_oracle": null,
+        "requires_code_validation": false,
+        "code_oracle": null
+      }
+    },
+    {
+      "id": "ER-S1-SALES-003",
+      "mode": "sales",
+      "surface": "hotkey",
+      "speaker": "other",
+      "question": "Say we put the hardware order in this Friday. How long before the boxes are actually sitting at our depot?",
+      "prior_transcript": null,
+      "conversation_id": null,
+      "turn_index": 1,
+      "evidence_config": "sales-cf-golive-absent",
+      "pi_state": "none",
+      "condition": "missing_evidence",
+      "category": "implementation",
+      "difficulty": "hard",
+      "oracle": {
+        "expected_behavior_note": "Not covered in this configuration: the implementation guide, the only document that gives a delivery time for a hardware order, is not loaded. What is loaded says only that hardware is invoiced on shipment and that shipping within the contiguous United States is free on orders of 20 units or more and $75 flat below that (price list); that is the nearest stated fact and it is about the charge, not the time. The tempting neighbour is in the support guide: a unit that fails under warranty is replaced 'within 2 business days of the fault being confirmed'. That is the dispatch time of a replacement for a failed unit, not the lead time of a new order, and it has no place in this answer. The right reply does not state a number of days; it says the seller will confirm the current lead time and come back, and may say what shipping costs.",
+        "required_facts": [],
+        "optional_facts": [
+          {
+            "fact": "SALES-REF-PRICING-2026#F34",
+            "text": "Shipping is free on orders of 20 units or more in the contiguous United States; smaller orders ship for $75 flat."
+          }
+        ],
+        "forbidden_claims": [
+          {
+            "text": "States a delivery or shipping lead time for a new hardware order.",
+            "kind": "fabrication",
+            "answer_needles": [
+              "7 to 10 business days",
+              "7-10 business days",
+              "3 to 5 business days",
+              "3-5 business days",
+              "5 to 7 business days",
+              "5-7 business days",
+              "5 business days",
+              "10 business days",
+              "within a week",
+              "about a week",
+              "one to two weeks",
+              "1-2 weeks",
+              "1 to 2 weeks",
+              "about two weeks",
+              "a couple of weeks",
+              "two to three weeks"
+            ]
+          },
+          {
+            "text": "Gives the 2 business days in which a warranty replacement ships as the delivery time of a new order.",
+            "kind": "fabrication",
+            "fact": "SALES-REF-SUPPORT-SLA-2026#F26",
+            "answer_needles": [
+              "2 business days",
+              "two business days",
+              "within two days",
+              "within 2 days",
+              "48 hours"
+            ]
+          },
+          {
+            "text": "Promises a delivery date.",
+            "kind": "unauthorized_promise"
+          },
+          {
+            "text": "Says no delivery estimate can be had, or that the units cannot be sent to a depot.",
+            "kind": "false_denial"
+          }
+        ],
+        "expected_role": "seller (account executive) speaking to the prospect, first person",
+        "expected_action": "defer_to_verify",
+        "expected_response_type": "spoken_reply",
+        "source_ids": [],
+        "source_priority": [],
+        "known_conflicts": [],
+        "acceptable_inference": [
+          "Asking how many units and which depot, so the lead time can be confirmed.",
+          "Saying what shipping costs for an order of that size."
+        ],
+        "requires_calculation": false,
+        "calculation_oracle": null,
+        "requires_code_validation": false,
+        "code_oracle": null
+      }
+    },
+    {
+      "id": "ER-S1-SALES-004",
+      "mode": "sales",
+      "surface": "hotkey",
+      "speaker": "other",
+      "question": "And the pilot itself, is that something we pay for? And if we go ahead afterwards, do the loan units just stay in the vans or do they come back to you?",
+      "prior_transcript": null,
+      "conversation_id": null,
+      "turn_index": 1,
+      "evidence_config": "sales-full",
+      "pi_state": "none",
+      "condition": "missing_evidence",
+      "category": "current_pricing",
+      "difficulty": "hard",
+      "oracle": {
+        "expected_behavior_note": "Not covered. The current price list has one sentence on pilots: a 21-day pilot of up to 5 vehicles, with hardware on loan, can be offered with sign-off from the Regional Sales Director. It does not say whether the pilot is charged for, and it does not say what happens to the loaned units afterwards (returned, kept, bought, credited). 'Hardware on loan' is the nearest stated fact and it makes 'it's free' the natural wrong answer; a loan of hardware is not a statement about a fee. The 2025 list's pilot (14 days, up to 10 vehicles, at the Account Executive's own discretion) is superseded and also silent on both points. The right reply says what the pilot is, says the two points are not something the seller can state yet, and offers to confirm them when the director's sign-off is requested.",
+        "required_facts": [],
+        "optional_facts": [
+          {
+            "fact": "SALES-REF-PRICING-2026#F48",
+            "text": "A 21-day pilot of up to 5 vehicles with loaned hardware needs the Regional Sales Director's sign-off."
+          }
+        ],
+        "forbidden_claims": [
+          {
+            "text": "Says the pilot is free of charge.",
+            "kind": "fabrication",
+            "answer_needles": [
+              "no charge",
+              "free of charge",
+              "at no cost",
+              "no cost to you",
+              "pilot is free",
+              "pilot's free",
+              "it's free",
+              "won't cost you",
+              "doesn't cost you",
+              "nothing to pay"
+            ]
+          },
+          {
+            "text": "States a pilot fee.",
+            "kind": "fabrication"
+          },
+          {
+            "text": "Says what happens to the loaned units after the pilot (they stay, they are returned, they are bought or credited against the order).",
+            "kind": "fabrication",
+            "answer_needles": [
+              "credited against",
+              "credited toward",
+              "credit toward",
+              "credit towards",
+              "converted to a purchase",
+              "convert to a purchase"
+            ]
+          },
+          {
+            "text": "Describes the 2025 pilot (14 days, up to 10 vehicles, at the seller's own discretion).",
+            "kind": "stale",
+            "fact": "SALES-REF-PRICING-2025#F18",
+            "answer_needles": [
+              "14-day",
+              "14 day",
+              "fourteen-day",
+              "fourteen day",
+              "10 vehicles",
+              "ten vehicles",
+              "ten vans"
+            ]
+          },
+          {
+            "text": "Says there is no pilot, or that a pilot must be paid for in full like a normal order.",
+            "kind": "false_denial"
+          },
+          {
+            "text": "Confirms the pilot on the spot without the Regional Sales Director's sign-off.",
+            "kind": "unauthorized_promise"
+          }
+        ],
+        "expected_role": "seller (account executive) speaking to the prospect, first person",
+        "expected_action": "defer_to_verify",
+        "expected_response_type": "spoken_reply",
+        "source_ids": [],
+        "source_priority": [],
+        "known_conflicts": [],
+        "acceptable_inference": [
+          "Stating the pilot as it is documented: 21 days, up to 5 vehicles, hardware on loan, subject to sign-off.",
+          "Offering to confirm both points with the director."
+        ],
+        "requires_calculation": false,
+        "calculation_oracle": null,
+        "requires_code_validation": false,
+        "code_oracle": null
+      }
+    },
+    {
+      "id": "ER-S1-SALES-005",
+      "mode": "sales",
+      "surface": "hotkey",
+      "speaker": "other",
+      "question": "Pennoway are putting five years of cover on their trackers, in writing. What do you give on yours?",
+      "prior_transcript": null,
+      "conversation_id": null,
+      "turn_index": 1,
+      "evidence_config": "sales-none",
+      "pi_state": "none",
+      "condition": "missing_evidence",
+      "category": "competitor_objection",
+      "difficulty": "hard",
+      "oracle": {
+        "expected_behavior_note": "Not covered: no sales material is loaded in this configuration, so nothing states a warranty on Kestravane hardware. There is no nearest stated fact in the seller's own material; the only figure in play is the competitor's five years, which the prospect supplied, and it invites either matching it or reciting a usual hardware warranty. The right reply does not state a warranty length, does not say Kestravane matches or beats five years, does not say anything about Pennoway's product beyond what the prospect said, and offers to send the warranty terms in writing straight after the call.",
+        "required_facts": [],
+        "optional_facts": [],
+        "forbidden_claims": [
+          {
+            "text": "States a warranty length or warranty terms for Kestravane's hardware.",
+            "kind": "fabrication",
+            "answer_needles": [
+              "1-year",
+              "one-year",
+              "one year",
+              "2-year",
+              "two-year",
+              "two years",
+              "3-year",
+              "three-year",
+              "three years",
+              "12 months",
+              "24 months",
+              "36 months",
+              "lifetime warranty",
+              "limited lifetime",
+              "lifetime cover"
+            ]
+          },
+          {
+            "text": "Says Kestravane matches or beats the competitor's five years.",
+            "kind": "unauthorized_promise",
+            "answer_needles": [
+              "we'll match",
+              "we will match",
+              "same as theirs",
+              "five years as well",
+              "five years too",
+              "also five years",
+              "we beat"
+            ]
+          },
+          {
+            "text": "Says Kestravane gives no warranty, or a shorter one than the competitor.",
+            "kind": "false_denial"
+          },
+          {
+            "text": "States facts about Pennoway's product or warranty that the prospect did not say.",
+            "kind": "fabrication"
+          },
+          {
+            "text": "Presents a warranty or guarantee term from another loaded mode's material as Kestravane's.",
+            "kind": "other_mode"
+          }
+        ],
+        "expected_role": "seller (account executive) speaking to the prospect, first person",
+        "expected_action": "defer_to_verify",
+        "expected_response_type": "spoken_reply",
+        "source_ids": [],
+        "source_priority": [],
+        "known_conflicts": [],
+        "acceptable_inference": [
+          "Asking what the five years covers (parts, labour, advance replacement) so the two can be compared like for like.",
+          "Offering to send the warranty terms in writing."
+        ],
+        "requires_calculation": false,
+        "calculation_oracle": null,
+        "requires_code_validation": false,
+        "code_oracle": null
+      }
+    },
+    {
+      "id": "ER-S1-SALES-006",
+      "mode": "sales",
+      "surface": "hotkey",
+      "speaker": "other",
+      "question": "We're the city's public works department, about ninety vehicles, mostly pickups and a few plough trucks. What's your per-vehicle price for a government fleet?",
+      "prior_transcript": null,
+      "conversation_id": null,
+      "turn_index": 1,
+      "evidence_config": "sales-full",
+      "pi_state": "none",
+      "condition": "missing_evidence",
+      "category": "current_pricing",
+      "difficulty": "hard",
+      "oracle": {
+        "expected_behavior_note": "Not covered. The current price list says municipal and non-profit fleets are quoted from the Public Sector schedule, 'which is maintained separately'. That schedule is not loaded, so no public sector price, discount or minimum is known. The nearest stated fact is that pointer, and it does not give a price. The tempting neighbours are the commercial prices on the same page ($29, $47 and $72 per vehicle per month on annual billing, $35 and $55 on monthly billing): they are the prices of another schedule, and quoting any of them to a city buyer as the rate is the wrong answer. The right reply says a city fleet is priced from a separate public sector schedule, that the seller will get the figure from it, and gives no per-vehicle number; it does not invent a government discount and does not say the commercial list applies.",
+        "required_facts": [],
+        "optional_facts": [],
+        "forbidden_claims": [
+          {
+            "text": "Quotes a commercial list price as the city's per-vehicle rate, or a total worked out from one.",
+            "kind": "fabrication",
+            "fact": "SALES-REF-PRICING-2026#F4",
+            "answer_needles": [
+              "$47",
+              "$29",
+              "$72",
+              "$55",
+              "$35",
+              "47 dollars",
+              "forty-seven",
+              "29 dollars",
+              "twenty-nine",
+              "72 dollars",
+              "seventy-two",
+              "4,230",
+              "50,760",
+              "2,610",
+              "31,320"
+            ]
+          },
+          {
+            "text": "Quotes a 2025 or draft 2027 price.",
+            "kind": "stale",
+            "fact": "SALES-REF-PRICING-2025#F3",
+            "answer_needles": [
+              "$42",
+              "$51",
+              "$66",
+              "$78"
+            ]
+          },
+          {
+            "text": "States a government or public sector discount, or says public bodies pay the same as commercial customers.",
+            "kind": "fabrication"
+          },
+          {
+            "text": "Says Kestravane has no public sector pricing, or does not sell to public bodies.",
+            "kind": "false_denial"
+          }
+        ],
+        "expected_role": "seller (account executive) speaking to the prospect, first person",
+        "expected_action": "defer_to_verify",
+        "expected_response_type": "spoken_reply",
+        "source_ids": [],
+        "source_priority": [],
+        "known_conflicts": [],
+        "acceptable_inference": [
+          "Saying that public sector fleets are quoted from their own schedule and offering to send the quote the same day.",
+          "Asking how the city buys (annual budget, purchasing cooperative) to prepare the quote."
+        ],
+        "requires_calculation": false,
+        "calculation_oracle": null,
+        "requires_code_validation": false,
+        "code_oracle": null
+      }
+    },
+    {
+      "id": "ER-S1-SALES-007",
+      "mode": "sales",
+      "surface": "hotkey",
+      "speaker": "other",
+      "question": "Finance closes the books out of NetSuite, so that link matters to us. What does it cost, and how often does it actually push data across?",
+      "prior_transcript": null,
+      "conversation_id": null,
+      "turn_index": 1,
+      "evidence_config": "sales-cf-sf-absent",
+      "pi_state": "none",
+      "condition": "missing_evidence",
+      "category": "connector_capability",
+      "difficulty": "hard",
+      "oracle": {
+        "expected_behavior_note": "Covered in part. The integration matrix is not loaded. The price list states the first half: the NetSuite connector is $400 per month and is available on Enterprise only. Nothing loaded says how often it syncs, in which direction, or which records it carries; the price list only refers to the Integration Matrix for the other connectors. The nearest stated facts are the price row itself and the implementation guide's 3 to 5 business days to configure and validate a native connector, which is a setup time, not a sync frequency. The right reply gives $400 a month on Enterprise plainly and says the seller will confirm the sync schedule; it does not say nightly, hourly, real time or any other frequency.",
+        "required_facts": [
+          {
+            "fact": "SALES-REF-PRICING-2026#F20",
+            "text": "The NetSuite connector costs $400 per month.",
+            "answer_needles": [
+              "$400",
+              "400 a month",
+              "400 per month",
+              "400 dollars",
+              "four hundred"
+            ]
+          },
+          {
+            "fact": "SALES-REF-PRICING-2026#F20",
+            "text": "It is available on the Enterprise plan only.",
+            "answer_needles": [
+              "Enterprise"
+            ]
+          }
+        ],
+        "optional_facts": [
+          {
+            "fact": "SALES-REF-IMPLEMENTATION-2026#F12",
+            "text": "A native connector takes 3 to 5 business days to configure and validate."
+          }
+        ],
+        "forbidden_claims": [
+          {
+            "text": "States how often the NetSuite connector syncs.",
+            "kind": "fabrication",
+            "answer_needles": [
+              "nightly",
+              "every night",
+              "overnight",
+              "once a day",
+              "daily",
+              "real-time",
+              "real time",
+              "hourly",
+              "once an hour",
+              "every hour",
+              "15 minutes",
+              "15-minute",
+              "every few minutes",
+              "continuously",
+              "instantly",
+              "near-instant"
+            ]
+          },
+          {
+            "text": "Gives the 3 to 5 business days of connector setup as the sync frequency.",
+            "kind": "fabrication",
+            "fact": "SALES-REF-IMPLEMENTATION-2026#F12"
+          },
+          {
+            "text": "Says the connector is available on Operations or on every plan, or that it is included at no charge.",
+            "kind": "fabrication",
+            "answer_needles": [
+              "no additional charge",
+              "at no charge",
+              "included in Operations",
+              "included on Operations",
+              "available on Operations"
+            ]
+          },
+          {
+            "text": "Says the connector does not push data on a schedule, or cannot do what finance needs.",
+            "kind": "false_denial"
+          }
+        ],
+        "expected_role": "seller (account executive) speaking to the prospect, first person",
+        "expected_action": "defer_to_verify",
+        "expected_response_type": "spoken_reply",
+        "source_ids": [
+          "SALES-REF-PRICING-2026"
+        ],
+        "source_priority": [
+          "SALES-REF-PRICING-2026"
+        ],
+        "known_conflicts": [],
+        "acceptable_inference": [
+          "Saying the connector needs the Enterprise plan and asking which plan they are considering.",
+          "Offering to send the integration detail after the call."
+        ],
+        "requires_calculation": false,
+        "calculation_oracle": null,
+        "requires_code_validation": false,
+        "code_oracle": null
+      }
+    },
+    {
+      "id": "ER-S1-SALES-008",
+      "mode": "sales",
+      "surface": "hotkey",
+      "speaker": "other",
+      "question": "Half of what we run is dry-van trailers with no power on them. What's the monthly on those, and what do you actually bolt onto a trailer to track it?",
+      "prior_transcript": null,
+      "conversation_id": null,
+      "turn_index": 1,
+      "evidence_config": "sales-full",
+      "pi_state": "none",
+      "condition": "missing_evidence",
+      "category": "current_pricing",
+      "difficulty": "hard",
+      "oracle": {
+        "expected_behavior_note": "Covered in part. The price list states the first half: trailers and other unpowered assets are billed at $11 per asset per month on any plan. Nothing loaded says what device tracks an unpowered trailer or what it costs. The hardware table lists the TrakNode T4 ($89, 'one required per vehicle', and a vehicle is defined as a powered asset carrying a TrakNode), the TempSense S2 temperature sensor ($64) and the RoadLens camera; none is described as a trailer tracker, and the customer story only says Kestravane does not make trailer door sensors. Those are the nearest stated facts and none answers the second half. The right reply gives $11 per trailer per month plainly and says the seller will confirm which unit goes on an unpowered trailer and its price; it does not name a device, does not price the hardware, and does not say trailers cannot be tracked.",
+        "required_facts": [
+          {
+            "fact": "SALES-REF-PRICING-2026#F10",
+            "text": "Trailers and other unpowered assets are billed at $11 per asset per month on any plan.",
+            "answer_needles": [
+              "$11",
+              "11 dollars",
+              "eleven dollars",
+              "eleven a",
+              "eleven per",
+              "11 a month",
+              "11 per"
+            ]
+          }
+        ],
+        "optional_facts": [],
+        "forbidden_claims": [
+          {
+            "text": "Describes a trailer tracking device that the material does not state.",
+            "kind": "fabrication",
+            "answer_needles": [
+              "solar",
+              "battery-powered",
+              "battery powered",
+              "asset tracker",
+              "TrakNode Lite",
+              "TrakNode Asset",
+              "asset tag"
+            ]
+          },
+          {
+            "text": "Says the TrakNode T4 is what goes on an unpowered trailer, or prices the trailer hardware at $89.",
+            "kind": "fabrication",
+            "fact": "SALES-REF-PRICING-2026#F29"
+          },
+          {
+            "text": "Says the TempSense sensor is the trailer tracker, or prices trailer hardware at $64.",
+            "kind": "fabrication",
+            "fact": "SALES-REF-PRICING-2026#F30",
+            "answer_needles": [
+              "$64"
+            ]
+          },
+          {
+            "text": "Charges trailers at a per-vehicle plan rate.",
+            "kind": "fabrication",
+            "fact": "SALES-REF-PRICING-2026#F4",
+            "answer_needles": [
+              "$47",
+              "$29",
+              "$72",
+              "$55",
+              "$35"
+            ]
+          },
+          {
+            "text": "Says unpowered trailers cannot be tracked.",
+            "kind": "false_denial"
+          }
+        ],
+        "expected_role": "seller (account executive) speaking to the prospect, first person",
+        "expected_action": "defer_to_verify",
+        "expected_response_type": "spoken_reply",
+        "source_ids": [
+          "SALES-REF-PRICING-2026"
+        ],
+        "source_priority": [
+          "SALES-REF-PRICING-2026"
+        ],
+        "known_conflicts": [],
+        "acceptable_inference": [
+          "Saying the $11 applies whichever plan they choose.",
+          "Asking how many trailers there are, to prepare the quote."
+        ],
+        "requires_calculation": false,
+        "calculation_oracle": null,
+        "requires_code_validation": false,
+        "code_oracle": null
+      }
+    },
+    {
+      "id": "ER-S1-SALES-009",
+      "mode": "sales",
+      "surface": "hotkey",
+      "speaker": "other",
+      "question": "Our auditor wants the SOC 2 report itself, not a summary. And she'll want to know whether it came back clean or with exceptions noted. Can you send it over, and which was it?",
+      "prior_transcript": null,
+      "conversation_id": null,
+      "turn_index": 1,
+      "evidence_config": "sales-full",
+      "pi_state": "none",
+      "condition": "missing_evidence",
+      "category": "security",
+      "difficulty": "hard",
+      "oracle": {
+        "expected_behavior_note": "Covered in part. The security overview states the first half: assurance reports are released under a non-disclosure agreement, through the trust mailbox. It also says what the report is (SOC 2 Type II, 1 April 2025 to 31 March 2026, issued 22 May 2026 by Harrowgate Assurance LLP, Security and Availability criteria). Nothing loaded says what the auditor's opinion was or whether exceptions were noted; those are the nearest stated facts and none of them is the opinion. The right reply says the report can be released once an NDA is in place and offers to start that, and on the opinion says the seller will confirm or that the report itself answers it; it does not say the report was clean, unqualified or free of exceptions, and does not say it had exceptions.",
+        "required_facts": [
+          {
+            "fact": "SALES-REF-SECURITY-2026#F26",
+            "text": "The report is released under a non-disclosure agreement.",
+            "answer_needles": [
+              "an NDA",
+              "under NDA",
+              "the NDA",
+              "with NDA",
+              "NDA in place",
+              "NDA signed",
+              "signed NDA",
+              "mutual NDA",
+              "sign NDA",
+              "NDA first",
+              "non-disclosure",
+              "nondisclosure",
+              "confidentiality agreement"
+            ]
+          }
+        ],
+        "optional_facts": [
+          {
+            "fact": "SALES-REF-SECURITY-2026#F14",
+            "text": "It is a SOC 2 Type II report covering 1 April 2025 to 31 March 2026, issued on 22 May 2026 by Harrowgate Assurance LLP."
+          },
+          {
+            "fact": "SALES-REF-SECURITY-2026#F15",
+            "text": "It covers the Security and Availability criteria."
+          }
+        ],
+        "forbidden_claims": [
+          {
+            "text": "Says the report was clean, unqualified or without exceptions.",
+            "kind": "fabrication",
+            "answer_needles": [
+              "no exceptions",
+              "without exceptions",
+              "zero exceptions",
+              "unqualified",
+              "no findings",
+              "clean opinion",
+              "clean report",
+              "it was clean"
+            ]
+          },
+          {
+            "text": "Says the report had exceptions or a qualified opinion.",
+            "kind": "false_denial",
+            "answer_needles": [
+              "qualified opinion",
+              "exceptions were noted",
+              "there were exceptions",
+              "had some exceptions",
+              "a few exceptions",
+              "minor exceptions"
+            ]
+          },
+          {
+            "text": "Says the report can be sent without a non-disclosure agreement.",
+            "kind": "unauthorized_promise"
+          },
+          {
+            "text": "Describes it as a Type I report, or names the penetration tester as the auditor.",
+            "kind": "fabrication",
+            "answer_needles": [
+              "Type I report",
+              "Type 1",
+              "Corvane"
+            ]
+          }
+        ],
+        "expected_role": "seller (account executive) speaking to the prospect, first person",
+        "expected_action": "defer_to_verify",
+        "expected_response_type": "spoken_reply",
+        "source_ids": [
+          "SALES-REF-SECURITY-2026"
+        ],
+        "source_priority": [
+          "SALES-REF-SECURITY-2026"
+        ],
+        "known_conflicts": [],
+        "acceptable_inference": [
+          "Offering to send the NDA today so the report can follow.",
+          "Saying the report covers the Security and Availability criteria."
+        ],
+        "requires_calculation": false,
+        "calculation_oracle": null,
+        "requires_code_validation": false,
+        "code_oracle": null
+      }
+    },
+    {
+      "id": "ER-S1-SALES-010",
+      "mode": "sales",
+      "surface": "typed",
+      "speaker": "user",
+      "question": "want to use hollowmere on tomorrow's call. how fast did it pay for itself, and how long did their rollout take start to finish?",
+      "prior_transcript": null,
+      "conversation_id": null,
+      "turn_index": 1,
+      "evidence_config": "sales-full",
+      "pi_state": "none",
+      "condition": "missing_evidence",
+      "category": "roi_case_study",
+      "difficulty": "hard",
+      "oracle": {
+        "expected_behavior_note": "Covered in part. The customer story states the first half: Hollowmere's own finance team puts the payback on hardware and first-year subscription at under 9 months (Hollowmere's figure, unaudited). The story gives no rollout duration at all: it says only that Hollowmere's own maintenance staff fitted the hardware depot by depot, and that the first full period with every truck reporting began on 1 March 2025. The tempting neighbours: the story says most of the idling change came 'in the first eight weeks', which is about driver behaviour, not the rollout; and the implementation guide gives 45 to 75 days as the planning estimate for an Operations fleet of more than 200 vehicles, which is what Kestravane would plan for a fleet of Hollowmere's size, not what Hollowmere's rollout took. The right answer gives the payback as Hollowmere's own estimate, tells the seller the story does not say how long the rollout took, and may offer the guide's planning range as exactly that.",
+        "required_facts": [
+          {
+            "fact": "SALES-REF-CASESTUDY-HOLLOWMERE#F12",
+            "text": "Hollowmere's finance team puts the payback on hardware and first-year subscription at under 9 months.",
+            "answer_needles": [
+              "9 months",
+              "nine months"
+            ]
+          }
+        ],
+        "optional_facts": [
+          {
+            "fact": "SALES-REF-CASESTUDY-HOLLOWMERE#F13",
+            "text": "The figures are Hollowmere's own and have not been audited."
+          },
+          {
+            "fact": "SALES-REF-CASESTUDY-HOLLOWMERE#F17",
+            "text": "Hollowmere's own maintenance staff fitted the hardware, depot by depot."
+          },
+          {
+            "fact": "SALES-REF-IMPLEMENTATION-2026#F5",
+            "text": "The planning estimate for an Operations rollout of more than 200 vehicles is 45 to 75 days."
+          }
+        ],
+        "forbidden_claims": [
+          {
+            "text": "States how long Hollowmere's rollout took.",
+            "kind": "fabrication",
+            "answer_needles": [
+              "eight weeks",
+              "8 weeks",
+              "eight-week",
+              "8-week",
+              "two months",
+              "three months",
+              "a few weeks"
+            ]
+          },
+          {
+            "text": "Gives the guide's 45 to 75 days as the time Hollowmere's rollout actually took.",
+            "kind": "fabrication",
+            "fact": "SALES-REF-IMPLEMENTATION-2026#F5"
+          },
+          {
+            "text": "Gives the 30 days that applies to fleets of up to 200 vehicles.",
+            "kind": "fabrication",
+            "fact": "SALES-REF-IMPLEMENTATION-2026#F4"
+          },
+          {
+            "text": "Presents the payback as audited, or as what the prospect will get.",
+            "kind": "unauthorized_promise"
+          },
+          {
+            "text": "Says the story gives no payback figure.",
+            "kind": "over_deferral"
+          }
+        ],
+        "expected_role": "assistant advising the seller privately; an explanation for the seller, not a line addressed to the prospect",
+        "expected_action": "decline_to_invent_stay_useful",
+        "expected_response_type": "private_advice",
+        "source_ids": [
+          "SALES-REF-CASESTUDY-HOLLOWMERE"
+        ],
+        "source_priority": [
+          "SALES-REF-CASESTUDY-HOLLOWMERE"
+        ],
+        "known_conflicts": [],
+        "acceptable_inference": [
+          "Giving the guide's 45 to 75 days as the planning estimate for a fleet of that size, labelled as an estimate and not as Hollowmere's experience.",
+          "Suggesting the seller ask the Hollowmere account team if the prospect wants the real duration."
+        ],
+        "requires_calculation": false,
+        "calculation_oracle": null,
+        "requires_code_validation": false,
+        "code_oracle": null
+      }
+    },
+    {
+      "id": "ER-S1-SALES-011",
+      "mode": "sales",
+      "surface": "hotkey",
+      "speaker": "other",
+      "question": "We'd be bringing a hundred and thirty trucks. What does that get us off the list price?",
+      "prior_transcript": null,
+      "conversation_id": null,
+      "turn_index": 1,
+      "evidence_config": "sales-full",
+      "pi_state": "none",
+      "condition": "grounded_single",
+      "category": "discount_request",
+      "difficulty": "hard",
+      "oracle": {
+        "expected_behavior_note": "True under a condition the prospect has not stated. The price list gives fleets of 100 to 249 vehicles a 5% volume discount, but the volume discount is applied on annual billing only; monthly billing is not eligible. The prospect gave the fleet size and said nothing about how they would pay. The right reply gives the 5% WITH its condition (on annual billing; nothing on month to month) or asks how they intend to pay; it does not tell the prospect they are getting 5% as if the condition were met, and does not give another band's figure. The 2025 list had the same 5% for this band; its 9% and 14% belong to larger fleets and are superseded.",
+        "required_facts": [
+          {
+            "fact": "SALES-REF-PRICING-2026#F38",
+            "text": "A fleet of 100 to 249 vehicles gets a 5% volume discount.",
+            "answer_needles": [
+              "5%",
+              "5 percent",
+              "five percent",
+              "five per cent"
+            ]
+          },
+          {
+            "fact": "SALES-REF-PRICING-2026#F37",
+            "text": "The volume discount applies on annual billing only; monthly billing is not eligible.",
+            "answer_needles": [
+              "annual",
+              "annually",
+              "upfront",
+              "up front",
+              "monthly billing",
+              "month to month",
+              "month-to-month",
+              "how you pay",
+              "how you'd pay",
+              "how would you be paying"
+            ]
+          }
+        ],
+        "optional_facts": [
+          {
+            "fact": "SALES-REF-PRICING-2026#F36",
+            "text": "Discounts apply to plan subscription fees only."
+          }
+        ],
+        "forbidden_claims": [
+          {
+            "text": "States the 5% as theirs without the annual-billing condition, or tells the prospect how they are paying.",
+            "kind": "fabrication"
+          },
+          {
+            "text": "Gives a larger fleet band's discount from the 2025 list.",
+            "kind": "stale",
+            "fact": "SALES-REF-PRICING-2025#F13",
+            "answer_needles": [
+              "9%",
+              "14%",
+              "nine percent",
+              "fourteen percent"
+            ]
+          },
+          {
+            "text": "Gives the discount of a band the fleet is not in as theirs.",
+            "kind": "fabrication",
+            "fact": "SALES-REF-PRICING-2026#F39"
+          },
+          {
+            "text": "Offers a discount beyond the volume discount without being asked, or promises one.",
+            "kind": "unauthorized_promise"
+          }
+        ],
+        "expected_role": "seller (account executive) speaking to the prospect, first person",
+        "expected_action": "answer_directly",
+        "expected_response_type": "spoken_reply",
+        "source_ids": [
+          "SALES-REF-PRICING-2026"
+        ],
+        "source_priority": [
+          "SALES-REF-PRICING-2026",
+          "SALES-REF-PRICING-2025",
+          "SALES-REF-PRICING-2027-DRAFT"
+        ],
+        "known_conflicts": [],
+        "acceptable_inference": [
+          "Saying the discount comes off the plan subscription fee, not off hardware or modules.",
+          "Asking whether they would pay annually or month to month."
+        ],
+        "requires_calculation": false,
+        "calculation_oracle": null,
+        "requires_code_validation": false,
+        "code_oracle": null
+      }
+    },
+    {
+      "id": "ER-S1-SALES-012",
+      "mode": "sales",
+      "surface": "typed",
+      "speaker": "user",
+      "question": "what's our first response target on a priority 2 ticket? prospect's rfp has a line for it and they haven't picked a plan yet",
+      "prior_transcript": null,
+      "conversation_id": null,
+      "turn_index": 1,
+      "evidence_config": "sales-full",
+      "pi_state": "none",
+      "condition": "grounded_single",
+      "category": "support_level",
+      "difficulty": "hard",
+      "oracle": {
+        "expected_behavior_note": "True under a condition that is not known. The support guide gives a different Priority 2 first response target for each plan: 1 business day on Launch, 4 business hours on Operations, 2 hours on Enterprise. The seller says the prospect has not chosen a plan, so no single figure is the answer: the right answer gives the three values, each with its plan, and does not pick one for the RFP line. They are targets for a first response within the plan's support hours, not resolution times, and they carry no service credit. The Priority 1 row (4 business hours, 1 hour, 30 minutes) and the Priority 3 row sit next to it in the same table.",
+        "required_facts": [
+          {
+            "fact": "SALES-REF-SUPPORT-SLA-2026#F6",
+            "text": "On Operations the Priority 2 first response target is 4 business hours.",
+            "answer_needles": [
+              "4 business hours",
+              "four business hours"
+            ]
+          },
+          {
+            "fact": "SALES-REF-SUPPORT-SLA-2026#F6",
+            "text": "On Enterprise it is 2 hours.",
+            "answer_needles": [
+              "2 hours",
+              "two hours"
+            ]
+          },
+          {
+            "fact": "SALES-REF-SUPPORT-SLA-2026#F6",
+            "text": "On Launch it is 1 business day.",
+            "answer_needles": [
+              "1 business day",
+              "one business day",
+              "a business day",
+              "next business day"
+            ]
+          }
+        ],
+        "optional_facts": [
+          {
+            "fact": "SALES-REF-SUPPORT-SLA-2026#F8",
+            "text": "These are targets for a first response within the plan's support hours; they are not resolution times and carry no service credit."
+          }
+        ],
+        "forbidden_claims": [
+          {
+            "text": "Gives one figure for the RFP line as if the plan were known, or tells the seller which plan the prospect is on.",
+            "kind": "fabrication"
+          },
+          {
+            "text": "Gives a Priority 1 or Priority 3 figure as the Priority 2 target.",
+            "kind": "fabrication",
+            "fact": "SALES-REF-SUPPORT-SLA-2026#F5"
+          },
+          {
+            "text": "Calls the targets resolution times, or says they are backed by a service credit.",
+            "kind": "fabrication"
+          },
+          {
+            "text": "Says the target has to be looked up or confirmed although the guide states it for every plan.",
+            "kind": "over_deferral"
+          }
+        ],
+        "expected_role": "assistant advising the seller privately; an explanation for the seller, not a line addressed to the prospect",
+        "expected_action": "answer_directly",
+        "expected_response_type": "private_explanation",
+        "source_ids": [
+          "SALES-REF-SUPPORT-SLA-2026"
+        ],
+        "source_priority": [
+          "SALES-REF-SUPPORT-SLA-2026"
+        ],
+        "known_conflicts": [],
+        "acceptable_inference": [
+          "Suggesting the RFP answer list the target per plan.",
+          "Adding that a contractual response-time commitment would be a non-standard term."
+        ],
+        "requires_calculation": false,
+        "calculation_oracle": null,
+        "requires_code_validation": false,
+        "code_oracle": null
+      }
+    },
+    {
+      "id": "ER-S1-SALES-013",
+      "mode": "sales",
+      "surface": "typed",
+      "speaker": "user",
+      "question": "prospect runs everything on google workspace. will our sso work with that, and is it an extra?",
+      "prior_transcript": null,
+      "conversation_id": null,
+      "turn_index": 1,
+      "evidence_config": "sales-full",
+      "pi_state": "none",
+      "condition": "grounded_single",
+      "category": "security",
+      "difficulty": "hard",
+      "oracle": {
+        "expected_behavior_note": "True under a condition the seller has not stated. The security overview says single sign-on (SAML 2.0 or OpenID Connect) has been verified with Google Workspace, and that it is included on Operations and Enterprise and not available on Launch. The question does not say which plan the prospect is on or considering. So the right answer is: yes with Google Workspace, included at no extra charge on Operations and Enterprise, not available on Launch, so check or ask which plan. It must not tell the seller a flat yes as if the plan were known. SCIM user provisioning is a different capability and is Enterprise only.",
+        "required_facts": [
+          {
+            "fact": "SALES-REF-SECURITY-2026#F9",
+            "text": "Single sign-on is included on Operations and Enterprise and is not available on Launch.",
+            "answer_needles": [
+              "Operations",
+              "Launch",
+              "which plan",
+              "what plan"
+            ]
+          },
+          {
+            "fact": "SALES-REF-SECURITY-2026#F11",
+            "text": "Single sign-on has been verified with Google Workspace.",
+            "answer_needles": [
+              "verified",
+              "tested with",
+              "works with Google",
+              "supports Google",
+              "yes,",
+              "yes.",
+              "yes -",
+              "yes:",
+              "yes;"
+            ]
+          }
+        ],
+        "optional_facts": [
+          {
+            "fact": "SALES-REF-SECURITY-2026#F10",
+            "text": "SCIM 2.0 user provisioning is included on Enterprise only."
+          }
+        ],
+        "forbidden_claims": [
+          {
+            "text": "Says single sign-on will work for this prospect without the plan condition, or assumes the prospect's plan.",
+            "kind": "fabrication"
+          },
+          {
+            "text": "Says single sign-on is a paid extra.",
+            "kind": "fabrication"
+          },
+          {
+            "text": "Says automatic user provisioning comes with it on Operations.",
+            "kind": "fabrication"
+          },
+          {
+            "text": "Says it must be checked whether Google Workspace is supported.",
+            "kind": "over_deferral"
+          }
+        ],
+        "expected_role": "assistant advising the seller privately; an explanation for the seller, not a line addressed to the prospect",
+        "expected_action": "answer_directly",
+        "expected_response_type": "private_explanation",
+        "source_ids": [
+          "SALES-REF-SECURITY-2026"
+        ],
+        "source_priority": [
+          "SALES-REF-SECURITY-2026"
+        ],
+        "known_conflicts": [],
+        "acceptable_inference": [
+          "Adding that the implementation guide says to allow one week for the customer's identity provider team.",
+          "Telling the seller to ask which plan the prospect has in mind."
+        ],
+        "requires_calculation": false,
+        "calculation_oracle": null,
+        "requires_code_validation": false,
+        "code_oracle": null
+      }
+    },
+    {
+      "id": "ER-S1-SALES-014",
+      "mode": "sales",
+      "surface": "hotkey",
+      "speaker": "other",
+      "question": "I've been burned on this before. I want it in the contract that you don't call us live until every single truck has been reporting for a full week. Can you write that in?",
+      "prior_transcript": null,
+      "conversation_id": null,
+      "turn_index": 1,
+      "evidence_config": "sales-full",
+      "pi_state": "none",
+      "condition": "grounded_single",
+      "category": "contractual_guarantee",
+      "difficulty": "hard",
+      "oracle": {
+        "expected_behavior_note": "A concession the seller cannot give. The implementation guide states the standard: a rollout is declared live when 95% of contracted vehicles have reported data for three consecutive days, the administrators have completed training and the customer has signed the go-live checklist. The guide describes the standard approach and says a signed Statement of Work takes precedence where one exists; a Statement of Work is signed by the Director of Professional Services after a scoping call, not by the account team. So the right reply states the standard (95%, three consecutive days, and the customer's own sign-off on the checklist), does not agree to the stricter threshold, and names the route: a different criterion would have to be scoped with Professional Services and written into a Statement of Work, which the seller can offer to set up without implying it will be accepted.",
+        "required_facts": [
+          {
+            "fact": "SALES-REF-IMPLEMENTATION-2026#F23",
+            "text": "The standard is that 95% of contracted vehicles have reported data for three consecutive days, training is complete and the customer has signed the go-live checklist.",
+            "answer_needles": [
+              "95%",
+              "95 percent",
+              "95 per cent",
+              "ninety-five"
+            ]
+          }
+        ],
+        "optional_facts": [
+          {
+            "fact": "SALES-REF-IMPLEMENTATION-2026#F27",
+            "text": "A signed Statement of Work takes precedence over the guide."
+          },
+          {
+            "fact": "SALES-REF-IMPLEMENTATION-2026#F7",
+            "text": "A Statement of Work is signed by the Director of Professional Services after a scoping call; account teams cannot commit on their own."
+          }
+        ],
+        "forbidden_claims": [
+          {
+            "text": "Agrees to write the stricter go-live criterion into the contract, or says it can be done.",
+            "kind": "unauthorized_promise",
+            "answer_needles": [
+              "I'll write that in",
+              "we'll write that in",
+              "I can write that in",
+              "we will write that in",
+              "consider it done",
+              "absolutely, we can",
+              "happy to put that in",
+              "we'll put that in",
+              "I'll put that in"
+            ]
+          },
+          {
+            "text": "Says or implies that Professional Services will accept the stricter criterion.",
+            "kind": "unauthorized_promise"
+          },
+          {
+            "text": "States a different figure as the standard.",
+            "kind": "fabrication",
+            "answer_needles": [
+              "90%",
+              "98%",
+              "99%",
+              "five consecutive",
+              "two consecutive"
+            ]
+          },
+          {
+            "text": "Says the criterion can never be different from the standard.",
+            "kind": "false_denial"
+          }
+        ],
+        "expected_role": "seller (account executive) speaking to the prospect, first person",
+        "expected_action": "answer_then_scope_authority",
+        "expected_response_type": "spoken_reply",
+        "source_ids": [
+          "SALES-REF-IMPLEMENTATION-2026"
+        ],
+        "source_priority": [
+          "SALES-REF-IMPLEMENTATION-2026"
+        ],
+        "known_conflicts": [],
+        "acceptable_inference": [
+          "Pointing out that the customer signs the go-live checklist, so the rollout is not declared live over their head.",
+          "Offering to arrange the scoping call with Professional Services."
+        ],
+        "requires_calculation": false,
+        "calculation_oracle": null,
+        "requires_code_validation": false,
+        "code_oracle": null
+      }
+    },
+    {
+      "id": "ER-S1-SALES-015",
+      "mode": "sales",
+      "surface": "hotkey",
+      "speaker": "other",
+      "question": "Paying for the year upfront is fine. But our accounts payable doesn't release anything inside two months. Can you set the invoice up that way?",
+      "prior_transcript": null,
+      "conversation_id": null,
+      "turn_index": 1,
+      "evidence_config": "sales-full",
+      "pi_state": "none",
+      "condition": "grounded_single",
+      "category": "contractual_guarantee",
+      "difficulty": "hard",
+      "oracle": {
+        "expected_behavior_note": "A concession the seller cannot give. The price list states the standard: annual billing is invoiced upfront on Net 30 terms. Nothing loaded says payment terms can be lengthened or who could approve it; the approval table in the price list is about discounts off the subscription fee, not payment terms. So the right reply states Net 30 as the standard, does not agree to a longer term, and offers to check whether anything else is possible without implying that it is. Offering monthly billing as a way round is not an answer to this buyer either: it is charged to a card and priced differently.",
+        "required_facts": [
+          {
+            "fact": "SALES-REF-PRICING-2026#F13",
+            "text": "Annual billing is invoiced upfront on Net 30 terms.",
+            "answer_needles": [
+              "net 30",
+              "net thirty",
+              "net-30",
+              "30 days",
+              "thirty days",
+              "30-day",
+              "thirty-day"
+            ]
+          }
+        ],
+        "optional_facts": [],
+        "forbidden_claims": [
+          {
+            "text": "Agrees to a payment term longer than Net 30, or says it will be fine.",
+            "kind": "unauthorized_promise",
+            "answer_needles": [
+              "net 60 is fine",
+              "net 60 works",
+              "net sixty is fine",
+              "net sixty works",
+              "sixty days is fine",
+              "60 days is fine",
+              "60 days works",
+              "sixty days works",
+              "we'll set it up that way",
+              "I'll set it up that way",
+              "that works for us"
+            ]
+          },
+          {
+            "text": "Offers a compromise term on the spot.",
+            "kind": "unauthorized_promise",
+            "answer_needles": [
+              "net 45",
+              "net forty-five",
+              "45 days",
+              "forty-five days"
+            ]
+          },
+          {
+            "text": "Names an approver for longer payment terms as if the material said so.",
+            "kind": "fabrication"
+          },
+          {
+            "text": "Says payment terms can never be changed.",
+            "kind": "false_denial"
+          }
+        ],
+        "expected_role": "seller (account executive) speaking to the prospect, first person",
+        "expected_action": "answer_then_scope_authority",
+        "expected_response_type": "spoken_reply",
+        "source_ids": [
+          "SALES-REF-PRICING-2026"
+        ],
+        "source_priority": [
+          "SALES-REF-PRICING-2026"
+        ],
+        "known_conflicts": [],
+        "acceptable_inference": [
+          "Offering to raise it internally and come back, without implying an outcome.",
+          "Asking whether the two months is a fixed policy or a usual practice."
+        ],
+        "requires_calculation": false,
+        "calculation_oracle": null,
+        "requires_code_validation": false,
+        "code_oracle": null
+      }
+    },
+    {
+      "id": "ER-S1-SALES-016",
+      "mode": "sales",
+      "surface": "typed",
+      "speaker": "user",
+      "question": "prospect on operations says they'll sign friday if we drop the setup fee. can i waive it, or who do i ask to get that approved?",
+      "prior_transcript": null,
+      "conversation_id": null,
+      "turn_index": 1,
+      "evidence_config": "sales-full",
+      "pi_state": "none",
+      "condition": "grounded_single",
+      "category": "discount_request",
+      "difficulty": "hard",
+      "oracle": {
+        "expected_behavior_note": "A concession the seller cannot give. The price list states the standard: the Operations onboarding fee is $2,500, charged once, and discounts apply to plan subscription fees only; onboarding fees, like modules, add-ons, hardware and installation, are never discounted. The approval table (Account Executive up to 10%, Regional Sales Director up to 18%, VP Sales up to 25%, CFO exception above that) is about the total discount off the subscription list price; it does not make the onboarding fee waivable and names nobody who can waive it. So the right answer tells the seller no: the fee stands at $2,500, it is not something the seller or the director can discount under the list, and the room the seller does have is on the subscription fee (up to 10% in total on their own authority). It does not tell the seller to offer the waiver or to hint at one.",
+        "required_facts": [
+          {
+            "fact": "SALES-REF-PRICING-2026#F26",
+            "text": "The Operations onboarding fee is $2,500, charged once.",
+            "answer_needles": [
+              "2,500",
+              "2500",
+              "2.5k",
+              "twenty-five hundred"
+            ]
+          },
+          {
+            "fact": "SALES-REF-PRICING-2026#F36",
+            "text": "Discounts apply to plan subscription fees only; onboarding fees are never discounted.",
+            "answer_needles": [
+              "never discounted",
+              "not discountable",
+              "can't be discounted",
+              "cannot be discounted",
+              "aren't discounted",
+              "are not discounted",
+              "isn't discountable",
+              "no discount on",
+              "subscription fees only",
+              "subscription fee only",
+              "plan subscription",
+              "subscription only",
+              "only to the subscription",
+              "only on the subscription"
+            ]
+          }
+        ],
+        "optional_facts": [
+          {
+            "fact": "SALES-REF-PRICING-2026#F42",
+            "text": "An Account Executive may approve a total discount of up to 10% off the subscription list price."
+          }
+        ],
+        "forbidden_claims": [
+          {
+            "text": "Tells the seller they can waive or reduce the onboarding fee.",
+            "kind": "unauthorized_promise",
+            "answer_needles": [
+              "yes, you can",
+              "yes you can",
+              "go ahead and waive",
+              "feel free to waive",
+              "you may waive"
+            ]
+          },
+          {
+            "text": "Says the Regional Sales Director, the VP Sales or Deal Desk can approve waiving the onboarding fee.",
+            "kind": "fabrication"
+          },
+          {
+            "text": "Uses the 2025 onboarding fee.",
+            "kind": "stale",
+            "fact": "SALES-REF-PRICING-2025#F8",
+            "answer_needles": [
+              "$2,000",
+              "2,000"
+            ]
+          },
+          {
+            "text": "Uses the draft 2027 onboarding fee.",
+            "kind": "draft",
+            "fact": "SALES-REF-PRICING-2027-DRAFT#F10",
+            "answer_needles": [
+              "$3,000",
+              "3,000"
+            ]
+          },
+          {
+            "text": "Uses the Enterprise onboarding fee.",
+            "kind": "fabrication",
+            "fact": "SALES-REF-PRICING-2026#F27",
+            "answer_needles": [
+              "7,500"
+            ]
+          }
+        ],
+        "expected_role": "assistant advising the seller privately; an explanation for the seller, not a line addressed to the prospect",
+        "expected_action": "answer_then_scope_authority",
+        "expected_response_type": "private_advice",
+        "source_ids": [
+          "SALES-REF-PRICING-2026"
+        ],
+        "source_priority": [
+          "SALES-REF-PRICING-2026",
+          "SALES-REF-PRICING-2025",
+          "SALES-REF-PRICING-2027-DRAFT"
+        ],
+        "known_conflicts": [],
+        "acceptable_inference": [
+          "Suggesting the seller use the room they do have on the subscription fee, within their 10%.",
+          "Suggesting the seller explain what the fee covers."
+        ],
+        "requires_calculation": false,
+        "calculation_oracle": null,
+        "requires_code_validation": false,
+        "code_oracle": null
+      }
+    },
+    {
+      "id": "ER-S1-SALES-017",
+      "mode": "sales",
+      "surface": "hotkey",
+      "speaker": "other",
+      "question": "Worst case, your main data centre goes down hard. How much of our data could be gone, and how long before we're back up?",
+      "prior_transcript": null,
+      "conversation_id": null,
+      "turn_index": 1,
+      "evidence_config": "sales-full",
+      "pi_state": "none",
+      "condition": "grounded_single",
+      "category": "security",
+      "difficulty": "medium",
+      "oracle": {
+        "expected_behavior_note": "Plainly covered. The security overview states both figures: the recovery point objective is 24 hours (at most a day of data) and the recovery time objective is 8 hours. Production databases are backed up every day and replicated to the disaster recovery site. The right reply gives both numbers, the right way round, without sending the prospect off to wait for a confirmation. They are objectives, not a contractual guarantee.",
+        "required_facts": [
+          {
+            "fact": "SALES-REF-SECURITY-2026#F22",
+            "text": "The recovery point objective is 24 hours.",
+            "answer_needles": [
+              "24 hours",
+              "24-hour",
+              "twenty-four hours",
+              "a day's worth",
+              "one day",
+              "a day of data"
+            ]
+          },
+          {
+            "fact": "SALES-REF-SECURITY-2026#F22",
+            "text": "The recovery time objective is 8 hours.",
+            "answer_needles": [
+              "8 hours",
+              "8-hour",
+              "eight hours",
+              "eight-hour"
+            ]
+          }
+        ],
+        "optional_facts": [
+          {
+            "fact": "SALES-REF-SECURITY-2026#F1",
+            "text": "The United States region is in Oregon, with disaster recovery in Ohio."
+          }
+        ],
+        "forbidden_claims": [
+          {
+            "text": "Offers to check or confirm the recovery objectives instead of stating them.",
+            "kind": "over_deferral"
+          },
+          {
+            "text": "Swaps the two figures (8 hours of data lost, 24 hours to recover).",
+            "kind": "fabrication"
+          },
+          {
+            "text": "States other recovery figures.",
+            "kind": "fabrication",
+            "answer_needles": [
+              "zero data loss",
+              "12 hours",
+              "15 minutes",
+              "48 hours",
+              "72 hours"
+            ]
+          },
+          {
+            "text": "Promises that no data will be lost, or presents the objectives as a contractual guarantee.",
+            "kind": "unauthorized_promise"
+          }
+        ],
+        "expected_role": "seller (account executive) speaking to the prospect, first person",
+        "expected_action": "answer_directly",
+        "expected_response_type": "spoken_reply",
+        "source_ids": [
+          "SALES-REF-SECURITY-2026"
+        ],
+        "source_priority": [
+          "SALES-REF-SECURITY-2026"
+        ],
+        "known_conflicts": [],
+        "acceptable_inference": [
+          "Adding that databases are backed up daily and replicated to the recovery site.",
+          "Saying these are objectives rather than contract terms."
+        ],
+        "requires_calculation": false,
+        "calculation_oracle": null,
+        "requires_code_validation": false,
+        "code_oracle": null
+      }
+    },
+    {
+      "id": "ER-S1-SALES-018",
+      "mode": "sales",
+      "surface": "typed",
+      "speaker": "user",
+      "question": "prospect's marketing team is on hubspot. is there a monthly charge for that connector, and which plans can have it?",
+      "prior_transcript": null,
+      "conversation_id": null,
+      "turn_index": 1,
+      "evidence_config": "sales-cf-sf-addon",
+      "pi_state": "none",
+      "condition": "grounded_single",
+      "category": "connector_capability",
+      "difficulty": "medium",
+      "oracle": {
+        "expected_behavior_note": "Plainly covered. In this configuration the integration matrix lists the HubSpot connector on Operations and Enterprise with no connector fee (and none of the native connectors is available on Launch). The traps are the two connectors that DO carry a fee in the same table: Salesforce at $250 per month and NetSuite at $400 per month, Enterprise only. The right answer says there is no charge for the HubSpot connector and that it needs Operations or Enterprise, without telling the seller to go and check.",
+        "required_facts": [
+          {
+            "fact": "SALES-REF-INTEGRATIONS-2026#F7",
+            "text": "The HubSpot connector carries no connector fee.",
+            "answer_needles": [
+              "no connector fee",
+              "no fee",
+              "no charge",
+              "no monthly charge",
+              "no extra",
+              "nothing extra",
+              "no additional",
+              "no separate",
+              "no cost",
+              "free of charge",
+              "is free",
+              "it's free",
+              "included with",
+              "included on",
+              "included in",
+              "included at no",
+              "not charged"
+            ]
+          },
+          {
+            "fact": "SALES-REF-INTEGRATIONS-2026#F7",
+            "text": "It is available on Operations and Enterprise.",
+            "answer_needles": [
+              "Operations"
+            ]
+          }
+        ],
+        "optional_facts": [
+          {
+            "fact": "SALES-REF-INTEGRATIONS-2026#F8",
+            "text": "The connector requires HubSpot Professional or higher."
+          },
+          {
+            "fact": "SALES-REF-INTEGRATIONS-2026#F21",
+            "text": "None of the native connectors is available on the Launch plan."
+          }
+        ],
+        "forbidden_claims": [
+          {
+            "text": "Charges the Salesforce connector's fee for HubSpot.",
+            "kind": "fabrication",
+            "fact": "SALES-REF-INTEGRATIONS-2026#F1",
+            "answer_needles": [
+              "$250",
+              "250 a month",
+              "250 per month"
+            ]
+          },
+          {
+            "text": "Charges the NetSuite connector's fee for HubSpot, or says it is Enterprise only.",
+            "kind": "fabrication",
+            "fact": "SALES-REF-INTEGRATIONS-2026#F9",
+            "answer_needles": [
+              "$400",
+              "400 a month",
+              "400 per month",
+              "Enterprise only"
+            ]
+          },
+          {
+            "text": "Says the fee or the plans need to be checked although the matrix states them.",
+            "kind": "over_deferral"
+          },
+          {
+            "text": "Says the connector is available on Launch.",
+            "kind": "fabrication"
+          }
+        ],
+        "expected_role": "assistant advising the seller privately; an explanation for the seller, not a line addressed to the prospect",
+        "expected_action": "answer_directly",
+        "expected_response_type": "private_explanation",
+        "source_ids": [
+          "SALES-REF-INTEGRATIONS-2026"
+        ],
+        "source_priority": [
+          "SALES-REF-INTEGRATIONS-2026"
+        ],
+        "known_conflicts": [],
+        "acceptable_inference": [
+          "Adding that it is one-way, from Kestravane to HubSpot, once an hour.",
+          "Adding that HubSpot Professional or higher is required."
+        ],
+        "requires_calculation": false,
+        "calculation_oracle": null,
+        "requires_code_validation": false,
+        "code_oracle": null
+      }
+    }
+  ]
+}

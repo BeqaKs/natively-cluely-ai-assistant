@@ -3649,3 +3649,19 @@ unit test that no other mode's prompt changes, then one app run of Sales (dev, d
 Landing is Evin's word. Any line failing: not proposed, numbers reported.
 **State at declaration:** the DeepSeek account has no balance (asked 17:13 UTC, `is_available: false`) and the
 judge is behind an access-block flag, so nothing of this can run yet. The author of `sales1` is working.
+
+### E31 — the new Sales sets are authored and frozen (recorded 2026-10-11 20:12 UTC; nothing run on them)
+`sales1` 18 items (`f5d0d839f78d`, readable) and `sales1-val` 18 items (`5cfc05d76f0b`, never read by me:
+counts only). One blind author from `AUTHORING-ER-SALES1.md`; the first attempt was cut off by a network failure
+before anything was written and was resumed. Lint: 0 errors in both; 4 warnings in each, the expected
+"missing_evidence item has document-required facts" on the four covered-in-part items. Freeze: the ten existing
+sets keep their hashes (checked one by one against the freeze before), manifest unchanged, 104 evidence files.
+Readable half: evidence missing 10, one grounded source 8; 13 spoken by the prospect, 5 typed by the seller; five
+configs, three of which drop a file; 16 of 18 items carry a forbidden string, 12 a required string.
+**Limits the author reported, which bound what the judge-free lines can show:** several "affirms it" / "denies it"
+claims carry no string, because any such phrase also occurs in a correct "I'll confirm whether…" reply, so the
+strings sit on invented values and on neighbours with no place in a right answer; the unstated-condition items
+are caught by a required string naming the condition, not by a forbidden one, and one of those strings ("annual")
+could occur by accident; the plain items use the kind `over_deferral` (the lint's name; the brief said
+`excessive_deferral` and is corrected). So lines 2 and 3 of the rule see invented values and missing conditions;
+a bare presupposition ("how the X integration works") is visible only to the judge (J1, J2, J4).

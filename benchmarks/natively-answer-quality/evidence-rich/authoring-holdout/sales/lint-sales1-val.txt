@@ -1,0 +1,7 @@
+errors (0)
+
+warnings (4)
+ER-SV1-SALES-007: missing_evidence item has document-required facts
+ER-SV1-SALES-008: missing_evidence item has document-required facts
+ER-SV1-SALES-009: missing_evidence item has document-required facts
+ER-SV1-SALES-010: missing_evidence item has document-required facts
