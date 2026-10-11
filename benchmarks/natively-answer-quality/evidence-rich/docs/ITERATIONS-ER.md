@@ -3832,3 +3832,50 @@ needed or owed", with a personal and a contract example), because the same fault
 modes (readable: these development rows; no unread rows tonight); line 3 on all nine modes; line 4 unchanged.
 Judged: rows of the priority modes whose shown text differs between base and the chosen arm (K1 on them, K3 on
 the other modes' differing rows if the pool allows). The Sales sets wait.
+
+### E34 — judge-free lines read (2026-10-11 21:52 UTC): fails lines 2 and 4; not proposed, not sent to the judge
+Replays 21:36:58–21:46:56 UTC through AgentRouter (`deepseek-v4-flash`), k = 2, 315 priority-mode prompts, 630
+samples per arm. `report/arm-read.mjs --kind gen --base e34-base --arms e34-a` (its pattern for a negative
+self-claim was written before the replays were read):
+
+| | base | E34 |
+|---|---:|---:|
+| Readable prompts (273): right by the fixed checks | 90.7 % | 90.7 % |
+| Readable: samples with a forbidden string | 15 | 14 |
+| Unread prompts (42; counts only): right | 83.3 % | **78.6 % (−4.8)** |
+| Unread: samples with a forbidden string | 10 | 10 |
+| Evidence missing, readable (35 prompts): samples with a negative self-claim | 7 | 4 |
+| Evidence missing, unread (9): samples with a negative self-claim | 1 | 0 |
+| Median length | 51 words | 52 |
+| Calls not answered | 0 | **1 (empty answer)** |
+
+Line 1 holds, line 3 holds (7 → 4), **line 2 fails** (the limit was 3.0 points; the base arm's own two repetitions
+differ by 2 of 42 on those prompts, so 4 samples of 84 is not far outside replay spread, but the line is the
+line), **line 4 fails** on one empty answer. By mode on the readable prompts: Looking for work 91.1 → 93.2 %,
+Technical Interview 88.4 → 87.4 %, General 92.8 → 91.6 %. The clause removes about half of the few negative
+self-claims the pattern can see and moves nothing else. **E34 stops here.**
+
+### Profile intelligence, checked before building anything (2026-10-11 21:54 UTC): lengths of time and employer attribution are right on current main
+By the fixed checks, current main answers `prov1` 24 of 24 (employer and title 4 / 4, lengths of time 3 / 3 per
+mode file, posting facts 2 / 2, own history with only the posting 3 / 3) and 17 of the 18 profile-mode questions
+that ask for a length of time across tonight's dev run, `er9-dev2-e26`, `challenge` and `prov1`. The derived
+"Complete employment history" block gives every role with its dates and the model counts correctly from it. So a
+computed-tenure block (considered as a profile-intelligence change) has nothing to fix and is not built. What the
+judged baseline showed as résumé mistakes (three of the 18 profile-mode hard fails) predates E23 / E26.
+
+## E36 — the fix-up pass: what a job posting describes is not the candidate's past (declared 2026-10-11 21:54 UTC, before any replay)
+**Why.** With only the posting loaded, "walk me through a system you designed" is answered with the posting's own
+system told in the first person ("my part was the design and the build: the idempotency layer…"; tonight's main
+still does it), and the pass edits the row without removing it: every noun of the claim is in the material, as the
+employer's duty, not as the candidate's history. Source attribution, on the pass; the generator-side notices for
+this (E24, E24b) failed and are not repeated.
+**Arm** `e36-a` (`replay-variants/e36-posting-is-not-their-past.mjs`): one clause on the [past] kind. Base
+`e36-base`. Drafts, the two profile modes only: `er11-dev-main`, `er9-dev2-e26`, `er7-chal-main`,
+`er8-prov1-main` (readable); `er7-chalval-main`, `er8-prov1val-main` (unread). AgentRouter, k = 2, cap 136,000.
+**Judge-free lines** (shown text, obj-3): (1) readable: right not more than 1.0 point below base, forbidden-string
+samples at most base; (2) unread (counts): at most 2 samples fewer right, forbidden-string samples at most base +
+1; (3) rows whose answer IS a posting fact (`prov1` categories `prov_posting_fact` and `prov_jd_fact_*`): right
+not lower than base, readable and unread; (4) share of replays that edit the draft not more than 5 points above
+base, pass time median not more than 150 ms above.
+**Judged lines** (rows whose shown text differs between the arms, repetition 0): M1. readable rows: mean higher
+and hard fails fewer than base; M2. unread rows: mean not lower, hard fails at most base.
