@@ -8,7 +8,7 @@ const args = process.argv.slice(2); const opt = (k, d = null) => { const i = arg
 const plan = JSON.parse(fs.readFileSync(path.resolve(opt('plan', path.join(ER, 'results/replay/astra-plan-e29.json'))), 'utf8')); const K = Number(opt('k', 0));
 const [armA, armB] = plan.arms.map((a) => a.replace(/@\d+$/, ''));
 const lines = (f) => (fs.existsSync(f) ? fs.readFileSync(f, 'utf8').split('\n').filter(Boolean).map((l) => JSON.parse(l)) : []);
-const outcome = (arm) => new Map(lines(path.join(ER, 'results/replay', `${arm}.jsonl`)).filter((r) => r.k === K).map((r) => [`${r.run}|${r.id}`, r.changed]));
+const outcome = (arm) => new Map(lines(path.join(ER, 'results/replay', `${arm.replace(/-k\d+$/, '')}.jsonl`)).filter((r) => r.k === K).map((r) => [`${r.run}|${r.id}`, r.changed]));
 const oa = outcome(armA), ob = outcome(armB);
 const jcache = new Map(); const judged = (name) => { if (!jcache.has(name)) { const m = new Map(); for (const j of lines(path.join(ER, 'judge/out/base', `${name}.astra.jsonl`))) if (j.ok && j.judge_model === 'gpt-6-astra') m.set(j.benchmark_id, j); jcache.set(name, m); } return jcache.get(name); };
 const rcache = new Map(); const run = (name) => { if (!rcache.has(name)) rcache.set(name, loadRun(path.join(ER, 'results', name))); return rcache.get(name); };

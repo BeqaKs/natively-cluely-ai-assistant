@@ -3516,3 +3516,65 @@ mine and none touched). Nothing of this work runs now. `~/natively-er-backup/res
 (the window still waits for 02:00:30 UTC); a session job at 07:15 IST runs it and then reads the window. Cost: if
 the DeepSeek balance returns before 07:15 IST, the E30 app runs start at 07:15 and not earlier, so E30 will most
 likely be judged in the window after this one. Last balance answer before the stop: 21:48 UTC, not available.
+
+### Astra window of 2026-10-11, 02:00–02:28 UTC — E29 repetition 1 judged; closed by a provider access block (recorded 2026-10-11 02:47 UTC)
+**Course.** Both waiting scripts restarted at 01:45:05 UTC (`restart-0715.sh`, Evin's 07:15 IST). Probe 02:00:49 UTC:
+exact gpt-6-astra on the first attempt. Calibration 02:00–02:08:49 UTC: **38/38**, every returned model exact
+gpt-6-astra (`calibration-astra-1791684529934.json`). No E30 run was listed (the DeepSeek account still has no
+balance; asked every 5 minutes, last answer 02:37 UTC). E29 repetition 1, 02:08:50–02:28:36 UTC: 50 judgments (48
+replayed rows, 2 drafts), no failure, no model mismatch. The larger-pack stage (derived rows of arm A, three
+streams of three calls) started 02:28:36. **At 02:28:39.888 one call returned HTTP 403 with the provider's
+content-policy body ("Permission denied: Your resource has been temporarily blocked because we detected behavior
+that may violate our content policy").** This is the access block, not the quota reply. The guard wrote the flag
+and refused every further call locally (38 refused, recorded as not-ok receipts); 8 calls already in flight
+completed and are kept. Nothing was retried; no key, route, content or encoding was changed; the second key was
+not tried (that is for the quota body only). I stopped the window script and its streams at 02:39:50 UTC. The flag
+`/tmp/er-access-block-20261008-1630.json` stays; it is removed only after one clean probe by hand in a later
+window. This is the third block (2026-10-08, 2026-10-09, 2026-10-11); the three arrived on different material
+(holdout replays, development rows, larger-pack lecture rows), so no one item is singled out.
+**New judgments: 58** (E29 repetition 1: 50; arm A derived larger-pack rows: 8, now 36 of 120 with the candidate at
+0, so still no pair). **Not judged:** the derived larger-pack pair, E26, the other X2 arms, 140 holdout rows,
+drafts, and everything of E30.
+
+**E29 — repetition 1 against its rule (33 rows where the two passes' shown text differs, all judged on both sides)**
+
+| | pass before E19 | pass as on main (E19) |
+|---|---:|---:|
+| mean | 8.182 | 8.038 (−0.144, 95 % half-width 0.57) |
+| hard fails | 6 | 8 |
+| invention-flag rows | 6 | 8 |
+
+Line 1 (hard fails with E19 ≤ without) **fails, by two rows**; line 2 (invention-flag rows ≤ without + 1) **fails,
+by one**; line 3 (mean ≥ without − 0.20) holds. By which pass edited (`report/e29-breakdown.mjs`, whose lookup of
+the repetition-1 replay rows I fixed today: it read a file name that does not exist and put every row under
+"neither edited"): only the old pass edited, 10 rows 8.42 → 8.44, hard 2 → 2; only the E19 pass edited, 3 rows
+7.17 → 9.41, hard 1 → 0; both edited with different text, 20 rows 8.21 → 7.63, hard 3 → 6.
+
+**E29 — verdict over both repetitions.** Line 1 failed on both (7 → 8, then 6 → 8); line 2 failed on one (unsettled);
+line 3 held on both. The rule, written before the replay: "any line failing on both repetitions is reported to Evin
+as a regression of E19 on evidence-missing questions". **So it is reported as one.** Size and place, both
+repetitions together with one value per question (`report/e29-pooled.mjs`, new):
+
+| | row-repetitions / questions | before E19 → E19 | per question (95 %) | hard fails |
+|---|---:|---:|---:|---:|
+| all differing rows | 67 / 36 | 8.148 → 7.991 | −0.10 (−0.61 to +0.42) | 13 → 16 |
+| only the old pass edited (E19 leaves the draft alone) | 21 / 12 | 8.372 → 8.212 | −0.13 (−0.49 to +0.23) | 4 → 5 |
+| only the E19 pass edited | 6 / 5 | 5.736 → 8.523 | +2.19 (−0.17 to +4.55) | 4 → 1 |
+| both passes edited, different text | 40 / 23 | 8.392 → 7.796 | −0.64 (−1.33 to +0.04) | 5 → 10 |
+
+Replay-to-replay movement of one arm against itself on the 31 questions that differ in both repetitions: old pass
+mean absolute move 0.33, hard-fail state changed on 1 question; E19 pass 0.56, on 3.
+What it says: the drafts E19 was written to leave alone are not where the loss is (no measurable change there, and
+the few drafts only the E19 pass edits gain). The loss sits where both passes rewrite the same draft: the E19
+pass's rewrite scored lower in both repetitions (hard 2 → 4 and 3 → 6). The mean over all differing rows is not
+distinguishable from zero; the count line is what failed, by 1 and 2 rows of 34 and 33. This agrees in direction
+with the baseline pair (evidence missing 8.04 → 7.68, hard 15 → 20 on two different sets of drafts).
+**Nothing is proposed.** E19 stays on main (its own rule held on 88 rows, 8.29 → 8.68, hard 12 → 7, and on the
+blind holdout; the 630-row baseline is not different); undoing it would be Evin's call. The lead for a later
+candidate: why the pass with E19's sentence rewrites an evidence-missing draft worse than the pass without it
+(development rows, readable; no judge call is needed to look).
+
+**E30.** Not run, not judged, not landed: the DeepSeek account has had no balance since 2026-10-10 19:59 UTC. The
+conditional landing Evin authorized did not arise.
+**What runs now:** only the balance poller (`chain-e30-wait.sh`, until about 15:45 UTC). No judge window is
+running or scheduled; the next one needs a probe by hand with the flag rule above.

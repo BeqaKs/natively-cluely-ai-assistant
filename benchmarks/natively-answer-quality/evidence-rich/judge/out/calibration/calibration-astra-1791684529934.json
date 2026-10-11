@@ -1,0 +1,649 @@
+{
+ "at": "2026-10-11T02:08:49.933Z",
+ "judge_provider": "agentrouter",
+ "judge_model": "gpt-6-astra",
+ "judge_family": "gpt-6-astra",
+ "judge_status": "canonical",
+ "charter_version": "er1-ebec3e9a021e",
+ "envelope_evidence": "focused",
+ "correct": 38,
+ "total": 38,
+ "need": 35,
+ "pass": true,
+ "results": [
+  {
+   "id": "ERCAL-01",
+   "class": "current_vs_stale_price",
+   "want": "A",
+   "got": "A",
+   "correct": true,
+   "strength": "decisive",
+   "reason": "A gives the exact current rate in immediately usable speech. B is equally concise but quotes a superseded price, creating a material pricing error.",
+   "flags_good": [],
+   "flags_bad": [
+    "stale_source_preferred",
+    "missed_available_evidence",
+    "pricing_error",
+    "major_factual_error"
+   ],
+   "returned_model": "gpt-6-astra",
+   "ok": true
+  },
+  {
+   "id": "ERCAL-02",
+   "class": "current_vs_draft_price",
+   "want": "B",
+   "got": "B",
+   "correct": true,
+   "strength": "decisive",
+   "reason": "B accurately quotes the authoritative v4.2 price and billing basis. A instead quotes a draft that explicitly says it is unapproved and must not be used for customer pricing.",
+   "flags_good": [],
+   "flags_bad": [
+    "draft_source_preferred",
+    "missed_available_evidence",
+    "pricing_error",
+    "major_factual_error"
+   ],
+   "returned_model": "gpt-6-astra",
+   "ok": true
+  },
+  {
+   "id": "ERCAL-03",
+   "class": "fact_vs_authority_to_promise",
+   "want": "B",
+   "got": "B",
+   "correct": true,
+   "strength": "decisive",
+   "reason": "B distinguishes the planning estimate from an authorized written commitment and offers the correct Statement of Work route. A makes the exact unauthorized guarantee the implementation guide prohibits.",
+   "flags_good": [],
+   "flags_bad": [
+    "unsafe_commitment",
+    "unsupported_company_claim",
+    "major_factual_error",
+    "missed_available_evidence"
+   ],
+   "returned_model": "gpt-6-astra",
+   "ok": true
+  },
+  {
+   "id": "ERCAL-04",
+   "class": "unknown_is_not_false",
+   "want": "A",
+   "got": "A",
+   "correct": true,
+   "strength": "decisive",
+   "reason": "A gives a grounded, immediately speakable verification response and accurately states the available assurance. B invents a negative compliance status that could wrongly disqualify the company.",
+   "flags_good": [],
+   "flags_bad": [
+    "unsupported_company_claim"
+   ],
+   "returned_model": "gpt-6-astra",
+   "ok": true
+  },
+  {
+   "id": "ERCAL-05",
+   "class": "conflict_surfaced_vs_ignored",
+   "want": "A",
+   "got": "A",
+   "correct": true,
+   "strength": "decisive",
+   "reason": "A handles the exact evidence state: conflicting current thresholds with 270 between them. B silently selects one source and could lead the seller to promise coverage that has not been established.",
+   "flags_good": [],
+   "flags_bad": [
+    "source_conflict_ignored",
+    "missed_available_evidence"
+   ],
+   "returned_model": "gpt-6-astra",
+   "ok": true
+  },
+  {
+   "id": "ERCAL-06",
+   "class": "fact_vs_authority_sla",
+   "want": "A",
+   "got": "A",
+   "correct": true,
+   "strength": "decisive",
+   "reason": "A gives an immediately usable, evidence-grounded answer and preserves the approval boundary. B makes the exact unauthorized contractual promise the loaded policy forbids.",
+   "flags_good": [],
+   "flags_bad": [
+    "missed_available_evidence",
+    "unsupported_company_claim",
+    "unsafe_commitment"
+   ],
+   "returned_model": "gpt-6-astra",
+   "ok": true
+  },
+  {
+   "id": "ERCAL-07",
+   "class": "direct_vs_source_dump",
+   "want": "B",
+   "got": "B",
+   "correct": true,
+   "strength": "clear",
+   "reason": "Both answers are accurate, but B conveys the complete pricing answer in one immediately sayable sentence. A burdens the live moment with irrelevant detail and document attribution.",
+   "flags_good": [],
+   "flags_bad": [
+    "evidence_overload"
+   ],
+   "returned_model": "gpt-6-astra",
+   "ok": true
+  },
+  {
+   "id": "ERCAL-08",
+   "class": "current_vs_stale_policy",
+   "want": "B",
+   "got": "B",
+   "correct": true,
+   "strength": "decisive",
+   "reason": "B correctly applies the current policy to the 40-day renewal and offers to prevent future renewal while preserving paid access. A relies on outdated guidance and makes an unauthorised full-refund promise.",
+   "flags_good": [],
+   "flags_bad": [
+    "stale_source_preferred",
+    "missed_available_evidence",
+    "major_factual_error",
+    "unsafe_commitment"
+   ],
+   "returned_model": "gpt-6-astra",
+   "ok": true
+  },
+  {
+   "id": "ERCAL-09",
+   "class": "policy_vs_authority",
+   "want": "A",
+   "got": "A",
+   "correct": true,
+   "strength": "decisive",
+   "reason": "A provides a truthful, immediately speakable escalation path without promising approval. B directly contradicts the agent's authority and falsely assures the customer that the refund is complete.",
+   "flags_good": [],
+   "flags_bad": [
+    "unsupported_policy_claim",
+    "unsafe_commitment",
+    "major_factual_error",
+    "missed_available_evidence"
+   ],
+   "returned_model": "gpt-6-astra",
+   "ok": true
+  },
+  {
+   "id": "ERCAL-10",
+   "class": "policy_vs_invented_policy",
+   "want": "B",
+   "got": "B",
+   "correct": true,
+   "strength": "decisive",
+   "reason": "B gives a concise, immediately speakable explanation of the actual privacy protections and exceptions. A falsely tells the customer that senior engineers can watch live feeds.",
+   "flags_good": [],
+   "flags_bad": [
+    "major_factual_error",
+    "unsupported_company_claim",
+    "unsupported_policy_claim",
+    "missed_available_evidence"
+   ],
+   "returned_model": "gpt-6-astra",
+   "ok": true
+  },
+  {
+   "id": "ERCAL-11",
+   "class": "no_policy_vs_invented_procedure",
+   "want": "A",
+   "got": "A",
+   "correct": true,
+   "strength": "decisive",
+   "reason": "A moves the call forward by collecting details and offering to check without inventing a remedy. B gives unsupported policy claims and consequential promises that the agent cannot substantiate.",
+   "flags_good": [],
+   "flags_bad": [
+    "unsupported_policy_claim",
+    "unsafe_commitment"
+   ],
+   "returned_model": "gpt-6-astra",
+   "ok": true
+  },
+  {
+   "id": "ERCAL-12",
+   "class": "natural_vs_ai_epistemic_leak",
+   "want": "B",
+   "got": "B",
+   "correct": true,
+   "strength": "decisive",
+   "reason": "B gives the agent an immediately usable, truthful way to continue the call. A avoids fabrication but exposes the system's retrieval state and leaves the customer at a dead end.",
+   "flags_good": [],
+   "flags_bad": [
+    "ai_epistemic_leak"
+   ],
+   "returned_model": "gpt-6-astra",
+   "ok": true
+  },
+  {
+   "id": "ERCAL-13",
+   "class": "conflict_surfaced_vs_ignored",
+   "want": "A",
+   "got": "A",
+   "correct": true,
+   "strength": "clear",
+   "reason": "A identifies both current timelines, warns against promising the shorter one, and recommends flagging the discrepancy. B conceals the conflict and gives an unjustified definitive answer. A still needs confirmation rather than endorsing five days.",
+   "flags_good": [],
+   "flags_bad": [
+    "source_conflict_ignored",
+    "missed_available_evidence"
+   ],
+   "returned_model": "gpt-6-astra",
+   "ok": true
+  },
+  {
+   "id": "ERCAL-14",
+   "class": "policy_reasoned_vs_invented_promise",
+   "want": "A",
+   "got": "A",
+   "correct": true,
+   "strength": "decisive",
+   "reason": "A gives an immediately usable, policy-grounded response with clear next steps. B promises an unauthorized replacement and guaranteed arrival date, creating false expectations.",
+   "flags_good": [],
+   "flags_bad": [
+    "missed_available_evidence",
+    "unsafe_commitment"
+   ],
+   "returned_model": "gpt-6-astra",
+   "ok": true
+  },
+  {
+   "id": "ERCAL-15",
+   "class": "current_vs_stale_quote",
+   "want": "A",
+   "got": "A",
+   "correct": true,
+   "strength": "decisive",
+   "reason": "A answers directly with the authoritative current payment terms. B gives the outdated deposit, understating the amount due by $3,250.",
+   "flags_good": [],
+   "flags_bad": [
+    "stale_source_preferred",
+    "missed_available_evidence",
+    "major_factual_error",
+    "pricing_error"
+   ],
+   "returned_model": "gpt-6-astra",
+   "ok": true
+  },
+  {
+   "id": "ERCAL-16",
+   "class": "current_decision_vs_invented_history",
+   "want": "B",
+   "got": "B",
+   "correct": true,
+   "strength": "decisive",
+   "reason": "B uses the actual inspection findings to authorize the recommended work in immediately sayable language. A reaches the same choice but justifies it with fabricated personal maintenance history.",
+   "flags_good": [],
+   "flags_bad": [
+    "unsupported_personal_claim",
+    "fabricated_behavioral_story"
+   ],
+   "returned_model": "gpt-6-astra",
+   "ok": true
+  },
+  {
+   "id": "ERCAL-17",
+   "class": "available_evidence_vs_deferral",
+   "want": "A",
+   "got": "A",
+   "correct": true,
+   "strength": "decisive",
+   "reason": "A immediately supplies the exact gate code and parking location from the loaded trip plan. B ignores that available evidence and makes the user look elsewhere.",
+   "flags_good": [],
+   "flags_bad": [
+    "missed_available_evidence",
+    "important_question_unanswered",
+    "excessive_deferral"
+   ],
+   "returned_model": "gpt-6-astra",
+   "ok": true
+  },
+  {
+   "id": "ERCAL-18",
+   "class": "arithmetic_correct_vs_wrong",
+   "want": "A",
+   "got": "A",
+   "correct": true,
+   "strength": "decisive",
+   "reason": "A correctly calculates both requested amounts from Revision C. B gives two wrong monetary amounts, matching a mixture of the current total and outdated island price.",
+   "flags_good": [],
+   "flags_bad": [
+    "stale_source_preferred",
+    "missed_available_evidence",
+    "pricing_error",
+    "major_factual_error"
+   ],
+   "returned_model": "gpt-6-astra",
+   "ok": true
+  },
+  {
+   "id": "ERCAL-19",
+   "class": "small_talk_vs_invented_personal_fact",
+   "want": "A",
+   "got": "A",
+   "correct": true,
+   "strength": "decisive",
+   "reason": "A provides immediately usable small talk without fabrication. B sounds conversational but puts a specific, unsupported personal experience into the user's mouth.",
+   "flags_good": [],
+   "flags_bad": [
+    "unsupported_personal_claim"
+   ],
+   "returned_model": "gpt-6-astra",
+   "ok": true
+  },
+  {
+   "id": "ERCAL-20",
+   "class": "answer_vs_coaching_and_role",
+   "want": "B",
+   "got": "B",
+   "correct": true,
+   "strength": "decisive",
+   "reason": "B directly answers the candidate with the authoritative policy and correct caregiver coverage. A supplies no policy information and leaves the recruiter to construct the actual answer.",
+   "flags_good": [],
+   "flags_bad": [
+    "missed_available_evidence",
+    "coaching_instead_of_answer",
+    "important_question_unanswered"
+   ],
+   "returned_model": "gpt-6-astra",
+   "ok": true
+  },
+  {
+   "id": "ERCAL-21",
+   "class": "current_vs_stale_benefit",
+   "want": "A",
+   "got": "A",
+   "correct": true,
+   "strength": "decisive",
+   "reason": "A accurately states the current 18-week, fully paid entitlement for all new parents. B gives obsolete policy terms despite the authoritative replacement being loaded.",
+   "flags_good": [],
+   "flags_bad": [
+    "stale_source_preferred",
+    "missed_available_evidence",
+    "major_factual_error"
+   ],
+   "returned_model": "gpt-6-astra",
+   "ok": true
+  },
+  {
+   "id": "ERCAL-22",
+   "class": "probe_vs_role_inversion",
+   "want": "B",
+   "got": "B",
+   "correct": true,
+   "strength": "decisive",
+   "reason": "B supplies the exact recruiter follow-up this moment needs, grounded in the résumé. A reverses the speaker role and embellishes the candidate’s disputed leadership claim.",
+   "flags_good": [],
+   "flags_bad": [
+    "role_confusion",
+    "missed_available_evidence",
+    "fabricated_behavioral_story",
+    "major_factual_error"
+   ],
+   "returned_model": "gpt-6-astra",
+   "ok": true
+  },
+  {
+   "id": "ERCAL-23",
+   "class": "decision_log_vs_invented_history",
+   "want": "B",
+   "got": "B",
+   "correct": true,
+   "strength": "decisive",
+   "reason": "B faithfully states the authoritative scope decision and its rationale. A reverses that decision and fabricates meeting history.",
+   "flags_good": [],
+   "flags_bad": [
+    "major_factual_error",
+    "fabricated_meeting_history",
+    "missed_available_evidence"
+   ],
+   "returned_model": "gpt-6-astra",
+   "ok": true
+  },
+  {
+   "id": "ERCAL-24",
+   "class": "current_decision_vs_deferral",
+   "want": "A",
+   "got": "A",
+   "correct": true,
+   "strength": "decisive",
+   "reason": "A gives immediately usable words that settle ownership and timing. B unnecessarily postpones the decision; taking this ordinary task requires no evidence of a previous assignment.",
+   "flags_good": [],
+   "flags_bad": [
+    "excessive_deferral",
+    "important_question_unanswered"
+   ],
+   "returned_model": "gpt-6-astra",
+   "ok": true
+  },
+  {
+   "id": "ERCAL-25",
+   "class": "current_vs_stale_target",
+   "want": "A",
+   "got": "A",
+   "correct": true,
+   "strength": "decisive",
+   "reason": "A gives the authoritative release target with all relevant qualifications. B gives an outdated target that would mislead the meeting about the release's stability requirement.",
+   "flags_good": [],
+   "flags_bad": [
+    "stale_source_preferred",
+    "missed_available_evidence",
+    "major_factual_error"
+   ],
+   "returned_model": "gpt-6-astra",
+   "ok": true
+  },
+  {
+   "id": "ERCAL-26",
+   "class": "unsupported_research_claim",
+   "want": "A",
+   "got": "A",
+   "correct": true,
+   "strength": "decisive",
+   "reason": "A is accurate and immediately sayable. B fabricates both an evaluation and its result, exposing the presenter to a serious false scientific claim.",
+   "flags_good": [],
+   "flags_bad": [
+    "unsupported_research_claim",
+    "major_factual_error",
+    "missed_available_evidence"
+   ],
+   "returned_model": "gpt-6-astra",
+   "ok": true
+  },
+  {
+   "id": "ERCAL-27",
+   "class": "final_vs_draft_result",
+   "want": "A",
+   "got": "A",
+   "correct": true,
+   "strength": "decisive",
+   "reason": "A accurately and concisely reports the final result. B would have the presenter state an obsolete detection delay as the current finding.",
+   "flags_good": [],
+   "flags_bad": [
+    "stale_source_preferred",
+    "draft_source_preferred",
+    "missed_available_evidence",
+    "major_factual_error"
+   ],
+   "returned_model": "gpt-6-astra",
+   "ok": true
+  },
+  {
+   "id": "ERCAL-28",
+   "class": "own_result_vs_other_groups_result",
+   "want": "B",
+   "got": "B",
+   "correct": true,
+   "strength": "decisive",
+   "reason": "B correctly attributes both systems' results and acknowledges the absence of a direct comparison. A fabricates a benchmark result by misattributing LSTM-AE's performance to Corvane-Net, creating a false claim of superiority.",
+   "flags_good": [],
+   "flags_bad": [
+    "unsupported_research_claim",
+    "major_factual_error",
+    "missed_available_evidence"
+   ],
+   "returned_model": "gpt-6-astra",
+   "ok": true
+  },
+  {
+   "id": "ERCAL-29",
+   "class": "course_convention_vs_textbook_default",
+   "want": "A",
+   "got": "A",
+   "correct": true,
+   "strength": "decisive",
+   "reason": "A correctly explains both current course conventions. B gives the outdated sign and calculation method, directly misleading the student on both parts of the question.",
+   "flags_good": [],
+   "flags_bad": [
+    "stale_source_preferred",
+    "missed_available_evidence",
+    "major_factual_error"
+   ],
+   "returned_model": "gpt-6-astra",
+   "ok": true
+  },
+  {
+   "id": "ERCAL-30",
+   "class": "current_vs_stale_syllabus",
+   "want": "B",
+   "got": "B",
+   "correct": true,
+   "strength": "decisive",
+   "reason": "B directly provides the current syllabus's 40% weight. A supplies the superseded 50% value, making its sole substantive claim wrong.",
+   "flags_good": [],
+   "flags_bad": [
+    "stale_source_preferred",
+    "missed_available_evidence",
+    "major_factual_error"
+   ],
+   "returned_model": "gpt-6-astra",
+   "ok": true
+  },
+  {
+   "id": "ERCAL-31",
+   "class": "right_profile_vs_profile_leak",
+   "want": "B",
+   "got": "B",
+   "correct": true,
+   "strength": "decisive",
+   "reason": "B provides a concise, immediately speakable answer grounded in Catarina’s actual expertise. A confidently presents another candidate’s technical background and project history.",
+   "flags_good": [],
+   "flags_bad": [
+    "wrong_profile_used",
+    "unsupported_personal_claim",
+    "missed_available_evidence",
+    "major_factual_error"
+   ],
+   "returned_model": "gpt-6-astra",
+   "ok": true
+  },
+  {
+   "id": "ERCAL-32",
+   "class": "available_evidence_vs_deferral",
+   "want": "B",
+   "got": "B",
+   "correct": true,
+   "strength": "decisive",
+   "reason": "B directly supplies both supported throughput figures. A unnecessarily postpones an answer already present in the loaded résumé.",
+   "flags_good": [],
+   "flags_bad": [
+    "missed_available_evidence",
+    "important_question_unanswered",
+    "excessive_deferral"
+   ],
+   "returned_model": "gpt-6-astra",
+   "ok": true
+  },
+  {
+   "id": "ERCAL-33",
+   "class": "honest_vs_fabricated_story",
+   "want": "A",
+   "got": "A",
+   "correct": true,
+   "strength": "decisive",
+   "reason": "A gives the candidate a usable, non-fabricated bridge to a genuine example. B turns a documented migration detail into an unsupported behavioral story that the candidate could not safely present as their own.",
+   "flags_good": [],
+   "flags_bad": [
+    "unsupported_personal_claim",
+    "fabricated_behavioral_story"
+   ],
+   "returned_model": "gpt-6-astra",
+   "ok": true
+  },
+  {
+   "id": "ERCAL-34",
+   "class": "no_preference_vs_invented_preference",
+   "want": "B",
+   "got": "B",
+   "correct": true,
+   "strength": "decisive",
+   "reason": "B is immediately sayable and preserves the candidate's ability to decide after understanding the logistics. A fabricates consequential personal circumstances and relocation plans.",
+   "flags_good": [],
+   "flags_bad": [
+    "unsupported_personal_claim"
+   ],
+   "returned_model": "gpt-6-astra",
+   "ok": true
+  },
+  {
+   "id": "ERCAL-35",
+   "class": "professional_judgment_vs_over_deferral",
+   "want": "B",
+   "got": "B",
+   "correct": true,
+   "strength": "decisive",
+   "reason": "B directly answers with a sensible, immediately speakable first-month plan. A unnecessarily refuses a question that can be answered using professional judgment and the available role description.",
+   "flags_good": [],
+   "flags_bad": [
+    "missed_available_evidence",
+    "excessive_deferral",
+    "important_question_unanswered"
+   ],
+   "returned_model": "gpt-6-astra",
+   "ok": true
+  },
+  {
+   "id": "ERCAL-36",
+   "class": "natural_vs_source_attribution",
+   "want": "A",
+   "got": "A",
+   "correct": true,
+   "strength": "slight",
+   "reason": "Both accurately convey four engineers led and five people total. A is preferable because it states the candidate’s own experience directly, without unnecessary résumé attribution.",
+   "flags_good": [],
+   "flags_bad": [],
+   "returned_model": "gpt-6-astra",
+   "ok": true
+  },
+  {
+   "id": "ERCAL-37",
+   "class": "code_correct_vs_incorrect",
+   "want": "B",
+   "got": "B",
+   "correct": true,
+   "strength": "decisive",
+   "reason": "B satisfies every requested behavior and produces the expected results for both oracle tests. A omits normalization and fails the positive palindrome test.",
+   "flags_good": [],
+   "flags_bad": [
+    "code_incorrect"
+   ],
+   "returned_model": "gpt-6-astra",
+   "ok": true
+  },
+  {
+   "id": "ERCAL-38",
+   "class": "grounded_story_vs_fabricated_story",
+   "want": "B",
+   "got": "B",
+   "correct": true,
+   "strength": "decisive",
+   "reason": "B faithfully delivers the candidate’s documented disagreement, experiment, compromise, and lesson in immediately sayable first-person speech. A fabricates the entire behavioral story.",
+   "flags_good": [],
+   "flags_bad": [
+    "fabricated_behavioral_story",
+    "unsupported_personal_claim",
+    "missed_available_evidence"
+   ],
+   "returned_model": "gpt-6-astra",
+   "ok": true
+  }
+ ]
+}
