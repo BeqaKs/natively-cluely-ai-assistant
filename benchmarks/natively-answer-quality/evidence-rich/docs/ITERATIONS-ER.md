@@ -3903,3 +3903,54 @@ has two, neither of the targeted kind, so the strings could not have shown the e
 arms make the pass edit more evidence-missing drafts (69 → 81 to 89 %) without removing the two negative
 self-claims the pattern sees. So on the priority modes E32 stops under its rule, and on substance nothing
 visible was gained. For Sales, its original target, it has still not been replayed (those sets wait).
+
+### AgentRouter's balance ran out at about 22:00 UTC; generation goes back to the direct key (2026-10-11 22:10 UTC)
+The second arm of E36's pass replays ended with 142 of 308 calls refused. The gateway's reply on the first key:
+"pre-consume quota failed, user quota: $0.0097, need quota: $0.0525"; the second key: "user quota is not enough".
+That is the account's balance, the same one the judge draws on. It was not empty at 21:32 UTC; between then and
+22:00 this session sent about 3,900 generator and pass calls through it (E34: 1,260; E32: 2,040; E36: about 470),
+each with a 15,000-token prompt. So Evin's instruction to generate through AgentRouter cannot be followed until
+that balance is refilled, and once it is, every generator call there is taken from the judge. **Decision on
+autopilot, to be confirmed by him:** from now generation uses the direct DeepSeek key again (it holds the 49.99 USD
+he added tonight); AgentRouter is kept for the judge. `generator-route.mjs` defaults to `direct`;
+`ER_GENERATOR=agentrouter` selects the other route. Nothing made on one route is compared with anything made on
+the other. Whether the 02:00 UTC window finds a refilled balance is not known until its probe.
+**A second reason the app runs stay on the direct key:** the app's structured-extraction ladder (résumé and
+posting parsing) has no AgentRouter rung. A profile holding only an AgentRouter key would drop Profile
+Intelligence to the rule-based parser, the state E26 fixed for DeepSeek-only users. That is a product gap for
+AgentRouter-only users, noted for Evin, not changed here.
+**E36:** its second arm is incomplete (166 of 308 rows answered before the balance ran out; the refused rows are
+set aside in `results/replay/_aside/`). Nothing is read from it. It is replayed again, both arms, on the direct
+key after tonight's app runs (`e36d-base`, `e36d-a`).
+
+## E38 — profile intelligence: a general-knowledge turn in the two profile modes reads the résumé and the posting (declared 2026-10-11 22:10 UTC; candidate `cand/e38` `daef3be5`, built, not run)
+**Cause, found in tonight's main run.** In Looking for work and Technical Interview, a question the classifier
+types as general technical takes the no-retrieval path. When a reference pack is loaded such a turn still reads
+it (2026-10-04); when the only documents are the résumé and the job description it reads nothing
+(`profileOnlyDocuments` is excluded). On the readable sets, Looking for work: 95 turns, 5 on that path with a
+profile loaded, 3 of them asking for something the profile states, all 3 wrong ("I don't have Fernlatch
+performance numbers in front of me" with the résumé loaded; "I'll confirm the rotation" with the posting loaded).
+Questions that need a document fact go wrong on 11 % of the turns that retrieve.
+**Change** (`electron/context-intelligence/orchestration/orchestrator.ts`, one condition beside the pack rule):
+such a turn plans RESUME and JOB_DESCRIPTION when the mode hydrates the user's profile and the profile is handed
+over whole (at most 6,000 tokens). The turn stays FAST and no claim is added. Kept out: an instruction-extraction
+request, a coding or system-design task, and a request for code the classifier does not type as one. New test
+file (13 tests); type check clean; context-intelligence + intelligence 2,900 tests, 2,898 pass, 0 fail, 2 skipped;
+llm the same single failure as main.
+**Runs** (the app, direct DeepSeek, fresh user data, one app at a time, after the E30 chain): the two profile
+modes on dev, dev2, challenge, challenge-val, prov1, prov1-val (226 rows) for the candidate (`er13-*-e38`) and for
+main `cdaedfad` (`er13-*-main`), alternating set by set so each pair is of the same hour.
+**Judge-free lines** (obj-3; "touched" = a row main answered on the no-retrieval path with a profile loaded and
+the candidate answered with the profile in the prompt):
+P1. every candidate row answered;
+P2. touched rows, readable and unread together: right by the fixed checks more often than main; forbidden-string
+    rows at most main;
+P3. untouched rows: right not more than 2.0 points below main on the readable sets, at most 2 rows fewer on the
+    unread ones;
+P4. first word: touched rows median not more than 400 ms later than main's same rows; all rows median not more
+    than 100 ms later;
+P5. touched rows whose oracle requires no document fact: right not lower than main, forbidden-string rows at
+    most main (a general question must not get worse for seeing the résumé).
+**Judged lines** (gpt-6-astra; the touched rows, both arms): Q1. mean higher than main and hard fails not more;
+Q2. touched rows that need no document fact: mean not more than 0.30 lower, hard fails at most main.
+Landing is Evin's word.
