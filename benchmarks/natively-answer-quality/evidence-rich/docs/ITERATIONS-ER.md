@@ -3578,3 +3578,74 @@ candidate: why the pass with E19's sentence rewrites an evidence-missing draft w
 conditional landing Evin authorized did not arise.
 **What runs now:** only the balance poller (`chain-e30-wait.sh`, until about 15:45 UTC). No judge window is
 running or scheduled; the next one needs a probe by hand with the flag rule above.
+
+## E31 — Sales: what the seller says when the material stops (declared 2026-10-11 17:18 UTC, on Evin's "fix sales mode"; nothing replayed or judged yet)
+**Where Sales loses.** Judged baseline of main with E19, 70 Sales rows: 8.21, 18 hard fails (25.7 %), the weakest
+mode. By condition over both judged runs of the same 70 questions (`er4` before E19 and `er6` with it, 140
+row-runs; hard fails / rows): evidence missing **9 / 14** (no other mode above 5 / 14), conflicting or outdated
+sources **7 / 24** (others at most 4 / 24), one grounded source 6 / 52, several sources 4 / 28, irrelevant source
+2 / 14, follow-up 1 / 8. So Sales is ordinary where the material answers the question and far worse than every
+other mode where it does not. Ten of the 18 rows also failed in the earlier run, with the same kind of fault.
+**What the answers do** (all 29 hard-fail row-runs read, `report/mode-hard-fails.mjs`, development rows only):
+1. *Something asserted around a fact that should have been deferred, or added after a correct answer* (about 16 of
+   29): a customer's own installation told as company practice; "drivers don't need an app"; "there's no driver
+   phone app"; "we're not HIPAA certified"; "native connectors are priced as add-ons"; geofence alerts "can go
+   straight to a Slack channel or a webhook"; "for a fleet your size on Operations"; "we can write a higher
+   threshold into the plan"; "I'll come back with the availability commitment that matches it"; "I'll come back to
+   you on how the HubSpot integration works" (says there is one).
+2. *A price, discount or eligibility table misapplied* (about 10): a volume discount given to a fleet below its
+   band, a discount applied to modules, the wrong approver for a discount band, a deadline counted wrongly.
+3. *An opening "yes" that the rest of the answer takes back* (3), two of them on the conflicting-threshold rows.
+**Cause of kind 1, in the prompt.** The Sales mode block (`electron/llm/promptSystemV2.ts`) says: "…only what the
+material states. Otherwise never guess or commit: offer to confirm and ask what they need it to do. WRONG: 'Yes,
+we sync NetSuite custom fields.' RIGHT: 'I'll confirm how the sync handles custom fields. Which ones matter?'"
+Its RIGHT line presupposes that the sync exists, and the HubSpot answer copies that shape. It forbids a guessed
+yes but says nothing of a guessed no, of what may be said around the deferral, or of offers; and the next
+paragraph tells the seller to "answer with grounded specifics" and "never end flat", which is where the added
+product sentence and the offer come from. Kinds 2 and 3 are not Sales-specific in rate (grounded rows are at the
+other modes' level) and fall under what is already closed: no broader calculation notice, no rewrite of the
+conflict instructions, no "decide, then say it". **E31 addresses kind 1 only.**
+**Candidate, two arms** (replay variants; no app change until one is chosen):
+- `e31a-sales-confirm-whether.mjs`: that paragraph becomes "…only what the material states about that very thing.
+  Otherwise never guess or commit in either direction: do not say it exists, does not exist, is not needed, or how
+  it works. Give what the material does state about it, offer to confirm whether, and ask what they need it to do;
+  add no other product detail, benefit or reassurance." with a second WRONG line (a deferral that presupposes) and
+  a RIGHT line that asks whether. +297 characters.
+- `e31b-sales-addon-bar.mjs`: E31a plus one paragraph holding what is added after the answer (the prospect's own
+  plan or fleet, a benefit, an offer to change a term or match what they ask for) to the same bar. +575 characters.
+Both change all 83 recorded Sales prompts (dev, dev2, challenge) and no other mode's (checked). In the app either
+needs the two prompt-size ceilings in `PromptSystemV2Composition` raised (cloud Sales is 12 characters under
+18,500, local 116 under 8,000).
+**Unseen questions, new versioned set** (frozen sets untouched): `sales1` (18, readable, ids `ER-S1-SALES-…`) and
+`sales1-val` (18, never read, ids `ER-SV1-SALES-…`, aggregates only), authored blind from
+`AUTHORING-ER-SALES1.md`: not covered at all 6, covered in part 4, true only under a condition the prospect has
+not stated 3, a concession the seller cannot give 3, plain covered question 2 (so a careful answer is not rewarded
+for being shy). Registered in `build.mjs`.
+**Runs, once the DeepSeek account has balance** (one app at a time): main `cdaedfad` in the app on `sales1` and
+`sales1-val` (36 rows, to record their prompts). Then generator replays, k = 3, three arms (base = the recorded
+prompt unchanged, E31a, E31b) on the Sales rows of dev, dev2, challenge, challenge-val, sales1, sales1-val (125
+prompts, 1,125 calls).
+**Judge-free lines** (checks obj-3, each arm against the base arm, samples pooled over k):
+1. Development Sales (70 prompts): right by the fixed checks not more than 2.0 points below base; samples with a
+   forbidden string at most base.
+2. `sales1` (18): samples with a forbidden string fewer than base; required-string share not more than 2.0 points
+   below base (the stated halves and the plain questions must still be answered).
+3. `sales1-val` (18, counts only): samples with a forbidden string at most base; required-string share not more
+   than 3.0 points below.
+4. Median answer length not more than 15 % above base; every call answered.
+An arm that fails a line is out. If both hold, the one with fewer forbidden-string samples on development +
+`sales1` goes on; a tie goes to E31a (the smaller change). If neither holds, E31 stops there and is reported.
+**Judged lines** (gpt-6-astra only, after a clean probe by hand lifts the access-block flag; chosen arm against
+base, repetition 0, every prompt a pair: 101 readable pairs = development 70 + challenge 13 + sales1 18, and 24
+unread pairs = sales1-val 18 + challenge-val 6):
+J1. readable pairs: mean higher by at least 0.30 and hard fails lower by at least 5;
+J2. unread pairs (aggregates only): mean not lower than base, hard fails at most base;
+J3. no harm where the material answers the question (grounded_single and multi_source rows of the readable pairs):
+    mean not more than 0.20 lower, hard fails at most base + 1, rows flagged excessive_deferral or
+    important_question_unanswered at most base + 1;
+J4. rows with an unsupported_*, fabricated_* or unsafe_commitment flag fewer than base on the readable pairs.
+Every line holding makes it a candidate for the app: branch from main, the Sales block and the two ceilings, a
+unit test that no other mode's prompt changes, then one app run of Sales (dev, dev2, sales1) against main's.
+Landing is Evin's word. Any line failing: not proposed, numbers reported.
+**State at declaration:** the DeepSeek account has no balance (asked 17:13 UTC, `is_available: false`) and the
+judge is behind an access-block flag, so nothing of this can run yet. The author of `sales1` is working.
