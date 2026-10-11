@@ -3735,3 +3735,43 @@ E30 app run was using the same key** (the rule is never to overlap them) and bef
 only its summary line (13 unchanged, 5 edited); the file is set aside unread as
 `results/replay/_aside/e32-dry-unread.jsonl` and is in no reading. The real replays wait for the app runs to end
 (`~/natively-er-backup/chains/chain-e32.sh`).
+
+## E33 — both Sales changes together, in the app (declared 2026-10-11 21:20 UTC on Evin's "do them both"; the candidate is not built yet)
+**His words and my reading.** After the E31 / E32 report (two lines of attack, and "nothing can be judged until I
+may probe the judge") he wrote "do them both". Read as: carry both Sales changes through to a judged result, which
+includes ONE judge probe at the next usual opening; a clean probe lifts the flag, an access block on it stops
+everything again. Not read as a word to land: landing is asked again with the numbers.
+**Candidate.** Branch `cand/e33` from main `cdaedfad`: the Sales paragraph of E31a; in the fix-up pass the E32 arm
+that E32's judge-free lines choose (if neither arm holds them, E33 is E31a alone); the two prompt-size ceilings
+raised; unit tests (the Sales block's new text; no other mode's system prompt changes; the pass sentence).
+**App runs** (direct DeepSeek, fresh user data, one app at a time, after the E30 and E32 chains end): the candidate
+on the Sales rows of dev, dev2, challenge, challenge-val, sales1, sales1-val (125 rows, runs `er13-*-e33`), and
+main `cdaedfad` on the 30 Sales rows of dev in the same hour (`er13-dev-main`) for the timing line only. Main's
+rows of the same 125 questions: `er6-dev-main`, `er6-dev2-main` (judged), `er7-chal-main`, `er7-chalval-main`,
+`er12-sales1-main`, `er12-sales1val-main` (55 rows still to judge).
+**Judge-free lines** (candidate rows against main's rows of the same questions, checks obj-3):
+F1. every candidate row answered (no error, timeout or empty answer);
+F2. the 101 readable rows: right by the fixed checks not more than 2.0 points below main; rows with a forbidden
+    string at most main's;
+F3. the 24 unread rows (counts only): right at most 2 rows fewer than main; forbidden-string rows at most main + 1;
+F4. rows with two second requests at most main's + 2 (the repair must not be set off more often);
+F5. same hour, 30 development rows: first word median not more than 150 ms later than main; time to the final
+    shown answer median not more than 300 ms later.
+**Judged lines** (gpt-6-astra, every question a pair: candidate row against main's row):
+G1. the 101 readable pairs: mean higher by at least 0.30 with a 95 % interval that excludes zero, and hard fails
+    at least 5 fewer (main has 18 on the 70 development rows; between two runs of main those rows moved by 7, so
+    less than 5 would be indistinguishable from turnover);
+G2. the 24 unread pairs (aggregates only): mean not lower than main, hard fails at most main's;
+G3. where the material answers the question (grounded_single and multi_source readable pairs): mean not more than
+    0.20 lower, hard fails at most main + 1, rows flagged excessive_deferral or important_question_unanswered at
+    most main + 1;
+G4. readable pairs with an unsupported_*, fabricated_* or unsafe_commitment flag: fewer than main.
+**Before any landing, if G1 to G4 hold and the pass was changed:** one app run of the other eight modes on dev
+(240 rows): right by the fixed checks not more than 1.0 point below main's run. Landing is Evin's word, and
+`claimVerifier.ts` has another session's uncommitted edit in the main checkout.
+**Judge window of 12 October** (`~/natively-er-backup/window-run-oct12-am/window-oct12.mjs`, detached, opens
+02:00:30 UTC): the first probe decides the flag; then calibration; then, in order: the E33 Sales rows when they are
+listed (`window-sales.txt`) → E30's development rows if its chain listed them → E31a against the unchanged prompt
+(generator replays, repetition 0, 125 pairs; derived runs `rg-e31-*-k0--…` are prepared) → listed plans (E32's
+differing rows) → E26 → the rest of the holdout → drafts → the larger-pack stages last (the block of 11 October
+arrived in that stage; nothing is singled out, but it no longer goes first).
