@@ -3775,3 +3775,60 @@ listed (`window-sales.txt`) → E30's development rows if its chain listed them 
 (generator replays, repetition 0, 125 pairs; derived runs `rg-e31-*-k0--…` are prepared) → listed plans (E32's
 differing rows) → E26 → the rest of the holdout → drafts → the larger-pack stages last (the block of 11 October
 arrived in that stage; nothing is singled out, but it no longer goes first).
+
+## New priorities and route (Evin, 2026-10-11 21:36 UTC): Technical Interview, Looking for work with profile intelligence, and General first; AgentRouter for the generator
+His words: "first priority should be technical interview and looking for work modes and optimization with profile
+intelligence, and general mode… all other modes come next. start iterating at 7:30 am ist the astra would be
+available till roughly 9am ist max, run as many iterations as possible, even parallelly is possible, also use
+agentrouter for deepseek model also instead of current direct deepseek api key".
+**What changes.** (1) Sales (E31, E32 as a Sales fix, E33) moves behind the three priority modes; the queued Sales
+pass replays were stopped before they ran and the E33 branch is not built. (2) Everything started from now uses
+AgentRouter for the generator: `evidence-rich/generator-route.mjs` (default route `agentrouter`, model
+`deepseek-v4-flash` on `/v1/messages` with thinking disabled, the app's own route; `ER_GENERATOR=direct` restores
+the old one); every replay row records its route. One test call at 21:32 UTC answered HTTP 200 outside the judge's
+window, so this route is not bound to the judge's pool. Stop rules on it: 402 or the quota 403 moves to the other
+key; any other 403 ends the process's calls at once. **The E30 chain already running finishes on the direct key**
+(its candidate and same-hour main runs were both made on it; changing the route between them would break the
+pair). (3) **Replays through AgentRouter are not compared with replays or runs made on the direct key**: every
+comparison below has both arms on the same route in the same hour.
+**A finding that changes how tonight's runs are paired:** the app tells the model today's date, and tonight's runs
+say Monday 12 October where the judged baseline (`er6`, run on 9 October) said Friday 9 October. Questions that
+hang on a deadline in the documents (for example an acceptance date of 9 October) therefore have a different
+right answer tonight. So a run of tonight is paired with tonight's run of main (`er11-dev-main`), not with `er6`.
+For E30 this replaces the pairing its rule named (`er6-dev-main`); decided here, before any of its rows is judged.
+**Where the three priority modes stand** (judged baseline, 70 rows each; the two profile modes there are before
+E23 / E26): Technical Interview 8.83 with 11 hard fails, Looking for work 9.04 with 7, General 8.98 with 7. Read
+(development rows): in the profile modes, a question about the candidate's own past with nothing loaded about it
+gets either the job posting retold as their experience or a negative self-claim ("I don't have a pipeline of my
+own", "I don't have a clean story") before a sound general approach; résumé dates and employers mixed up (the
+class E23 / E26 addressed; not judged on development since); and the generator's own technical slips (a time
+zone, a code edge case, a reasoning step). In General: a binding rule in a second document passed over, a
+categorical "nothing to claim", invented specifics, and two answers spoken as the wrong person.
+
+## E34 — no negative self-claim when the user's own past is not in the material (declared 2026-10-11 21:36 UTC, before any replay)
+**Change** (`replay-variants/e34-no-negative-biography.mjs`): the composer rule that already says "Never say the
+information is missing" gains one clause: never say the user has no such experience, story, example or project
+either. All modes carry the rule; tonight it is measured on the three priority modes.
+**Replays** (AgentRouter, k = 2, base and E34): the priority-mode prompts of `er11-dev-main` (90, tonight's main),
+`er9-dev2-e26` (80, the two profile modes), `er6-dev2-main` (40, General), `er7-chal-main` (39),
+`er7-chalval-main` (18), `er8-prov1-main` (24), `er8-prov1val-main` (24).
+**Judge-free lines** (obj-3, samples pooled): (1) readable prompts: right not more than 1.5 points below base,
+forbidden-string samples at most base; (2) unread prompts (counts): right not more than 3.0 points below,
+forbidden-string samples at most base + 1; (3) evidence-missing prompts: samples that contain a negative
+self-claim (a fixed pattern, written in `report/e34-read.mjs` before the replays are read) fewer than base; (4)
+median length within 15 %, every call answered.
+**Judged lines** (repetition 0): L1. the evidence-missing prompts (all of them, readable and unread reported
+apart): mean higher than base and hard fails fewer on the readable ones; not lower and not more on the unread
+ones. L2. a control of 30 development prompts whose question the material answers (the first ten grounded_single
+ids of each mode in id order): mean not more than 0.20 lower, hard fails at most base + 1.
+Before any landing: the other six modes replayed with the same judge-free lines. Landing is Evin's word.
+
+### E32 — amended before any of its replays is read (2026-10-11 21:36 UTC)
+Drafts are now tonight's: every row of `er11-dev-main` that ran the pass (main `cdaedfad`, all nine modes) and the
+profile-mode rows of `er9-dev2-e26`; route AgentRouter. A third arm, `e32-c`: E32b with the [past] sentence
+widened from the product to anything ("that something does NOT exist, was never done, is not offered, supported,
+needed or owed", with a personal and a contract example), because the same fault appears in the priority modes
+("I don't have a pipeline of my own", "there's nothing to claim"). Lines 1 and 2 are read on the three priority
+modes (readable: these development rows; no unread rows tonight); line 3 on all nine modes; line 4 unchanged.
+Judged: rows of the priority modes whose shown text differs between base and the chosen arm (K1 on them, K3 on
+the other modes' differing rows if the pool allows). The Sales sets wait.

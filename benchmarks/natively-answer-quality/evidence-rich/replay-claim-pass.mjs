@@ -18,6 +18,7 @@
 // Output: results/replay/<name>.jsonl, one line per row and repetition:
 //   { run, id, k, surface, cap, outcome, changed, text, scratch, ms, in_chars, saw_whole, rebuilt_matches_recorded }
 import fs from 'node:fs';
+import { genFetch, ROUTE, ROUTE_MODEL } from './generator-route.mjs';
 import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import crypto from 'node:crypto';
@@ -48,7 +49,7 @@ export function buildMessage(surface, full, draftBody, capChars) {
 }
 
 async function* deepseekStream(model, system, user, signal) {
-  const res = await fetch('https://api.deepseek.com/chat/completions', { method: 'POST', signal,
+  const res = await genFetch('https://api.deepseek.com/chat/completions', { method: 'POST', signal,
     headers: { Authorization: `Bearer ${KEY}`, 'Content-Type': 'application/json' },
     body: JSON.stringify({ model, stream: true, temperature: 0.2, seed: 7, max_tokens: 8192, thinking: { type: 'disabled' },
       messages: [{ role: 'system', content: system }, { role: 'user', content: user }] }) });
@@ -103,7 +104,7 @@ await Promise.all(todo.flatMap((j) => Array.from({ length: K }, (_, k) => L(asyn
   });
   let verdict = { text: run.text, changed: run.changed, outcome: run.outcome };
   if (variant.accept) verdict = variant.accept(verdict, { ...ctx, scratch, cv }) ?? verdict;
-  fs.appendFileSync(outFile, JSON.stringify({ run: j.run, id: j.row.benchmark_id, k, surface: j.surface, cap, outcome: verdict.outcome, changed: verdict.changed, text: verdict.text, scratch, ms: run.ms,
+  fs.appendFileSync(outFile, JSON.stringify({ run: j.run, id: j.row.benchmark_id, k, route: ROUTE, surface: j.surface, cap, outcome: verdict.outcome, changed: verdict.changed, text: verdict.text, scratch, ms: run.ms,
     in_chars: buildMessage(j.surface, j.full, j.draftBody, cap).length, saw_whole: j.full.length <= cap, rebuilt_matches_recorded: buildMessage(j.surface, j.full, j.draftBody, recordedCap) === j.recorded }) + '\n');
 }))));
 const R = fs.readFileSync(outFile, 'utf8').split('\n').filter(Boolean).map(JSON.parse);

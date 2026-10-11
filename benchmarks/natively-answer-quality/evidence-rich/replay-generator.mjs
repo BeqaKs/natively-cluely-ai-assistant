@@ -10,6 +10,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { loadRun } from './objective.mjs';
+import { genFetch, ROUTE, ROUTE_MODEL } from './generator-route.mjs';
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const args = process.argv.slice(2); const opt = (k, d = null) => { const i = args.indexOf(`--${k}`); return i >= 0 ? args[i + 1] : d; };
 const CS = await import(path.join(HERE, 'results', '.cv', 'calcScratch.mjs'));
@@ -25,7 +26,7 @@ for (const runName of String(opt('runs')).split(',')) {
   const run = loadRun(path.join(RES, runName)); const systems = JSON.parse(fs.readFileSync(path.join(RES, runName, 'systems.json'), 'utf8'));
   for (const row of run.rows) {
     const w = run.wire[row.benchmark_id]; if (!w) continue; const item = run.ds.byId[row.benchmark_id];
-    if (opt('mode') && item?.mode !== opt('mode')) continue;   // --mode sales: one mode's rows of the named runs
+    if (opt('mode') && !String(opt('mode')).split(',').includes(item?.mode)) continue;   // --mode sales[,general]: only these modes' rows of the named runs
     const user = (w.messages ?? []).filter((m) => m.role !== 'system').map((m) => m.text ?? '').join('\n'); const system = systems[w.system_sha]; if (!system || !user) continue;
     const pick = select === 'all' ? true : select === 'calc' ? /# Calculation\n/.test(user) : select === 'typed' ? row.surface === 'typed' : select === 'heard' ? row.surface !== 'typed' : select.split(',').includes(row.benchmark_id);
     if (!pick) continue;
@@ -34,7 +35,7 @@ for (const runName of String(opt('runs')).split(',')) {
     for (let k = 0; k < K; k++) if (!done.has(`${runName}|${row.benchmark_id}|${k}`)) tasks.push({ run: runName, id: row.benchmark_id, k, ...p, req, forb, mode: item.mode, condition: item.condition });
   }
 }
-console.log(`arm ${name}: ${tasks.length} calls`);
+console.log(`arm ${name}: ${tasks.length} calls, route ${ROUTE} (${ROUTE_MODEL})`);
 // Has a character the user would see arrived? Without a scratch block: as soon as there is text that cannot be an open
 // tag. With one: once its close tag is followed by text. (A block the model never closes is timed at the end.)
 const OPEN = /^\s*\[\[?\s*calc\s*\]\]?/i; const CLOSE = /\[{1,2}\s*\/\s*calc\s*\]{1,2}/i;
@@ -46,7 +47,7 @@ function isVisible(text) {
 async function one(t) {
   const t0 = Date.now(); let text = ''; let err = null; let first = null; let visible = null; let usage = null;
   try {
-    const res = await fetch('https://api.deepseek.com/chat/completions', { method: 'POST', headers: { Authorization: `Bearer ${KEY}`, 'Content-Type': 'application/json' },
+    const res = await genFetch('https://api.deepseek.com/chat/completions', { method: 'POST', headers: { Authorization: `Bearer ${KEY}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({ model: 'deepseek-flash', stream: true, stream_options: { include_usage: true }, temperature: 0.2, seed: 7, max_tokens: 8192, thinking: { type: 'disabled' }, messages: [{ role: 'system', content: t.system }, { role: 'user', content: t.user }] }) });
     if (!res.ok) throw new Error(`deepseek ${res.status}`);
     const dec = new TextDecoder(); let buf = '';
@@ -55,7 +56,7 @@ async function one(t) {
   const stripped = CS.stripCalcScratch(text); const shown = stripped.text.trim(); const visibleAt = text.indexOf('[[/CALC]]');
   const hits = t.req.map((r) => r.answer_needles.some((n) => squash(shown).includes(squash(n))));
   const forbidden = t.forb.filter((c) => c.answer_needles.some((n) => squash(shown).includes(squash(n)))).map((c) => c.kind ?? 'forbidden');
-  return { run: t.run, id: t.id, k: t.k, mode: t.mode, condition: t.condition, err, prompt_tokens: usage?.prompt_tokens ?? null, cached_tokens: usage?.prompt_cache_hit_tokens ?? usage?.prompt_tokens_details?.cached_tokens ?? null, ms_first: first, ms_visible: visible ?? (shown ? Date.now() - t0 : null), ms_total: Date.now() - t0, calc_block: !!stripped.scratch, calc_chars: stripped.scratch?.length ?? 0, shown_chars: shown.length,
+  return { run: t.run, id: t.id, k: t.k, mode: t.mode, condition: t.condition, route: ROUTE, route_model: ROUTE_MODEL, err, prompt_tokens: usage?.prompt_tokens ?? null, cached_tokens: usage?.prompt_cache_hit_tokens ?? usage?.prompt_tokens_details?.cached_tokens ?? null, ms_first: first, ms_visible: visible ?? (shown ? Date.now() - t0 : null), ms_total: Date.now() - t0, calc_block: !!stripped.scratch, calc_chars: stripped.scratch?.length ?? 0, shown_chars: shown.length,
     required: t.req.length, required_hit: hits.filter(Boolean).length, all_required: t.req.length > 0 && hits.every(Boolean), forbidden, text: shown, scratch: stripped.scratch ?? null };
 }
 let next = 0, n = 0;
