@@ -3954,3 +3954,16 @@ P5. touched rows whose oracle requires no document fact: right not lower than ma
 **Judged lines** (gpt-6-astra; the touched rows, both arms): Q1. mean higher than main and hard fails not more;
 Q2. touched rows that need no document fact: mean not more than 0.30 lower, hard fails at most main.
 Landing is Evin's word.
+
+## E37 — is the fix-up pass worth its second request in the two interview modes? A measurement (declared 2026-10-11 22:11 UTC)
+**Why.** Another session has an uncommitted change that switches the pass off in Looking for work and Technical
+Interview (Evin: no second pass, no delay before the answer is final), with a judged comparison still owed. The
+data for it exists in tonight's runs: every row keeps its draft (what the user would see with the pass off) and
+its shown answer. By the fixed checks the pass is neutral there (Looking for work, readable rows: 39 edited, right
+32 as drafted, 31 as shown, forbidden strings 1 → 0; Technical Interview: 11 edited, 10 → 10).
+**Judged:** the drafts of the profile-mode rows the pass edited in `er11-dev-main` and `er9-dev2-e26`
+(`results/replay/astra-plan-e37-drafts.json`); the shown answers of the same rows are judged with the baseline.
+**Reading, written now:** if the shown answers' mean is at least 0.15 above the drafts' and their hard fails are
+not more, the pass earns its place in these modes. If the drafts' mean is within 0.05 of the shown answers' or
+higher and their hard fails are at most one more, switching it off costs nothing measurable. Anything between is
+unsettled. No change is made by this session either way; it is input for Evin and for that session.
