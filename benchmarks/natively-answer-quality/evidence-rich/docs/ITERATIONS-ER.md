@@ -3517,7 +3517,7 @@ mine and none touched). Nothing of this work runs now. `~/natively-er-backup/res
 the DeepSeek balance returns before 07:15 IST, the E30 app runs start at 07:15 and not earlier, so E30 will most
 likely be judged in the window after this one. Last balance answer before the stop: 21:48 UTC, not available.
 
-### Astra window of 2026-10-11, 02:00–02:28 UTC — E29 repetition 1 judged; closed by a provider access block (recorded 2026-10-11 02:47 UTC)
+### Astra window of 2026-10-11, 02:00–02:28 UTC — E29 repetition 1 judged; closed by a provider access block (recorded 2026-10-11 02:42 UTC)
 **Course.** Both waiting scripts restarted at 01:45:05 UTC (`restart-0715.sh`, Evin's 07:15 IST). Probe 02:00:49 UTC:
 exact gpt-6-astra on the first attempt. Calibration 02:00–02:08:49 UTC: **38/38**, every returned model exact
 gpt-6-astra (`calibration-astra-1791684529934.json`). No E30 run was listed (the DeepSeek account still has no
