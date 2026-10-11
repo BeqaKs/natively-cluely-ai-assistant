@@ -3,6 +3,7 @@
 // fixed strings). For measuring the generator's own variance on a class of turns and the effect of a prompt variant.
 //   node evidence-rich/replay-generator.mjs --runs er-dev-e13 --select calc|all|<id,id> --k 6 --name base
 //        [--variant evidence-rich/replay-variants/<file>.mjs]   (exports transform({ system, user, item }) → { system, user })
+//        [--mode <mode-key>]   only that mode's rows
 // Output: results/replay/gen-<name>.jsonl. Direct DeepSeek (deepseek-flash, temperature 0.2, seed 7, thinking off),
 // the app's own request; the [[CALC]] block is removed with the app's own stripCalcScratch.
 import fs from 'node:fs';
@@ -24,6 +25,7 @@ for (const runName of String(opt('runs')).split(',')) {
   const run = loadRun(path.join(RES, runName)); const systems = JSON.parse(fs.readFileSync(path.join(RES, runName, 'systems.json'), 'utf8'));
   for (const row of run.rows) {
     const w = run.wire[row.benchmark_id]; if (!w) continue; const item = run.ds.byId[row.benchmark_id];
+    if (opt('mode') && item?.mode !== opt('mode')) continue;   // --mode sales: one mode's rows of the named runs
     const user = (w.messages ?? []).filter((m) => m.role !== 'system').map((m) => m.text ?? '').join('\n'); const system = systems[w.system_sha]; if (!system || !user) continue;
     const pick = select === 'all' ? true : select === 'calc' ? /# Calculation\n/.test(user) : select === 'typed' ? row.surface === 'typed' : select === 'heard' ? row.surface !== 'typed' : select.split(',').includes(row.benchmark_id);
     if (!pick) continue;

@@ -3665,3 +3665,73 @@ are caught by a required string naming the condition, not by a forbidden one, an
 could occur by accident; the plain items use the kind `over_deferral` (the lint's name; the brief said
 `excessive_deferral` and is corrected). So lines 2 and 3 of the rule see invented values and missing conditions;
 a bare presupposition ("how the X integration works") is visible only to the judge (J1, J2, J4).
+
+### E31 — judge-free lines read (recorded 2026-10-11 20:35 UTC): E31a holds all four, E31b fails line 1
+Evin topped the DeepSeek account up (balance endpoint 20:16 UTC: available). Main `cdaedfad` in the app on
+`sales1` and `sales1-val`, 20:16:47–20:22:18 UTC (`er12-sales1-main`, `er12-sales1val-main`: 18 + 18 rows, every
+row answered). Replays 20:22:18–20:32:12 UTC, direct DeepSeek, k = 3, 125 Sales prompts, 375 samples per arm, none
+unanswered. `report/e31-read.mjs` (answers graded again with the fixed checks, obj-3):
+
+| | base | E31a | E31b |
+|---|---:|---:|---:|
+| Development, 70 prompts: right by the fixed checks | 91.9 % | 91.4 % (−0.5) | 88.6 % (−3.3) |
+| Development: samples with a forbidden string | 3 | 1 | 3 |
+| `sales1`, 18: right | 70.4 % | 77.8 % | 77.8 % |
+| `sales1`: samples with a forbidden string | 12 | 10 | 11 |
+| `sales1`: required strings found | 56 / 60 | 57 / 60 | 59 / 60 |
+| `sales1-val`, 18 (counts only): right | 96.3 % | 100 % | 98.1 % |
+| `sales1-val`: samples with a forbidden string | 2 | 0 | 1 |
+| Median answer length | 70 words | 69 | 70 |
+| Not lines — `challenge`, 13: right / forbidden | 69.2 % / 1 | 69.2 % / 3 | 56.4 % / 3 |
+| Not lines — `challenge-val`, 6: right / forbidden | 83.3 % / 0 | 83.3 % / 0 | 83.3 % / 0 |
+
+Line 1: E31a holds, **E31b fails** (−3.3 points; also −12.8 on `challenge`). Lines 2, 3, 4: both hold. **By the
+rule E31a goes on to the judged lines and E31b is out.**
+**What the strings do not show, read on nine development questions that hard-failed (two samples each, base and
+E31a side by side; a look, not a score):** the HubSpot question is now answered as the new RIGHT line ("I'll confirm
+whether we connect to HubSpot…") in one sample of two; the other eight still carry the fault in at least one
+sample ("drivers don't need an app", "we're not HIPAA certified", the excursion-alert pitch, a customer's
+installation told as the company's, "for an Operations rollout at your fleet size… 45 to 75 days"). So the
+paragraph moves the wording it names and little else; my expectation is that J1 (hard fails lower by at least 5)
+will not hold on E31a alone. It is still owed its judged reading by the rule, which needs the judge.
+The `sales1-val` base is already 96.3 % right by strings, so that half says little without the judge.
+
+## E32 — the fix-up pass: a product denial is a claim (declared 2026-10-11 20:35 UTC, before any replay of it is read)
+**Why.** The generator's inventions in Sales survive the pass that exists to remove them. Its instructions list as
+a claim "[past] … a number, a price, a policy, a procedure, a capability, a customer, a result" and exempt, since
+E19, "a statement that the material does NOT contain, state or settle something". Several of the Sales faults are
+denials about the product or the company ("there's no driver phone app", "drivers don't need an app", "we're not
+HIPAA certified", "HubSpot isn't one of our native connectors"): nothing in [past] names a negative, and the E19
+exemption reads close enough to cover them. This is the narrow, source-aware provenance step of the standing
+brief (invented company facts), on the pass, not the generator. The CONFLICT instructions are not touched.
+**Arms** (`replay-claim-pass.mjs`, main's pass bundled from `cdaedfad` as `cv-main-cdaedfad.mjs`, cap 136,000,
+k = 2): `e32-base` (unchanged); `e32-a` = [past] also names "that the product, the company or a plan does NOT
+have, offer, support, include or need something", with four examples; `e32-b` = E32a plus a clause on the E19
+exemption ("it speaks of what they have in front of them, never of what the product, the company or a person has,
+offers or needs"). Drafts: every row of `er6-dev-main` that ran the pass (all nine modes: the pass is shared), and
+the Sales rows of `er6-dev2-main`, `er7-chal-main`, `er7-chalval-main`, `er12-sales1-main`,
+`er12-sales1val-main`.
+**Judge-free lines** (the shown text after the pass, fixed checks obj-3, each arm against `e32-base`):
+1. Sales, readable sets (dev, dev2, challenge, sales1): samples with a forbidden string fewer than base; right by
+   the fixed checks not more than 1.0 point below base.
+2. Sales, unread sets (sales1-val, challenge-val; counts only): forbidden-string samples at most base; right not
+   more than 2.0 points below.
+3. All nine modes, `er6-dev-main`: right not more than 1.0 point below base; required strings found not more than
+   1.0 point below (the pass must not strip stated facts); share of replays that edit the draft not more than 5
+   points above base.
+4. Pass time, median: not more than 150 ms above base.
+An arm failing a line is out; if both hold, fewer forbidden-string samples on line 1 goes on, a tie to E32a.
+**Judged lines** (gpt-6-astra, repetition 0, rows whose shown text differs between base and the arm):
+K1. Sales readable differing rows: mean higher and hard fails fewer than base; rows with an unsupported_* or
+    fabricated_* flag fewer;
+K2. Sales unread differing rows (aggregates): mean not lower, hard fails at most base;
+K3. the other eight modes' differing rows of `er6-dev-main`: mean not more than 0.20 lower, hard fails at most
+    base + 1.
+Landing would be Evin's word, and `electron/llm/claimVerifier.ts` carries another session's uncommitted edit in
+the main checkout, so a landing has to be agreed with that work.
+**A slip, recorded:** while checking the replay command's arguments I passed `--limit 0`, which the tool reads as
+"no limit", and it sent 18 pass requests (arm e32-b, the `sales1` drafts, k = 1) at 20:34 UTC, **while the
+E30 app run was using the same key** (the rule is never to overlap them) and before this rule was written. I saw
+only its summary line (13 unchanged, 5 edited); the file is set aside unread as
+`results/replay/_aside/e32-dry-unread.jsonl` and is in no reading. The real replays wait for the app runs to end
+(`~/natively-er-backup/chains/chain-e32.sh`).
