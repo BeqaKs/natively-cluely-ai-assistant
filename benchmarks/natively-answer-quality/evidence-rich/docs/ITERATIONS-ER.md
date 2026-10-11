@@ -3879,3 +3879,27 @@ not lower than base, readable and unread; (4) share of replays that edit the dra
 base, pass time median not more than 150 ms above.
 **Judged lines** (rows whose shown text differs between the arms, repetition 0): M1. readable rows: mean higher
 and hard fails fewer than base; M2. unread rows: mean not lower, hard fails at most base.
+
+### E32 — judge-free lines on the priority modes (2026-10-11 21:59 UTC): no arm holds line 1; not sent to the judge for these modes
+Pass replays 21:46:56–21:58:13 UTC through AgentRouter, k = 2, 255 drafts that ran the pass (all nine modes of
+`er11-dev-main`, the profile modes of `er9-dev2-e26`), 510 samples per arm, none unanswered.
+`report/arm-read.mjs --kind pass --base e32-base --arms e32-a,e32-b,e32-c`:
+
+| | base | E32a | E32b | E32c |
+|---|---:|---:|---:|---:|
+| Priority modes (107 drafts): right as shown | 89.3 % | 89.3 % | 88.3 % | 87.9 % |
+| Priority modes: samples with a forbidden string | 2 | 2 | 2 | 2 |
+| Priority modes, evidence missing (13 drafts): replays that edit the draft | 69.2 % | 80.8 % | 80.8 % | 88.5 % |
+| Priority modes, evidence missing: samples with a negative self-claim | 2 | 2 | 2 | 2 |
+| All nine modes (255): right as shown | 87.6 % | 87.6 % | 86.7 % | 87.1 % |
+| All nine modes: required strings found | 565 / 626 | 566 | 562 | 561 |
+| All nine modes: replays that edit the draft | 24.1 % | 22.2 % | 23.3 % | 25.7 % |
+| Pass time, median | 1,203 ms | 1,343 | 1,221 | 1,252 |
+
+Line 1 asked for fewer forbidden-string samples than base and at most 1.0 point fewer right: **all three arms
+fail it** (2 → 2; E32c also −1.4 points). Lines 3 and 4 hold for all three (E32b sits exactly at the 1.0-point
+limit). The line was written for the Sales sets, where the base has a dozen such samples; on these modes the base
+has two, neither of the targeted kind, so the strings could not have shown the effect. What they do show: the
+arms make the pass edit more evidence-missing drafts (69 → 81 to 89 %) without removing the two negative
+self-claims the pattern sees. So on the priority modes E32 stops under its rule, and on substance nothing
+visible was gained. For Sales, its original target, it has still not been replayed (those sets wait).
