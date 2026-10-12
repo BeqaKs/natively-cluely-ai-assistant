@@ -4377,3 +4377,49 @@ X4. main's rows with a profile loaded are extracted by the parser (`heuristic`).
     exist in the app and E42 is closed as unnecessary.
 Context, not a line (another route): right by the fixed checks beside `er11-dev-main`'s same 30 rows (direct key,
 26 of 30). Landing is Evin's word; the branch is based on `cdaedfad`, main is now `bac5d70c`.
+
+### E42 — read (2026-10-12 14:07 UTC): X1 fails on one stalled extraction; the gap is real and mostly closed; not proposed as it stands
+Runs 13:41 to 14:00 UTC, AgentRouter key only, fresh user data: `er18-dev-main` (8 rows), `er18-dev-e42` (30 rows).
+Cost USD 16.12 of the new key (about 45 cents a row with its fix-up pass and its share of the profile upload).
+| Line | Result |
+|---|---|
+| X4. main reads the profile with the parser | **holds**: 6 of 6 rows with a profile `heuristic`; the app log has "No reasoning model available" on every structured call |
+| X1. candidate: every profile row read by the model | **fails**: 23 of 25 `llm`, 2 `heuristic` |
+| X2. no derived experience entry rejected | holds: 0 (18 rows carry entries) |
+| X3. every row answered, no error, no timeout | **fails**: no error row, but one answer is the app's own "The model did not produce an answer in time" (main's 8 rows have one too) |
+The ladder did its part: 32 structured calls tried on the AgentRouter rung, 32 answered. What failed is the
+caller's limit: the first résumé extraction passed `llmUtils`'s 45 s twice and `KnowledgeOrchestrator` fell back to
+the parser for that profile (2 rows). A mock-interview generation passed its 30 s limit once.
+Context, another route: right by the fixed checks 26 of 30, the same count as `er11-dev-main`'s rows on the direct
+key. On the 8 rows both arms ran: main 6, candidate 7.
+**Verdict by the rule:** X1 and X3 fail, so E42 is not proposed as it stands. What it does show: an AgentRouter-only
+profile goes from 0 of 6 to 23 of 25 rows read by the model. Whether that is worth landing with the 45 s limit as
+it is, or the limit should be longer for this rung, is Evin's decision; no second variant is built on autopilot.
+
+### The gateway's speed during these runs (measured 13:44 to 14:04 UTC)
+| Where | First word, median | Slowest |
+|---|---|---|
+| App, direct key, the same 30 questions (`er11-dev-main`, 12 October 00:00 UTC) | 764 ms | under 2 s |
+| Replay through AgentRouter at 13:25 UTC (60 calls, three at a time) | 1,142 and 1,357 ms | 2.0 s |
+| App through AgentRouter at 13:44 to 14:00 UTC (`er18-dev-e42`) | 3,462 ms | 10.7 s; 9 of 30 over 5 s; one hit the app's 10 s limit and showed its timeout text |
+| Replay of those 30 requests, one at a time, at about 14:02 UTC | 3,513 ms | 20.5 s; a tenth over 9.8 s |
+The app adds nothing: its request left 24 ms after the question, and the replay of the same requests is as slow.
+The gateway's time to the first word moved from about 1.2 s to about 3.5 s within the hour. Output speed once it
+starts is the same as the direct key (about 155 tokens a second). So on this route every first-word line of an
+experiment is the gateway's hour, the app's time limits are hit now and then, and a timed-out row counts as a
+wrong answer. A latency line cannot be read from an AgentRouter run unless both arms alternate inside the hour.
+
+### E43 — the three candidates on current main, built and tested (14:07 UTC; no API call)
+`cand/e43` `484e256e` (local, not pushed, worktree `er-e21`) = `bac5d70c` + the layout (`ecce088e`) + the profile
+read (`eba3e7a3`) + the AgentRouter rung (`484e256e`); three cherry-picks, no conflict. Build and type check clean.
+`electron/llm` suite: 6,017 tests, 5,998 pass, 1 fails, 18 skipped. Intelligence and context-intelligence suites:
+2,963 tests, 2,952 pass, 0 fail, 2 skipped, 9 marked to-do. The one failure, `QuickActionTurnRequest2026_10_09`
+("a legacy prompt still gets the mode template"), fails the same way on unchanged `bac5d70c` and on `cdaedfad`
+(checked by building each); it belongs to another session's quick-actions work and is not touched here.
+No benchmark run was made on `cand/e43`: the runs behind each candidate are on `cdaedfad`. `er-main` is back on
+`cdaedfad`, rebuilt.
+
+### Spend on the new AgentRouter key, 12 October
+Counter 20,013.40 cents when Evin gave the key (his figure: USD 174 left) → 23,066.59 at 14:05 UTC: USD 30.53
+spent (price measurements 11.01, E42's two runs 16.12, the 30-call speed replay 3.40). About USD 143 left by that
+arithmetic. Nothing is running against it. The two older keys were not used for generation.
