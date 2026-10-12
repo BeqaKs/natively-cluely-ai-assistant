@@ -41,7 +41,7 @@ This file is generated: `node evidence-rich/report/build-handoff.mjs` (from `ben
 
 ## 1. State in one screen
 
-**Read this first: the state on 12 October 2026, 04:25 UTC** (the table below it was last brought up to date on 11 October; where the two differ, this block is the later one).
+**Read this first: the state on 12 October 2026, 04:13 UTC** (the table below it was last brought up to date on 11 October; where the two differ, this block is the later one).
 
 Evin's instruction of 11 October, evening: the priority is Technical Interview, Looking for work (with profile intelligence) and General; the other modes come next; the target is 9.5 in every mode; iterate overnight on autopilot.
 

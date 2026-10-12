@@ -41,7 +41,7 @@ This file is generated: `node evidence-rich/report/build-handoff.mjs` (from `ben
 
 ## 1. State in one screen
 
-**Read this first: the state on 12 October 2026, 04:25 UTC** (the table below it was last brought up to date on 11 October; where the two differ, this block is the later one).
+**Read this first: the state on 12 October 2026, 04:13 UTC** (the table below it was last brought up to date on 11 October; where the two differ, this block is the later one).
 
 Evin's instruction of 11 October, evening: the priority is Technical Interview, Looking for work (with profile intelligence) and General; the other modes come next; the target is 9.5 in every mode; iterate overnight on autopilot.
 
@@ -4994,8 +4994,8 @@ Entry headings with their line numbers in `docs/ITERATIONS-ER.md`, and every lin
 - L4216: The judge's balance did not return by 03:20 UTC (recorded 2026-10-12 03:16 UTC)
 - L4221: E41 — judge-free lines read (2026-10-12 03:44 UTC): S1 to S4 hold; the first-word line only narrowly, across hours
 - L4237: E41 — first word in the same hour, read (2026-10-12 04:09 UTC): the stack is not later
-- L4249: Why `ER-D-LFW-012` goes wrong under the new layout: the fix-up pass, not the layout's draft (diagnostic, 04:15 UTC)
-- L4266: The fix-up pass in the two profile modes, by what the app knows (judge-free, 04:20 UTC; input for E37)
+- L4249: Why `ER-D-LFW-012` goes wrong under the new layout: the fix-up pass, not the layout's draft (diagnostic, 04:11 UTC)
+- L4266: The fix-up pass in the two profile modes, by what the app knows (judge-free, 04:12 UTC; input for E37)
 
 ### B.1 The log
 
@@ -9247,7 +9247,7 @@ Technical Interview 26, 26, 27, 25 against 27, 27, 25. Three questions split by 
 `ER-D-LFW-011` and `ER-D-LFW-012` go against the new layout (4 of 4 right → 1 of 3), `ER-D-TI-011` for it (2 of 4 →
 3 of 3).
 
-##### Why `ER-D-LFW-012` goes wrong under the new layout: the fix-up pass, not the layout's draft (diagnostic, 04:15 UTC)
+##### Why `ER-D-LFW-012` goes wrong under the new layout: the fix-up pass, not the layout's draft (diagnostic, 04:11 UTC)
 Typed: "they asked if I'd ever move to rotterdam or if remote is the plan. what do I say". The user's notes in the
 request say "Staying in Porto. I'm not moving to Rotterdam or anywhere else, so remote within Europe is a condition,
 not a preference. … up to about six weeks of travel a year works for me." In all three new-layout runs the DRAFT
@@ -9264,7 +9264,7 @@ So the order of the material is not the cause. The pass is unstable on this row 
 runs happened to keep the draft), and the new layout's draft, which answers the either-or first, tips it every
 time. The defect is the pass listing as unsupported what the user's own notes state.
 
-##### The fix-up pass in the two profile modes, by what the app knows (judge-free, 04:20 UTC; input for E37)
+##### The fix-up pass in the two profile modes, by what the app knows (judge-free, 04:12 UTC; input for E37)
 `report/pass-in-profile-modes.mjs`, every profile-mode run of 12 October (21 runs, 858 rows, both layouts; the
 edited rows graded as drafted and as shown, obj-3):
 | | Rows | Edited | Right as drafted → as shown | Forbidden-string rows | Shown defers where the draft did not |

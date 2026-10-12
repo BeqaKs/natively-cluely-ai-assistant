@@ -4246,7 +4246,7 @@ Technical Interview 26, 26, 27, 25 against 27, 27, 25. Three questions split by 
 `ER-D-LFW-011` and `ER-D-LFW-012` go against the new layout (4 of 4 right → 1 of 3), `ER-D-TI-011` for it (2 of 4 →
 3 of 3).
 
-### Why `ER-D-LFW-012` goes wrong under the new layout: the fix-up pass, not the layout's draft (diagnostic, 04:15 UTC)
+### Why `ER-D-LFW-012` goes wrong under the new layout: the fix-up pass, not the layout's draft (diagnostic, 04:11 UTC)
 Typed: "they asked if I'd ever move to rotterdam or if remote is the plan. what do I say". The user's notes in the
 request say "Staying in Porto. I'm not moving to Rotterdam or anywhere else, so remote within Europe is a condition,
 not a preference. … up to about six weeks of travel a year works for me." In all three new-layout runs the DRAFT
@@ -4263,7 +4263,7 @@ So the order of the material is not the cause. The pass is unstable on this row 
 runs happened to keep the draft), and the new layout's draft, which answers the either-or first, tips it every
 time. The defect is the pass listing as unsupported what the user's own notes state.
 
-### The fix-up pass in the two profile modes, by what the app knows (judge-free, 04:20 UTC; input for E37)
+### The fix-up pass in the two profile modes, by what the app knows (judge-free, 04:12 UTC; input for E37)
 `report/pass-in-profile-modes.mjs`, every profile-mode run of 12 October (21 runs, 858 rows, both layouts; the
 edited rows graded as drafted and as shown, obj-3):
 | | Rows | Edited | Right as drafted → as shown | Forbidden-string rows | Shown defers where the draft did not |
