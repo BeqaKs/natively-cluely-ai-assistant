@@ -4432,3 +4432,7 @@ balance to read there. Before its shape was looked at it was sent to agentrouter
 requests (four billing GETs, one usage GET variant, one tiny call); Evin is told, since that is a MiniMax
 credential shown to another service. It is not added to the judge's or the generator's key lists.
 The other three, same reading: usage counters 24,999.09, 67,968.12 and 23,066.59 cents, unchanged since 14:05 UTC.
+Checked again at 14:40 UTC on Evin's "check again": the value under that name was replaced (35 characters,
+`sk-` then lowercase letters, digits and dashes; equal to no other key in the file; not the DeepSeek format, not
+the 51-character AgentRouter format). Its shape was read first, then two billing GETs: HTTP 401 "invalid token"
+again. Not sent anywhere else; not added to the key lists.
