@@ -1,0 +1,22 @@
+{
+ "made": "2026-10-12T01:11:10.663Z",
+ "what": "E38: the touched rows, both arms",
+ "need": {
+  "er13-dev-main": [
+   "ER-D-LFW-022"
+  ],
+  "er13-dev-e38": [
+   "ER-D-LFW-022"
+  ],
+  "er13-dev2-main": [
+   "ER-D2-LFW-019",
+   "ER-D2-LFW-030",
+   "ER-D2-TI-018"
+  ],
+  "er13-dev2-e38": [
+   "ER-D2-LFW-019",
+   "ER-D2-LFW-030",
+   "ER-D2-TI-018"
+  ]
+ }
+}

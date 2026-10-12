@@ -4049,3 +4049,36 @@ R3. first word, median over the same requests: reported beside flash's. More tha
 If R1 and R2 hold: the drafts of both arms for `er11-dev-main`'s 90 rows (repetition 0) are listed for the judge
 after the priority list, as derived runs. If R2 does not hold, the larger model is recorded as not helping by
 these checks and no judge call is spent.
+
+## E30b — the documents-first layout's unseen line, against main of the same date (declared 2026-10-12 01:19 UTC, before the run)
+**Why.** E30's line 4 failed against main's runs of 7 and 8 October. Every request carries "It is Monday 12 October
+2026 where the user is", so a run of another day is a different request. Context read before this declaration (not
+lines): on the unseen profile-mode rows main already has runs of the same date (`er13-*-main`, 86 rows): right
+86.0 % → 94.2 %, forbidden-string rows 3 → 2. On dev against main of the same night: right 90.0 % → 90.0 %,
+forbidden 4 → 2; by mode it is turnover either way (Looking for work 26 → 24 of 30, Technical Interview 26 → 27,
+General 29 → 30).
+**Run.** Main `cdaedfad` (worktree `er-main`, built), the seven modes without a profile, challenge and
+challenge-val: `er14-chal-main`, `er14-chalval-main` (133 rows). Direct key, fresh user data, one app.
+**Line** (the same as E30's line 4, same reader): the candidate's 219 unseen rows against main of the same date
+(`er14-chal-main`, `er14-chalval-main`, `er13-chal-main`, `er13-chalval-main`, `er13-prov1-main`,
+`er13-prov1val-main`): right not more than 2.0 points below main; forbidden-string rows at most main + 3.
+**What it can change.** E30's verdict as registered stays "line 4 failed". If this line holds, the layout is
+reported to Evin as failing its registered line on a comparison across days and holding the same line on the same
+date, with its judged lines J1 to J3 still owed (pair: `er11-dev-e28b` with `er11-dev-main`); the three priority
+modes' rows of `er11-dev-e28b` (90) are then listed for the judge after the priority list. If it fails, the layout
+is closed. Nothing is landed either way without the judged lines and Evin's word.
+
+### E39 — read (2026-10-12 01:23 UTC): the larger model, reasoning off, is not better by the fixed checks and is slower; no judge call spent
+`gen-e39-pro.jsonl` (315 samples, k = 1), `gen-e39-flash.jsonl` (630 samples, k = 2), the same 315 recorded requests
+of the three priority modes (273 readable, 42 unread). `report/arm-read.mjs --kind gen`, obj-3.
+- **R1 holds.** 315 of 315 answered, no reasoning text on any sample, served model `deepseek-v4-pro`.
+- **R2 does not hold.** Readable: right 90.8 % → 88.3 % (−2.6; the line asks for +3.0). Unread: 85.7 % → 88.1 %
+  (72 of 84 → 37 of 42). Forbidden-string samples, all sets: 18 of 630 → 9 of 315, the same share.
+  By mode, readable: General 90.4 % → 90.4 %; Looking for work 90.0 % → 88.4 %; Technical Interview 92.1 % → 86.3 %.
+  Negative self-claim samples 6 of 630 → 2 of 315. Answers a little shorter (median 51 → 46 words).
+- **R3.** First word, median 660 → 1055 ms (+395 ms); 90th percentile 890 → 1688 ms. Whole answer 1244 → 1948 ms.
+- Cost of the arm: about USD 0.61 for 315 calls and 3.9 million prompt tokens (balance 44.44 → 43.83).
+**Recorded:** with reasoning off, `deepseek-v4-pro` does not answer these requests more correctly than
+`deepseek-flash` by the fixed checks, and it starts about 0.4 s later. No judge call is spent on it. What this does
+not test: the judge's finer grounds (an unsupported aside, a wrong speaker), another vendor's model, or reasoning
+on (ruled out by Evin). The prompts were written and tuned against flash, which may favour it.

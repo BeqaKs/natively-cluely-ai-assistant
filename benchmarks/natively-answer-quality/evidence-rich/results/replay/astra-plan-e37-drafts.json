@@ -1,5 +1,5 @@
 {
- "made": "2026-10-11T22:11:48.993Z",
+ "made": "2026-10-12T01:13:11.128Z",
  "what": "E37: the drafts of the profile-mode rows the fix-up pass edited (the shown answers are judged with the baseline)",
  "need": {
   "er11-dev-main::draft": [
@@ -22,25 +22,20 @@
    "ER-D-TI-006",
    "ER-D-TI-008"
   ],
-  "er9-dev2-e26::draft": [
-   "ER-D2-LFW-011",
-   "ER-D2-LFW-013",
-   "ER-D2-LFW-015",
+  "er13-dev2-main::draft": [
    "ER-D2-LFW-001",
    "ER-D2-LFW-003",
    "ER-D2-LFW-004",
    "ER-D2-LFW-005",
    "ER-D2-LFW-007",
+   "ER-D2-LFW-033",
    "ER-D2-LFW-035",
    "ER-D2-LFW-031",
-   "ER-D2-LFW-021",
-   "ER-D2-LFW-022",
    "ER-D2-LFW-024",
-   "ER-D2-LFW-027",
    "ER-D2-LFW-037",
    "ER-D2-LFW-040",
-   "ER-D2-TI-027",
-   "ER-D2-TI-029"
+   "ER-D2-TI-012"
   ]
- }
+ },
+ "note": "dev2 drafts moved from er9-dev2-e26 to er13-dev2-main (current main, the same night) before any judgment of this plan"
 }
