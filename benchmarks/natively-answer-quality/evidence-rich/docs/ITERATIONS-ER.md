@@ -4212,3 +4212,24 @@ UTC, all answered). Candidate: `er11-dev-e28b`, `er11-dev2-e28b`.
 133 of them: 99 → 107); forbidden-string rows 8 → 6 and 12 → 14 (repeat 9 → 5); first word not later; cached
 share of prompt tokens 34.7 % → 94.1 % at the median. Level where the questions were written beside the prompts,
 ahead where they were not. Judged lines owed.
+
+### The judge's balance did not return by 03:20 UTC (recorded 2026-10-12 03:16 UTC)
+`quota-watch.json`: 7 checks of two keys between 02:02 and 03:14 UTC, every one the gateway's quota reply. The
+check has ended; no window is running or scheduled. **No judgment exists for 12 October.** The list
+(`window-run-oct12-am/window-sales.txt`) is kept as it stands for the next window, which starts with one probe.
+
+### E41 — judge-free lines read (2026-10-12 03:44 UTC): S1 to S4 hold; the first-word line only narrowly, across hours
+`chains/e41-gate.txt`. `er16-*-e41` (226 rows; the dev2 run was repeated at 03:28 UTC because the app did not come
+up within five minutes at 02:39, no row of the failed start exists) against `er13-*-main`.
+- S1 holds: 226 of 226 answered; 222 requests carry evidence and all 222 are in the new layout (4 carry none).
+- S2 holds: right 200 → 204 of 226 (88.5 % → 90.3 %; wrong → right 12, right → wrong 8); forbidden-string rows
+  4 → 4. Looking for work 100 → 103 of 113, Technical Interview 100 → 101 of 113.
+- S3 holds: the 4 rows E38 touches, right 2 → 4, no forbidden string; the two that need no document fact right
+  in both. Untouched rows: readable 89.2 % → 89.8 %, unread 32 → 33 of 36.
+- S4 holds as written (150 ms): first word, all rows, median 871 → 1011 ms (+140); spoken 878 → 1023 (+145),
+  typed 779 → 920 (+141). **The two sides are two to four hours apart**, and the layout alone against main of the
+  same hour read −67 ms spoken and +90 ms typed. A margin this thin across hours is not a finding either way.
+**First-word check in the same hour, declared now (03:45 UTC):** main then the stack, dev, the two profile modes
+(60 rows each, `er17-dev-main`, `er17-dev-e41`), back to back. Line: the stack's median first word not more than
+150 ms later than main's, spoken and typed (`e30-read.mjs --latency`). If it is later than that, the stack is
+reported as costing first-word time, whatever the fixed checks say.
