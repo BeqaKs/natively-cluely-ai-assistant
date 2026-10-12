@@ -4233,3 +4233,49 @@ up within five minutes at 02:39, no row of the failed start exists) against `er1
 (60 rows each, `er17-dev-main`, `er17-dev-e41`), back to back. Line: the stack's median first word not more than
 150 ms later than main's, spoken and typed (`e30-read.mjs --latency`). If it is later than that, the stack is
 reported as costing first-word time, whatever the fixed checks say.
+
+### E41 — first word in the same hour, read (2026-10-12 04:09 UTC): the stack is not later
+`chains/e41c-gate.txt`. `er17-dev-main` (03:44 to 03:56 UTC) then `er17-dev-e41` (03:56 to 04:08), 60 questions each.
+- First word, spoken (43): median 902 → 842 ms (−60); 90th percentile 1226 → 1321. Typed (17): 906 → 784 ms (−122).
+  **The line holds; the +140 ms of the runs three hours apart was the hour, not the build.**
+- Not a line of this check, reported because it was seen: right by the fixed checks on these 60 rows 55 → 52
+  (wrong → right 1, right → wrong 4), forbidden-string rows 0 → 2.
+**All seven runs of 12 October on these 60 questions:** old layout (three of main, one of `cand/e38`) 52, 53, 55, 53
+right; new layout (`cand/e28b`, `cand/e41` twice) 51, 53, 52. Looking for work 26, 27, 28, 28 against 24, 26, 27;
+Technical Interview 26, 26, 27, 25 against 27, 27, 25. Three questions split by build by at least two runs:
+`ER-D-LFW-011` and `ER-D-LFW-012` go against the new layout (4 of 4 right → 1 of 3), `ER-D-TI-011` for it (2 of 4 →
+3 of 3).
+
+### Why `ER-D-LFW-012` goes wrong under the new layout: the fix-up pass, not the layout's draft (diagnostic, 04:15 UTC)
+Typed: "they asked if I'd ever move to rotterdam or if remote is the plan. what do I say". The user's notes in the
+request say "Staying in Porto. I'm not moving to Rotterdam or anywhere else, so remote within Europe is a condition,
+not a preference. … up to about six weeks of travel a year works for me." In all three new-layout runs the DRAFT
+says exactly that, opening with "Remote is the plan."; the pass lists those sentences as unsupported [self]
+statements and the shown answer becomes "Remote is the plan. I'll confirm the details and come back to you on it."
+Replays of the pass on this one row, 6 each (`diag012-*.jsonl`, the app's pass and cap):
+| Material | Draft | Supported sentences removed |
+|---|---|---|
+| new layout, as recorded | new layout's | 6 of 6 |
+| new layout without the repeated question | new layout's | 6 of 6 |
+| old order (question first) | new layout's | 6 of 6 |
+| main's own request | main's | 4 of 6 |
+So the order of the material is not the cause. The pass is unstable on this row on main too (the app's four main
+runs happened to keep the draft), and the new layout's draft, which answers the either-or first, tips it every
+time. The defect is the pass listing as unsupported what the user's own notes state.
+
+### The fix-up pass in the two profile modes, by what the app knows (judge-free, 04:20 UTC; input for E37)
+`report/pass-in-profile-modes.mjs`, every profile-mode run of 12 October (21 runs, 858 rows, both layouts; the
+edited rows graded as drafted and as shown, obj-3):
+| | Rows | Edited | Right as drafted → as shown | Forbidden-string rows | Shown defers where the draft did not |
+|---|---:|---:|---|---|---|
+| No résumé loaded | 219 | 53 | 45 → 47 (lost 0, gained 2) | 4 → 2 | 15 (0 on questions the documents answer) |
+| A résumé is loaded | 639 | 128 | 104 → 90 (lost 19, gained 5) | 9 → 5 | 26 (10 on questions the documents answer) |
+| Evidence missing (oracle) | 126 | 74 | 61 → 67 (lost 0, gained 6) | 13 → 7 | 28 |
+| Evidence present (oracle) | 732 | 107 | 88 → 70 (lost 19, gained 1) | 0 → 0 | 13 |
+By mode: Looking for work 142 edits of 429 rows, right 120 → 108; Technical Interview 39 edits of 429, 29 → 29.
+**Reading.** The pass earns its place where the asked thing is not in the documents (no right answer lost, the
+forbidden strings halved) and costs right answers where it is, nearly all of it in Looking for work. This is E4's
+measurement of 3 October again, on today's build and in these two modes; E4's gate (no pass when the files are in
+the prompt) raised the mean and let four more hard fails through on the holdout, so a gate is not proposed here.
+The fixed checks do not see an invented aside the pass removes; the judged draft-against-shown pairs (E37) are what
+settles it, and they wait for the judge.
