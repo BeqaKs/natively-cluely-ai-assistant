@@ -4114,3 +4114,14 @@ Its judged lines J1 to J3 are owed before anything is proposed. Listed for this 
 first three sections: the layout's rows of the three priority modes in `er11-dev-e28b` (90), which pair with the
 90 rows of `er11-dev-main` judged in section 2. Not landed; Evin's conditional word asked for every line to hold
 as written, and one did not, so landing needs his word again whatever the judge says.
+
+### E30 — a judged line for the unseen rows, declared before any judgment of them (2026-10-12 01:38 UTC)
+By mode on the readable unseen sets (challenge and prov1, 141 questions, same date): right 107 → 122 (75.9 % →
+86.5 %; wrong → right 20, right → wrong 5), forbidden-string rows 9 → 9. The three priority modes: Looking for
+work 19 → 22 of 25, Technical Interview 23 → 24 of 25, General 11 → 12 of 13. The two runs are three to four
+hours apart, and on dev the same pair of builds is level, so the fixed checks alone do not settle whether this is
+the layout. The judge can.
+**J4** (gpt-6-astra; the readable unseen rows of the three priority modes, 63 pairs: `er11-chal-e28b` with
+`er13-chal-main` for the two profile modes and `er14-chal-main` for General, `er11-prov1-e28b` with
+`er13-prov1-main`): the layout's mean is not lower than main's and its hard fails are not more. Reported with its
+interval; 63 pairs cannot show a small difference. Listed as section 5 of the priority list, after J1 to J3's rows.
