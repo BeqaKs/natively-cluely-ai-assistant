@@ -14,7 +14,8 @@ const CV = path.join(HERE, 'results', '.cv', 'repair-efc126a9');
 const P = await import(path.join(CV, 'promptSystemV2.mjs')); const D = await import(path.join(CV, 'documentGroundedPrompt.mjs')); const RC = await import(path.join(CV, 'repairCap.mjs'));
 const SUFFIX = JSON.parse(fs.readFileSync(path.join(HERE, 'results', '.cv', 'system-suffix.json'), 'utf8')).suffix;
 const SYSTEM = D.appendCustomModeSystemPromptLayer({ baseSystemPrompt: P.resolveV2SystemPrompt({ action: 'answer', surface: 'live', tier: P.v2TierForPromptTier(undefined) }) }) + SUFFIX;
-const KEY = (fs.readFileSync('/Users/evin/natively-cluely-ai-assistant/.env', 'utf8').match(/^DEEPSEEK_API_KEY=(.*)$/m)?.[1] ?? '').trim().replace(/^["']|["']$/g, '');
+// 2026-10-12 (Evin): the DeepSeek key is not read; genFetch sends every request to AgentRouter with its own keys.
+import { genFetch } from './generator-route.mjs';
 const SEP = '\n\n---\n'; const MARK = '[...answer context truncated for the repair pass...]'; const WHOLE_CAP = 96000;
 const OUT = path.join(HERE, 'results', 'replay', 'e10.jsonl'); fs.mkdirSync(path.dirname(OUT), { recursive: true });
 const done = new Set(fs.existsSync(OUT) ? fs.readFileSync(OUT, 'utf8').split('\n').filter(Boolean).map((l) => { const j = JSON.parse(l); return `${j.run}|${j.id}|${j.arm}|${j.k}`; }) : []);
@@ -42,7 +43,7 @@ async function one(t) {
   const ac = new AbortController(); const t0 = Date.now(); let text = ''; let first = null; let stop = 'done';
   const deadline = setTimeout(() => { if (text.trim().length < 5) { stop = 'deadline'; ac.abort(); } }, 7000);
   try {
-    const res = await fetch('https://api.deepseek.com/chat/completions', { method: 'POST', signal: ac.signal, headers: { Authorization: `Bearer ${KEY}`, 'Content-Type': 'application/json' },
+    const res = await genFetch('https://api.deepseek.com/chat/completions', { method: 'POST', signal: ac.signal, headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ model: 'deepseek-flash', stream: true, temperature: 0.2, seed: 7, max_tokens: 8192, thinking: { type: 'disabled' }, messages: [{ role: 'system', content: SYSTEM }, { role: 'user', content: t.user }] }) });
     if (!res.ok) throw new Error(`deepseek ${res.status}`);
     const dec = new TextDecoder(); let buf = '';

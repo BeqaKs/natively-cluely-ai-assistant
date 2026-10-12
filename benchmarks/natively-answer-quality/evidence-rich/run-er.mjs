@@ -136,15 +136,18 @@ console.log(`run ${runId}: ${todo.length}/${units.length} units to do (${todo.re
 // ---- connect, one LLM key, Pro on ----
 const envText = fs.readFileSync(path.resolve(process.env.NATIVELY_ENV_FILE || path.join(HERE, '..', '..', '..', '.env')), 'utf8');
 const envKey = (name) => (envText.match(new RegExp(`^${name}=(.*)$`, 'm'))?.[1] ?? '').trim().replace(/^["']|["']$/g, '').trim();
-const dsKey = envKey('DEEPSEEK_API_KEY');
-if (!dsKey) { console.error('DEEPSEEK_API_KEY not found in the env file (set NATIVELY_ENV_FILE).'); process.exit(2); }
+// 2026-10-12 13:20 UTC, Evin: "onllly use agent router for running iteration , strictly dont use deepseek api key".
+// The ONE key in the profile is the AgentRouter key he added for it; the DeepSeek key is not read.
+const AR_KEY_VAR = 'AGENTROUTER_API_KEY_2';
+const arKey = envKey(AR_KEY_VAR);
+if (!arKey) { console.error(`${AR_KEY_VAR} not found in the env file (set NATIVELY_ENV_FILE).`); process.exit(2); }
 const c = await connectApp();
 if (!(await app.recorderEnabled(c))) { console.error('prompt recorder is off. Launch with NATIVELY_E2E=1 NATIVELY_PROMPT_DEBUG=1.'); process.exit(2); }
-const profile = await app.setupProfile(c, { deepseekKey: dsKey });
-// The header says direct DeepSeek; refuse to run on anything else (2026-10-04: a profile left over from the limits
-// probes still held an AgentRouter key, the app routed there, and a whole dev run was recorded as "deepseek-direct").
-if (/agentrouter/i.test(JSON.stringify(profile?.config ?? {})) && process.env.ER_ALLOW_AGENTROUTER !== '1') {
-  console.error('the app is routing through AgentRouter, not direct DeepSeek — start it from an empty profile (supervise-er.mjs --fresh-userdata)'); process.exit(4);
+const profile = await app.setupProfile(c, { agentrouterKey: arKey });
+// The header says AgentRouter; refuse to run on anything else (the 2026-10-04 lesson, the other way round: a profile
+// left over from an earlier run can still hold a DeepSeek key, and the app would route there).
+if (!/agentrouter/i.test(JSON.stringify(profile?.config ?? {})) || /"deepseek-(flash|pro)"|deepseek-direct/i.test(JSON.stringify(profile?.config ?? {}))) {
+  console.error('the app is not routing through AgentRouter — start it from an empty profile (supervise-er.mjs --fresh-userdata): ' + JSON.stringify(profile?.config ?? {})); process.exit(4);
 }
 // ER_EMBEDDING=voyage (X2 arm C, 2026-10-09): give the app a cloud embedding provider before any file is uploaded, so
 // that retrieval on a pack above the whole-pack threshold is the hybrid search and not the bundled local model's
@@ -202,10 +205,9 @@ const header = fs.existsSync(F.header) ? readJson(F.header) : {
   app_version: appPkg.version, app_root: APP_ROOT, started_at: new Date().toISOString(), finished_at: null,
   provider_model_config: profile.config, default_config_before_keys: profile.before, pro_enabled_via_e2e_hook: profile.pro,
   embedding: { requested: process.env.ER_EMBEDDING ?? 'default', status: embBrief },
-  // §81–§84: the AgentRouter → DeepSeek generator route was requested first. The build under test (e000db4a) has no
-  // AgentRouter provider (no setAgentRouterApiKey in its preload), a deterministic failure, so generation is on the
-  // direct DeepSeek key — the fallback the spec names — and every row says so.
-  generator: { requested_first: 'agentrouter/deepseek', used: 'deepseek-direct', generator_fallback: true, fallback_reason: process.env.ER_GENERATOR_REASON || 'direct DeepSeek for comparability: the baselines this run is compared with (er-dev-m1, er-dev-m1r) used direct DeepSeek; AgentRouter is available in this build and was not used' },
+  // §81–§84: the AgentRouter → DeepSeek generator route. Runs up to 12 October 04:10 UTC used the direct DeepSeek key
+  // (their headers say so); from Evin's word of 12 October 13:20 UTC every run is on AgentRouter and no fallback exists.
+  generator: { requested_first: 'agentrouter/deepseek', used: 'agentrouter', key_var: AR_KEY_VAR, generator_fallback: false, fallback_reason: null },
   local_models: { embedder: fs.existsSync(path.join(APP_ROOT, 'resources', 'models', 'Xenova', 'multilingual-e5-small', 'onnx', 'model_quantized.onnx')), reranker: fs.existsSync(path.join(APP_ROOT, 'resources', 'models', 'Xenova', 'ms-marco-MiniLM-L-6-v2', 'onnx', 'model_quantized.onnx')) },
   reference_root: process.env.NATIVELY_E2E_REFERENCE_ROOT ?? null, app_log: APP_LOG,
   os: `${os.type()} ${os.release()} ${os.arch()}`, node: process.version, warmup_requests: Number(opt('warmup', 3)), request_timeout_ms: Number(opt('timeout', 90000)), concurrency: 1, sessions: [],
@@ -469,7 +471,7 @@ for (const unit of todo) {
       // §84 generator provenance, per row, read from the request that actually went out.
       generator_provider: host ? (/deepseek\.com$/.test(host) ? 'deepseek-direct' : /agentrouter/.test(host) ? 'agentrouter' : host) : null,
       generator_model: wsum?.response?.response_model ?? wsum?.model ?? null, configured_model: wsum?.model ?? null, generator_host: host,
-      generator_fallback: true, fallback_reason: header.generator.fallback_reason, generation_params: wsum?.params ?? null,
+      generator_fallback: header.generator.generator_fallback === true, fallback_reason: header.generator.fallback_reason ?? null, generation_params: wsum?.params ?? null,
       prompt_builder: wsum?.note?.promptSource ?? null, note_surface: wsum?.note?.surface ?? null, note_mode: wsum?.note?.mode ?? null, action: wsum?.note?.extra?.turnFacts?.personaAction ?? wsum?.note?.action ?? null,
       v3_trace: trace.available ? (trace.v3[0] ?? null) : null, v3_trace_count: trace.available ? trace.v3.length : null, app_trace_available: trace.available, latency_lines: trace.latency_lines ?? [],
       prompt_evidence: promptEvidence(w), system_prompt_sha: wsum?.system_sha ?? null,

@@ -62,7 +62,8 @@ export const JUDGED_SUFFIX = JUDGE === 'opus' ? '.judged-opus.jsonl' : '.judged.
 // 2026-10-01 12:26Z and the 02:00Z batch did not restore it. Same gateway, same model id, same client header: the
 // judge does not change, only whose quota pays for the call. A key that reports its quota (or its ration batch)
 // spent hands over to the next one; new calls stop only when every key has said so. Names only, never values.
-export const KEY_VARS = Object.freeze(['AGENTROUTER_API_KEY', 'AGENTROUTER_API_KEY_1']);
+// 2026-10-12 13:20Z — Evin: "i have added one api key agenr router 2 ... it has 174 usd creditts". Third name, same rules.
+export const KEY_VARS = Object.freeze(['AGENTROUTER_API_KEY', 'AGENTROUTER_API_KEY_1', 'AGENTROUTER_API_KEY_2']);
 // The app worktrees deliberately carry no .env; the key lives in the MAIN checkout's .env.
 function findEnv() {
   if (process.env.NATIVELY_ENV_FILE) return process.env.NATIVELY_ENV_FILE;

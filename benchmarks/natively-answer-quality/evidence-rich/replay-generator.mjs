@@ -14,7 +14,7 @@ import { genFetch, ROUTE, ROUTE_MODEL } from './generator-route.mjs';
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const args = process.argv.slice(2); const opt = (k, d = null) => { const i = args.indexOf(`--${k}`); return i >= 0 ? args[i + 1] : d; };
 const CS = await import(path.join(HERE, 'results', '.cv', 'calcScratch.mjs'));
-const KEY = (fs.readFileSync('/Users/evin/natively-cluely-ai-assistant/.env', 'utf8').match(/^DEEPSEEK_API_KEY=(.*)$/m)?.[1] ?? '').trim().replace(/^["']|["']$/g, '');
+// 2026-10-12 (Evin): the DeepSeek key is not read; genFetch sends every request to AgentRouter with its own keys.
 // --model <id>: a measurement of another DeepSeek model on the same request (E39). Direct route only; thinking stays off.
 const MODEL = opt('model', 'deepseek-flash'); if (MODEL !== 'deepseek-flash' && ROUTE !== 'direct') throw new Error('--model is for the direct route');
 // --temperature <t>: a measurement of another sampling temperature on the same request (E40). The app sends 0.2.
@@ -51,7 +51,7 @@ function isVisible(text) {
 async function one(t) {
   const t0 = Date.now(); let text = ''; let err = null; let first = null; let visible = null; let usage = null; let reasoned = 0; let served = null;
   try {
-    const res = await genFetch('https://api.deepseek.com/chat/completions', { method: 'POST', headers: { Authorization: `Bearer ${KEY}`, 'Content-Type': 'application/json' },
+    const res = await genFetch('https://api.deepseek.com/chat/completions', { method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ model: MODEL, stream: true, stream_options: { include_usage: true }, temperature: TEMP, seed: 7, max_tokens: 8192, thinking: { type: 'disabled' }, messages: [{ role: 'system', content: t.system }, { role: 'user', content: t.user }] }) });
     if (!res.ok) throw new Error(`deepseek ${res.status}`);
     const dec = new TextDecoder(); let buf = '';

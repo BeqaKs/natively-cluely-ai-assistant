@@ -32,8 +32,7 @@ if (!name || !opt('cv') || !opt('runs')) { console.error('need --name, --cv and 
 const cv = await import(pathToFileURL(path.resolve(opt('cv'))).href);
 const variant = opt('variant') ? await import(pathToFileURL(path.resolve(opt('variant'))).href) : {};
 const env = fs.readFileSync(process.env.NATIVELY_ENV_FILE || '/Users/evin/natively-cluely-ai-assistant/.env', 'utf8');
-const KEY = (env.match(/^DEEPSEEK_API_KEY=(.*)$/m)?.[1] ?? '').trim().replace(/^["']|["']$/g, '');
-if (!KEY) { console.error('no DeepSeek key in the env file'); process.exit(2); }
+// 2026-10-12 (Evin): the DeepSeek key is not read; genFetch sends every request to AgentRouter with its own keys.
 
 // The recorder kept only a hash of the pass's system prompt. It is rebuilt from the app's own function plus the
 // language suffix the app appends to every system prompt (recovered once from a recorded answer prompt, --suffix),
@@ -50,7 +49,7 @@ export function buildMessage(surface, full, draftBody, capChars) {
 
 async function* deepseekStream(model, system, user, signal) {
   const res = await genFetch('https://api.deepseek.com/chat/completions', { method: 'POST', signal,
-    headers: { Authorization: `Bearer ${KEY}`, 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ model, stream: true, temperature: 0.2, seed: 7, max_tokens: 8192, thinking: { type: 'disabled' },
       messages: [{ role: 'system', content: system }, { role: 'user', content: user }] }) });
   if (!res.ok) throw new Error(`deepseek ${res.status}`);

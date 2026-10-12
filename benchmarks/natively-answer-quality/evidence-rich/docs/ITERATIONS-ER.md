@@ -4279,3 +4279,101 @@ measurement of 3 October again, on today's build and in these two modes; E4's ga
 the prompt) raised the mean and let four more hard fails through on the holdout, so a gate is not proposed here.
 The fixed checks do not see an invented aside the pass removes; the judged draft-against-shown pairs (E37) are what
 settles it, and they wait for the judge.
+
+## 12 October, afternoon: AgentRouter only (Evin, 13:20 UTC)
+Evin: "i have added one api key agenr router 2 , use that it has 174 usd creditts , key and 1 has 25 usd on each , ,
+onllly use agent router for running iteration , strictly dont use deepseek api key".
+
+### What changed in the tools (13:21 to 13:40 UTC)
+- `astra/client.mjs`: `AGENTROUTER_API_KEY_2` is the third key name, same hand-over rules (its 8 tests pass).
+- `generator-route.mjs`: AgentRouter is the only route; `ER_GENERATOR=direct` stops the process. Key order for
+  generation: the new key, then the two older ones.
+- `replay-generator.mjs`, `replay-claim-pass.mjs`, `replay-repair.mjs`, `run-er.mjs`: the DeepSeek key is no longer
+  read. `run-er.mjs` puts the new AgentRouter key in the app's profile and refuses to run if the app is routed
+  anywhere else. Runs made before this (all of `er11` to `er17`) were on the direct key and say so in their headers.
+- Nothing made on one route is compared as a line with anything made on the other.
+
+### The judge at 13:22 UTC: closed (one probe by hand)
+`gpt-6-astra` is listed for all three keys; the chat call answered HTTP 402 "Budget pool quota has been exhausted" on
+each. No access block, and no longer the balance reply of this morning. Per the standing rule judge calls stopped
+there. `window-oct12.mjs` was started detached at 13:31 UTC with `ER_START_AT=2026-10-13T02:00:30Z` (status:
+`window-run-oct12-am/window-oct10.json`; this morning's status is kept as `window-oct10.status-oct12.json`).
+
+### What a generator call costs on AgentRouter (measured 13:23 to 13:30 UTC, the key's own usage counter)
+| Requests | Prompt tokens (cached) | Charged |
+|---|---|---|
+| 30 Technical Interview requests of `er11-dev-main`, first time | 439,499 (179,840) | USD 5.84 |
+| the same 30 again | 439,499 (276,992) | USD 5.04 |
+| one request, `/v1/messages` | 6,920 (6,784) | USD 0.061 |
+| the same request, `/v1/chat/completions` | 6,920 (6,784) | USD 0.063 |
+About USD 16 per million uncached prompt tokens and USD 9 per million cached ones, the same on both routes: about
+19 cents for one priority-mode answer. The direct key did last night's 9,000 calls for about USD 6. The new key's
+174 USD is therefore about 850 generator calls, not a night of replays; USD 11.01 of it went on these measurements.
+The route itself is sound: on the 30 requests the replays are right on 27 and 28 by the fixed checks (the app's
+drafts of the same rows, direct key: 27), no reasoning text, first word 1.1 to 1.4 s at the median (direct: 0.66 s).
+**Consequence, my call on autopilot:** generation is spent only on a declared experiment that needs it, and the two
+older keys (USD 25 each) are left for the judge.
+
+### Where the judged points of the priority modes go (9 October judgments, `report/where-points-go.mjs`)
+| Mode | Scored | Before the hard-fail caps | Rows at 9.5 or more | Weak rows (capped, or below 9) |
+|---|---|---|---|---|
+| Technical Interview | 8.83 | 9.25 | 51 of 70 | 17 |
+| Looking for work | 9.04 | 9.26 | 50 of 70 | 14 |
+| General | 8.98 | 9.25 | 45 of 70 | 12 |
+Without any cap the three modes would be at 9.25. A mean of 9.5 needs roughly 25 of the 43 weak rows to become
+good answers, not only the caps removed. The weak rows' flags: evidence available and not used 17, a question left
+unanswered 10, a major factual error 10, an unsupported personal claim 9, a deferral 5.
+In Looking for work the weak rows sit where the fix-up pass edited: 29 of 70 rows edited, mean 8.47; the 41 unedited
+rows 9.45; 10 of the 14 weak rows were edited, and 7 of the 8 with a not-used, unanswered or deferral flag. In the
+other two modes the weak rows are mostly unedited drafts (Technical Interview 4 of 17 edited, General 3 of 12).
+Only two drafts of these runs were ever judged, so whether the drafts of those 29 rows were better is not known:
+that is E37, and it is first in tomorrow's list after the baseline.
+
+### Four arms on the two profile modes, judge-free (`report/four-arms.mjs`, obj-3, 226 questions, runs of 12 October)
+| Arm | Right | Forbidden-string rows | Deferrals |
+|---|---|---|---|
+| main as shown (`er13-*-main`) | 200 | 4 | 11 |
+| main, fix-up pass off (its drafts) | 203 | 5 | 1 |
+| stacked build E41 as shown (`er16-*-e41`) | 204 | 4 | 16 |
+| E41, pass off | 207 | 6 | 5 |
+Looking for work alone: 100 → 102 → 103 → 106 of 113. The fixed checks do not see an invented aside, so the
+forbidden-string column understates what the pass protects against; the judged drafts decide.
+
+### Judged lines for the stacked build and for the pass, declared 13:32 UTC before any judgment
+Added to `window-sales.txt` after E37: General's 6 edited drafts on main (`astra-plan-general-drafts.json`); E41's
+rows of the two profile modes on both development sets (`er16-dev-e41`, `er16-dev2-e41`, 140 rows) and its 27 edited
+drafts (`astra-plan-e41-drafts.json`). The layout's own development rows (`er11-dev-e28b`) follow, General first.
+Pairs: `er16-dev-e41` with `er11-dev-main`, `er16-dev2-e41` with `er13-dev2-main` (same date).
+K1. E41 as shown against main as shown, 140 pairs: no harm if the mean is not more than 0.10 lower and hard fails
+    are at most main's + 2; a gain if the mean is higher by at least 0.15 with hard fails not more.
+K2. no mode lower by more than 0.30 with an interval that excludes zero.
+K3. the pass, read on main and on E41 separately (`report/pass-judged.mjs`): the mode mean with the pass off (edited
+    rows take their draft's score) against the pass on, and the hard fails each way. Reported as measured; switching
+    the pass off in the interview modes is already Evin's direction in another session, and this is its judged A/B.
+A window holds about 600 judgments (10 October: 594 in 37 minutes before the pool closed); the list is 675 with
+the calibration, so its tail (the layout's unseen rows, J4) may wait another day.
+
+## E42 — an AgentRouter key can do structured extraction (declared 2026-10-12 13:40 UTC, before any app run of it)
+**Why.** From today every benchmark run has only an AgentRouter key in the app. The app's structured-extraction
+ladder has no AgentRouter rung (recorded on 11 October), so such a profile reads the résumé and the posting with
+the rule-based parser: the state E26 fixed for a DeepSeek-only user (wrong title and employer pairings in 259
+recorded prompts). It is also what an AgentRouter-only user of the product gets today.
+**Change** (`cand/e42` `1a82241e`, on `cdaedfad`, local, not pushed; `electron/LLMHelper.ts`): an AgentRouter rung
+LAST in `generateContentStructured`, after DeepSeek, at 0.4, thinking off; the model is the gateway's automatic
+default (DeepSeek, not rationed per day), not the selected chat model. `generateWithAgentRouter` takes optional
+call options; chat callers send none. Shared TypeScript, no platform branch.
+**Code line, read before this declaration:** type check clean; the new test file and the two existing ladder files
+34 of 34; the whole `electron/llm` suite 5,970 tests, 5,951 pass, 1 fails, 18 skipped. The one failure
+(`QuickActionTurnRequest2026_10_09`, "a legacy prompt still gets the mode template") fails the same way on the
+unchanged `cdaedfad` build.
+**Runs** (AgentRouter key only, fresh user data, one app at a time, Looking for work, development set):
+`er18-dev-main` (main `cdaedfad`, the first 8 units, to see the gap in the app) then `er18-dev-e42` (30 rows).
+Estimated cost USD 15 to 20 of the new key.
+**Lines, written now** (`report/e26-read.mjs`):
+X1. candidate: every row with a profile loaded has its profile extracted by the model (`llm`), none by the parser.
+X2. candidate: no derived experience entry in a recorded prompt is rejected by the pairing rule.
+X3. candidate: every row answered, no error, no timeout.
+X4. main's rows with a profile loaded are extracted by the parser (`heuristic`). If they are not, the gap does not
+    exist in the app and E42 is closed as unnecessary.
+Context, not a line (another route): right by the fixed checks beside `er11-dev-main`'s same 30 rows (direct key,
+26 of 30). Landing is Evin's word; the branch is based on `cdaedfad`, main is now `bac5d70c`.

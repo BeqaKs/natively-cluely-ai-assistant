@@ -1,0 +1,37 @@
+{
+ "made": "2026-10-12T13:31:42.859Z",
+ "what": "E41 with the fix-up pass off: the drafts of the profile-mode rows the pass edited in the stacked build (the shown answers are judged as listed runs)",
+ "need": {
+  "er16-dev-e41::draft": [
+   "ER-D-LFW-023",
+   "ER-D-LFW-001",
+   "ER-D-LFW-002",
+   "ER-D-LFW-004",
+   "ER-D-LFW-007",
+   "ER-D-LFW-010",
+   "ER-D-LFW-024",
+   "ER-D-LFW-017",
+   "ER-D-LFW-018",
+   "ER-D-LFW-012",
+   "ER-D-LFW-013",
+   "ER-D-LFW-014",
+   "ER-D-LFW-028",
+   "ER-D-TI-022",
+   "ER-D-TI-018"
+  ],
+  "er16-dev2-e41::draft": [
+   "ER-D2-LFW-011",
+   "ER-D2-LFW-001",
+   "ER-D2-LFW-003",
+   "ER-D2-LFW-004",
+   "ER-D2-LFW-005",
+   "ER-D2-LFW-007",
+   "ER-D2-LFW-035",
+   "ER-D2-LFW-031",
+   "ER-D2-LFW-024",
+   "ER-D2-LFW-040",
+   "ER-D2-TI-012",
+   "ER-D2-TI-032"
+  ]
+ }
+}

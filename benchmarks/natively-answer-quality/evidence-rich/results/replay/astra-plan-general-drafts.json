@@ -1,0 +1,16 @@
+{
+ "made": "2026-10-12T13:31:42.928Z",
+ "what": "the drafts of the General rows the fix-up pass edited on main (the shown answers are judged with the baseline)",
+ "need": {
+  "er11-dev-main::draft": [
+   "ER-D-GEN-024",
+   "ER-D-GEN-026"
+  ],
+  "er14-dev2-main::draft": [
+   "ER-D2-GEN-021",
+   "ER-D2-GEN-037",
+   "ER-D2-GEN-040",
+   "ER-D2-GEN-036"
+  ]
+ }
+}
