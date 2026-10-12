@@ -4125,3 +4125,16 @@ the layout. The judge can.
 `er13-chal-main` for the two profile modes and `er14-chal-main` for General, `er11-prov1-e28b` with
 `er13-prov1-main`): the layout's mean is not lower than main's and its hard fails are not more. Reported with its
 interval; 63 pairs cannot show a small difference. Listed as section 5 of the priority list, after J1 to J3's rows.
+
+### E40 — read (2026-10-12 01:40 UTC): temperature 0 gives no gain by the fixed checks; no judge call spent
+`gen-e40-t0.jsonl`, 630 samples (315 requests, k = 2), against `e39-flash` (0.2, the same requests).
+- T1 holds: 630 of 630 answered.
+- **T2 does not hold.** Readable: right 90.8 % → 91.6 % (+0.7; the line asks for +2.0). Unread: 72 → 70 of 84.
+  Forbidden-string samples 18 → 16. By mode, readable: General 90.4 % → 90.4 %, Looking for work 90.0 % → 93.7 %,
+  Technical Interview 92.1 % → 90.5 %.
+- T3. Per request, two samples: at 0.2, both right 273, split 22, both wrong 20; at 0, both right 278, split 14,
+  both wrong 23. Temperature 0 is not deterministic on this API (the two samples are the same text on 35 of 315
+  requests; 37 at 0.2). About a third of the wrong samples at 0.2 sit on requests the other sample gets right; at 0
+  fewer requests split, and as many of them settle on the wrong answer as on the right one.
+**Recorded:** no gain; the setting stays 0.2. Read with E39: the errors that remain in the priority modes are not
+removed by a larger model without reasoning or by a colder draw.
