@@ -41,7 +41,25 @@ This file is generated: `node evidence-rich/report/build-handoff.mjs` (from `ben
 
 ## 1. State in one screen
 
-**Read this first: the state on 12 October 2026, 04:13 UTC** (the table below it was last brought up to date on 11 October; where the two differ, this block is the later one).
+**Read this first: the state on 12 October 2026, 14:10 UTC** (later than the block under it; where the two differ, this one holds).
+
+Evin, 12 October 13:20 UTC: "i have added one api key agenr router 2 , use that it has 174 usd creditts , key and 1 has 25 usd on each , , onllly use agent router for running iteration , strictly dont use deepseek api key".
+
+| Thing | State at 14:10 UTC on 12 October |
+|---|---|
+| Route | **AgentRouter only.** `generator-route.mjs` has no direct route any more, the replay tools and `run-er.mjs` do not read the DeepSeek key, and `run-er.mjs` puts `AGENTROUTER_API_KEY_2` in the app's profile and refuses any other routing. Every run up to `er17` was on the direct key and says so in its header; `er18` onwards is AgentRouter. Nothing of one route is compared as a line with the other. |
+| Judge | Probed once by hand at 13:22 UTC: HTTP 402 "Budget pool quota has been exhausted" on all three keys (the balance reply of the morning is gone). Judge calls stopped. **`window-oct12.mjs` is running detached and waits for 02:00:30 UTC on 13 October** (7:30 am IST). Status: `~/natively-er-backup/window-run-oct12-am/window-oct10.json`. |
+| The list it will judge, in order | E38's touched rows (8) → main on the three priority modes (210) → E37's drafts (30) and General's edited drafts (6) → the stacked build E41 on the two profile modes, both development sets (140) and its edited drafts (27) → the layout's development rows, General first (90) → the layout's and main's readable unseen rows (126). 675 with the calibration; a window has held about 600. |
+| Judged lines declared for it | K1 to K3 (E41 against main; the pass on and off), beside Q1/Q2 (E38), J1 to J4 (layout). Readers: `report/e37-e38-judged.mjs`, `report/pass-judged.mjs`, `report/where-points-go.mjs`, `report/pair-aggregate.mjs`. |
+| What a call costs on AgentRouter | About USD 16 per million uncached prompt tokens and USD 9 per million cached, on both of its routes: **about 19 cents for one priority-mode answer, about 45 cents for one app row** (answer, fix-up pass, its share of the profile upload). The 174 USD is about 850 answers. Read it from the key's own counter: `GET /v1/dashboard/billing/usage` (cents). USD 30.53 spent on 12 October; about 143 left. |
+| The gateway's speed | First word about 1.2 s at 13:25 UTC and about 3.5 s (a tenth over 9.8 s, one 20.5 s) at 14:00 UTC, in the app and in a replay of the same requests alike; the direct key gave 0.76 s. The app's 10 s answer limit and 45 s extraction limit are hit now and then. A first-word line cannot be read from an AgentRouter run unless both arms alternate inside the hour. |
+| E42, `cand/e42` `1a82241e` | An AgentRouter rung last in the structured-extraction ladder, so an AgentRouter-only user's résumé is read by the model. The gap is real (main: 6 of 6 profile rows read by the rule-based parser). The candidate: 23 of 25 by the model; **its line X1 (every row) fails** because one extraction passed the caller's 45 s limit twice. Not proposed as it stands; whether to land it anyway or lengthen that limit is Evin's. |
+| All three candidates on current main | `cand/e43` `484e256e` (local) = `bac5d70c` + layout + profile read + AgentRouter rung, no conflict. Type check clean; `electron/llm` 5,998 of 6,017 pass, 1 fails, 18 skipped; intelligence suites 2,952 of 2,963 pass, 0 fail. The one failure (`QuickActionTurnRequest2026_10_09`) fails the same way on unchanged `bac5d70c`. No benchmark run on it. |
+| Where the points go (9 October judgments) | All three priority modes are at 9.25 before the hard-fail caps. 9.5 needs about 25 of the 43 weak rows of 210 to become good answers. In Looking for work the weak rows are the ones the fix-up pass edited (edited 29 rows: 8.47; unedited 41: 9.45; 10 of 14 weak rows edited). Their drafts were never judged: E37 decides. |
+| Four arms, judge-free, 226 profile-mode questions | main shown 200 right → main with the pass off 203 → E41 shown 204 → E41 with the pass off 207; forbidden-string rows 4, 5, 4, 6. |
+| Running | Only the waiting window script. No app, no replay. |
+
+**The state on 12 October 2026, 04:13 UTC** (the table below it was last brought up to date on 11 October; where the two differ, this block is the later one).
 
 Evin's instruction of 11 October, evening: the priority is Technical Interview, Looking for work (with profile intelligence) and General; the other modes come next; the target is 9.5 in every mode; iterate overnight on autopilot.
 
@@ -139,8 +157,12 @@ In order, dates in UTC. Quotes are his words, as typed. Plain "continue" message
 | 2026-10-09 | "push main to github" | GitHub `main` moved `bce8e47a` → `73b18d97`. Only `main` was pushed. |
 | 2026-10-09 | "write a handoff file with all the questions , resonses , chanegs you have made , observations , rejected changed , benchmark , why this change , code changes , prompt changes etc in to a single.md file , everything" | This file. |
 | 2026-10-09 | A long written brief for a new session ("final answer-quality optimization"): measure main with E19 first; map the remaining failures by first cause; arithmetic, facts from several documents, inventions the pass misses, correct inference, Technical Interview code, follow-ups; run the 12k / 24k / 48k threshold test; build a new high-difficulty set with an untouched validation part; Astra only; deterministic checks outrank the judge; nothing merged or pushed without his word. | The second session of 2026-10-09 (sections 1, 6 and 11, and the log from "Session of 2026-10-09, 10:00 UTC onward"). |
+| 2026-10-11 | "first priority should be techical interview and looking for wrok modes and optimization wth profiel intelligence, and general mode… all other modes come next"; "i want all the modes to be at 9.5 or above"; "use agentrouter for deepseek model also"; "im gonna sleep now, you are on autopilot, continue iterating" | Priority list rewritten; E30 to E41 run overnight (section 1). Generation through AgentRouter emptied its balance that night, so the judge had none at the window of 12 October. |
+| 2026-10-12 | "i have added one api key agenr router 2 , use that it has 174 usd creditts , key and 1 has 25 usd on each , , onllly use agent router for running iteration , strictly dont use deepseek api key" | The direct route was removed from the tools; the judge client knows the third key; price and speed of the route measured; E42 run; the judge window set for 02:00 UTC on 13 October. |
 
 Decisions he made that are easy to forget:
+
+- **AgentRouter only, the DeepSeek key is not to be used** (2026-10-12).
 
 - **No reasoning on the answer model** (2026-10-02): measured at +1.3 s median and +4.8 s at the slow end to the first word. Do not propose first-word delays as quality fixes.
 - **The awaited rerank stays** (2026-10-03): "keep as today".
@@ -333,6 +355,9 @@ node evidence-rich/supervise-er.mjs --root <app worktree> --runs dev:<run-id>,de
 14d. **A clean result on rows you have read may not carry.** E21 held on the development rows twice (+11 points, interval above zero) and showed nothing on 37 unseen calculation questions. Check a candidate on `challenge` and `challenge-val` before any app run or judge call.
 14e. **Needles are substrings.** "October 20" used to match "October 2026" (fixed in obj-3 for digits). Write date needles with their day spelled so that a longer number cannot contain them.
 14. **The shared git stash.** Never use bare `git stash` or `git stash pop`: other sessions use the same stash.
+16. **A process search inside a typed command finds the command itself.** `ps | grep "[d]ev-agent"` in a command whose own text names `scripts/dev-agent.mjs` (a heredoc, a chain being written) counts the shell. Search in a separate call.
+17. **AgentRouter's price is per prompt token and high** (section 1). A replay of 300 requests is about USD 60. Read the counter before and after anything larger than a probe; `chains/spend-guard.mjs` stops an app run past a cap.
+18. **An AgentRouter-only app run is slow to set up**: a profile upload runs about ten structured calls through the gateway, and on `cdaedfad` it has no model at all for them (E42).
 15. **Other sessions' files.** The main checkout usually holds uncommitted work from other sessions. Never sweep it into a commit; stage by path.
 
 ---
@@ -657,6 +682,8 @@ Section 13 prints the pass's instruction block as it is on main and the full tex
 ## 11. Open decisions and next steps
 
 **Open with Evin**
+
+0a. **Decisions of 12 October, afternoon (these replace (a) and (b) of the next item).** (i) **Budget.** At about 19 cents an answer the new key buys about 850 answers; last night's judge-free work was about 9,000 calls. Either the iterations stay this small, or generation goes back to the direct key (USD 43 there), or more is added. (ii) **E42**: land the rung although one extraction in three stalled past 45 s, lengthen that limit for it, or leave it. (iii) **Landing** the layout, the profile read or both: still his word, after tomorrow's judgments; `cand/e43` shows they build and test on current main. (iv) **The pass in the interview modes**: tomorrow's draft-against-shown judgments are its A/B.
 
 0. **Decisions of 12 October, first.** (a) **The judge has no balance**: the AgentRouter account needs a top-up before anything on the list above can be judged; the next window is Evin's to name. (b) **Generation route**: this session moved generation back to the direct DeepSeek key when AgentRouter ran out; confirm, or say that AgentRouter is to carry both (then its balance has to cover about 4,000 replay calls a night beside the judge). An AgentRouter-only profile also has no model for résumé parsing (the structured ladder has no AgentRouter rung). (c) **The layout** (`cand/e28b`): failed as registered, holds and reproduces on the same date; judge it and land it on your word, or close it. (d) **The profile read** (`cand/e38`): land on your word after its 8 judgments, or now on the judge-free lines. (e) **9.5 in every mode**: not reachable by the kind of change tried so far; the larger DeepSeek model without reasoning and temperature 0 were measured and do not help. What is left is reasoning on (ruled out by you, +1.3 s to the first word), a model of another vendor, or accepting about 9.0 in these modes. (f) **The fix-up pass in the two interview modes** (another session's uncommitted change switches it off): the 30 draft-against-shown pairs are queued (E37).
 
