@@ -3967,3 +3967,85 @@ its shown answer. By the fixed checks the pass is neutral there (Looking for wor
 not more, the pass earns its place in these modes. If the drafts' mean is within 0.05 of the shown answers' or
 higher and their hard fails are at most one more, switching it off costs nothing measurable. Anything between is
 unsettled. No change is made by this session either way; it is input for Evin and for that session.
+
+### E30 — judge-free lines read (2026-10-12 01:15 UTC): line 4 fails on the unseen sets; not proposed, not judged, not landed
+`chains/e30-gate.txt`, `chains/e30-gate-630.txt`, checks obj-3.
+- Line 1 (layout as replayed): holds. 612 of 612 development requests with evidence have it first and end with the
+  repeated question; the 18 without evidence keep the old layout; unseen 219 of 219.
+- Line 2 (answered): holds. 630 of 630 and 219 of 219.
+- Line 3 (development 630, against `er6`): holds. Right 561 → 573 (89.0 % → 91.0 %), forbidden-string rows 6 → 6.
+  Against main of the same night on dev (`er11-dev-main`, 270): right 90.0 % → 90.0 %, forbidden-string rows 4 → 2.
+- **Line 4 (unseen 219, against `er7`/`er8`): FAILS.** Right 181 → 189 (82.6 % → 86.3 %), but forbidden-string rows
+  10 → 14 (the line allows main + 3). The seven modes without a profile: 6 → 12; the two profile modes: 4 → 2.
+- Line 5 (pass and repair): holds. Edited 15.4 % → 13.8 %; a second request 76.5 % → 76.3 %; two 10.8 % → 10.8 %.
+- Line 6 (first word, same hour): holds. Spoken median 1414 → 1347 ms, typed 714 → 804 ms (+90, the line is 150).
+- Line 7 (the purpose; replay of the recorded dev prompts in order, one session id): holds. Cached share of the
+  prompt tokens, median 94.1 % (main's own prompts the same way: 34.7 %); pooled 75.6 % against 36.3 %.
+
+**Decision by the rule: one line failed, so `cand/e28b` is not proposed and nothing of it was listed for the judge.**
+Evin's conditional word to land it does not apply. Not landed.
+
+**What the failed line does and does not show.** It compares the candidate's runs of 11 October with main's runs of
+7 and 8 October. The app tells the model today's date, and on dev the same comparison against `er6` (9 October)
+reads +1.9 points while against main of the same night it reads 0.0, so a difference of days moves these counts.
+The rule was written before that was known and its verdict stands as written. A fair test needs main on the
+unseen sets in the same night; that would be a new experiment with its own rule (E30b), not a re-reading of this one.
+
+### E38 — judge-free lines read (2026-10-12 01:12 UTC): P1 to P5 hold; the touched rows go to the judge
+`report/e38-read.mjs`, 226 questions in both arms (190 readable, 36 unread), runs `er13-*-e38` against `er13-*-main`,
+set by set in the same hour.
+- P1 holds: 0 of 226 candidate rows unanswered.
+- P2 holds: 4 touched rows (all readable; Looking for work 3, Technical Interview 1). Right 2 → 4; forbidden-string
+  rows 0 → 0. The two that changed: "whats the on call setup for this job" ("I'll confirm the on-call setup" →
+  "one week in six as primary … a compensatory day off after each on-call week"), and "fernlatch speed numbers,
+  before and after" ("I don't have Fernlatch numbers in front of me" → all three pairs of numbers).
+- P3 holds: untouched readable rows 89.2 % → 87.6 % (−1.6, the line is 2.0; these rows' requests are the same in
+  both builds, so this is the run-to-run turnover); unread 32 → 34 of 36.
+- P4 holds: first word, touched rows 1012 → 748 ms; all rows 871 → 831 ms.
+- P5 holds: the two touched rows that need no document fact (the outbox pattern; idempotency) are right in both
+  arms, no forbidden string, and read as general explanations in both.
+One candidate row is still on the no-retrieval path with nothing read (a kept-out kind). The effect is small in
+count because the classifier sends few profile-mode questions down that path: 4 of 226 tonight.
+Plan `results/replay/astra-plan-e38.json` (8 judgments) is first in the priority list. Landing is Evin's word.
+
+### E36 — judge-free lines read on the direct key (2026-10-12 01:14 UTC): line 1 fails; not proposed, not judged
+Arms `e36d-base`, `e36d-a`, 308 samples each (154 questions, k = 2), no error, no empty answer.
+- **Line 1 FAILS:** readable right 87.7 % → 87.3 % (−0.4, inside the line) but forbidden-string samples 3 → 5 (the
+  line is "at most base"). Looking for work 1 → 3, Technical Interview 2 → 2.
+- Line 2 holds: unread right 50 → 51 of 56, forbidden-string samples 3 → 3.
+- Line 3 holds: posting-fact rows right 4 of 4 readable and 4 of 4 unread in both arms.
+- Line 4 holds: edited 36.4 % → 35.4 %; pass median 1002 → 956 ms.
+On the rows it was written for (evidence missing, readable, 40 samples) the pass edits more often (75.0 % → 87.5 %)
+and the fixed checks do not improve (right 39 → 38, forbidden 1 → 2). Stopped. Third pass-side or generator-side
+wording for the posting-as-experience row that fails (after E24, E24b); the next attempt, if any, is not a wording.
+
+### The priority list for the window of 12 October, as changed before any judgment (01:13 UTC)
+`window-sales.txt`: (1) E38's plan; (2) tonight's main on the three priority modes: `er11-dev-main` (Technical
+Interview, Looking for work, General, 90 rows) and `er13-dev2-main` (the two profile modes, 80 rows; it replaces
+`er9-dev2-e26`, which is the same code on 9 October); (3) E37's drafts, whose dev2 half moved with it to
+`er13-dev2-main` (12 edited rows there; 18 in `er11-dev-main`; the earlier plan is kept as
+`astra-plan-e37-drafts.before-er13.json`).
+
+## E39 — a measurement: the larger DeepSeek model on the same recorded requests, reasoning off (declared 2026-10-12 01:16 UTC, before any call)
+**Why.** Evin's target is 9.5 in every mode. The judged hard fails of the three priority modes on main (Technical
+Interview 11, Looking for work 7, General 7 of 70 each) do not share a cause a prompt or a retrieval rule can
+remove: a wrong time zone, a promotion date read as a joining date, a reasoning slip in a sizing answer, an
+invented detail, a wrong speaker. Four narrow candidates tonight (E34, E32, E36 failed; E38 holds and touches 4
+rows of 226). Whether a stronger generator removes these is not known and has never been measured here.
+**This is a measurement, not a candidate.** Nothing in the app changes, the canonical generator stays
+`deepseek-flash`, and choosing another model is Evin's decision (cost and speed are his to weigh).
+**Arms** (`replay-generator.mjs`, the app's own request, temperature 0.2, seed 7, `thinking: disabled`, direct
+key): `e39-flash` (`deepseek-flash`, k = 2) and `e39-pro` (`--model deepseek-v4-pro`, k = 1). Requests: tonight's
+main, the three priority modes. Readable: `er11-dev-main` (90), `er13-dev2-main` (80), `er6-dev2-main` General
+(40), `er13-chal-main`, `er13-prov1-main`, `er7-chal-main` General. Unread, counts only: `er13-chalval-main`,
+`er13-prov1val-main`, `er7-chalval-main` General. The replayed text is the draft in both arms (no fix-up pass).
+**Lines, written now** (`report/arm-read.mjs --kind gen`, obj-3):
+R1. the measurement is valid: every `e39-pro` sample answered, no reasoning text on any sample, the served model
+    is the one asked for. If reasoning text arrives, the arm is not read (reasoning is not to be enabled).
+R2. worth a judged comparison if right by the fixed checks is at least 3.0 points above `e39-flash` on the
+    readable sets and not lower on the unread ones, with forbidden-string samples not a larger share.
+R3. first word, median over the same requests: reported beside flash's. More than 300 ms later is reported as a
+    cost against Evin's "answer fast", whatever R2 says.
+If R1 and R2 hold: the drafts of both arms for `er11-dev-main`'s 90 rows (repetition 0) are listed for the judge
+after the priority list, as derived runs. If R2 does not hold, the larger model is recorded as not helping by
+these checks and no judge call is spent.
