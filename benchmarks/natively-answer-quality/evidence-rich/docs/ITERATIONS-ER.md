@@ -4161,3 +4161,22 @@ request in the new layout) against `er14-chal-main` + `er14-chalval-main` (01:22
 builds are level. The unseen sets hold more questions that need two documents or a later revision, which is where
 putting the documents first and the question last was expected to help. The judged lines (J1 to J3 on dev, J4 on
 the unseen rows of the priority modes) are still owed.
+
+## Judge window of 12 October: opened at 02:00:30 UTC, access restored, account balance empty; nothing judged (recorded 02:03 UTC)
+- Probe 02:00:52: clean (exact `gpt-6-astra`, no access block). The flag of 11 October was moved aside
+  (`/tmp/er-access-block-20261008-1630.cleared-1791770452452.json`).
+- Calibration 02:00:54: 0 of 38, every pair answered "account quota exhausted (insufficient_user_quota)" within two
+  seconds. Not a calibration result; no judgment was made and no score exists for this window.
+- Cause: the AgentRouter account is the judge's and the generator replays of 21:32 to 22:00 UTC on 11 October
+  (about 3,900 calls, on Evin's instruction to use AgentRouter for generation) spent its balance. Both keys.
+- `window-run-oct12-am/quota-watch.mjs` asks once every 12 minutes, one small call per key, until 03:20 UTC. If a
+  key answers, it starts the window script (probe, calibration, then the priority list). First check 02:02: both
+  keys still without balance. A terminal notification was sent to Evin (the phone push was not delivered).
+- Not judged, in list order: E38's touched rows (8), tonight's main on the three priority modes (170), E37's drafts
+  (30), the layout's priority-mode rows on dev (90) and on the readable unseen sets (126), E31a's Sales pairs.
+
+### Line 3 of E30 against main of the same date, development 630 (declared 2026-10-12 02:04 UTC, before the run)
+Main `cdaedfad` on dev2, the seven modes without a profile: `er14-dev2-main` (280 rows). With `er11-dev-main` (270)
+and `er13-dev2-main` (80) that is main on all 630 development questions dated 12 October, against
+`er11-dev-e28b` + `er11-dev2-e28b`. Same line as written for E30: right not more than 2.0 points below main,
+forbidden-string rows at most main + 5. Read by mode for the three priority modes.
