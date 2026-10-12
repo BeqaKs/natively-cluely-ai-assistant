@@ -41,6 +41,24 @@ This file is generated: `node evidence-rich/report/build-handoff.mjs` (from `ben
 
 ## 1. State in one screen
 
+**Read this first: the state on 12 October 2026, 02:10 UTC** (the table below it was last brought up to date on 11 October; where the two differ, this block is the later one).
+
+Evin's instruction of 11 October, evening: the priority is Technical Interview, Looking for work (with profile intelligence) and General; the other modes come next; the target is 9.5 in every mode; iterate overnight on autopilot.
+
+| Thing | State on 12 October |
+|---|---|
+| Judge | **No judgment was made on 12 October.** The window opened at 02:00:30 UTC; the probe was clean and cleared the access-block flag of 11 October; the calibration then got "account quota exhausted" on all 38 pairs. The AgentRouter account is the judge's, and about 3,900 generator replays sent through it on 11 October (21:32 to 22:00 UTC, on Evin's instruction to use AgentRouter for generation) spent its balance. Generation went back to the direct DeepSeek key at 22:05 UTC (`generator-route.mjs`, default `direct`; `ER_GENERATOR=agentrouter` by request). |
+| What waits for the judge, in order | `window-run-oct12-am/window-sales.txt`: E38's touched rows (8) → main on the three priority modes, runs dated 12 October (`er11-dev-main` three modes, `er13-dev2-main` two modes; 170) → E37's drafts (30) → the layout's priority-mode rows on dev (90) → the layout's and main's readable unseen rows of the priority modes (126) → the older lists (E31a's Sales pairs, E26, holdout). Readers: `report/e37-e38-judged.mjs e38\|e37`, `report/window-read.mjs`. |
+| Layout, `cand/e28b` `7067ab3c` (E30) | **Its registered line 4 failed** (unseen forbidden-string rows 10 → 14 against main's runs of 7 and 8 October), so by its rule it is not proposed and Evin's conditional word to land it does not apply. Every request carries the day's date, so runs of different days are different requests. **Against main of the same date the line holds** (E30b: unseen 173 → 189 right of 219, forbidden 12 → 14) **and a second run within the hour reproduced it** (E30c: 99 → 107 of 133 on the seven modes without a profile; the first run had 108). On dev the two builds are level (243 and 243 of 270). The purpose holds: cached share of prompt tokens, median 94.1 % against 34.7 %. Judged lines J1 to J3 (dev) and J4 (unseen, priority modes) are owed. Not landed. |
+| Profile read, `cand/e38` `daef3be5` (E38) | In the two profile modes a typed question the classifier answers from general knowledge read nothing when only the résumé or posting was loaded. Fix in `orchestrator.ts` (one condition), 13 tests. Judge-free lines P1 to P5 hold: 4 of 226 questions change path, right 2 → 4 on them, first word not later. Judged lines Q1, Q2 owed. Landing is Evin's word. |
+| Both in one build, `cand/e41` `3a86e45c` (E41) | Local, worktree `er-e21`. 2,909 tests, 2,907 pass, 0 fail; type check clean. Runs `er16-*-e41` (the two profile modes, 226 rows) against `er13-*-main`; lines S1 to S4 in the log. |
+| Closed on 11 and 12 October, no judge call spent | E34 (generator: no negative self-claim), E32 on the priority modes (pass: a denial is a claim), E36 (pass: a posting is not the candidate's past): each failed a judge-free line. E39 (the larger model `deepseek-v4-pro`, reasoning off): not better by the fixed checks, first word 0.4 s later. E40 (temperature 0): no gain. |
+| What the remaining errors are | On the same request one flash sample is right and the next is wrong on about 7 % of the priority-mode requests, and both are wrong on about 6 % (half of those are the fixed checks' own misses). The judged hard fails of the three modes share no cause that a wording, a retrieval rule, a larger model without reasoning or a colder draw removed. |
+| Sales | E31a holds its four judge-free lines and waits for the judge; E32 and E33 declared for Sales; all behind the priority modes. |
+| App `main` | Unchanged: local and GitHub `cdaedfad`. Nothing was landed or pushed to main on 11 or 12 October after the 24,000 threshold. |
+| Direct DeepSeek balance | USD 43.83 at 01:19 UTC on 12 October. |
+
+
 | Thing | State |
 |---|---|
 | App `main` | **Local and GitHub both `cdaedfad`** (the 24,000 threshold, landed 2026-10-10 19:50 UTC on Evin's "1) yes", pushed 21:22 UTC on his "do both"; any later commit on main needs his word again before it is pushed). `cdaedfad` = `cand/e27` rebased: a reference pack is read whole up to 24,000 tokens, the claim pass's material cap is 136,000 characters. Below it: two commits of another session (`95490839`, `ea316087`), then `67fb1b24` = E26 (a DeepSeek key can do structured extraction). The main checkout carries other sessions' uncommitted edits; land a commit there without touching them (compare-and-swap `update-ref`, check out the clean files, `reset` + `apply` for an edited one; log entry of 2026-10-10 19:58 UTC). |
@@ -637,6 +655,9 @@ Section 13 prints the pass's instruction block as it is on main and the full tex
 ## 11. Open decisions and next steps
 
 **Open with Evin**
+
+0. **Decisions of 12 October, first.** (a) **The judge has no balance**: the AgentRouter account needs a top-up before anything on the list above can be judged; the next window is Evin's to name. (b) **Generation route**: this session moved generation back to the direct DeepSeek key when AgentRouter ran out; confirm, or say that AgentRouter is to carry both (then its balance has to cover about 4,000 replay calls a night beside the judge). An AgentRouter-only profile also has no model for résumé parsing (the structured ladder has no AgentRouter rung). (c) **The layout** (`cand/e28b`): failed as registered, holds and reproduces on the same date; judge it and land it on your word, or close it. (d) **The profile read** (`cand/e38`): land on your word after its 8 judgments, or now on the judge-free lines. (e) **9.5 in every mode**: not reachable by the kind of change tried so far; the larger DeepSeek model without reasoning and temperature 0 were measured and do not help. What is left is reasoning on (ruled out by you, +1.3 s to the first word), a model of another vendor, or accepting about 9.0 in these modes. (f) **The fix-up pass in the two interview modes** (another session's uncommitted change switches it off): the 30 draft-against-shown pairs are queued (E37).
+
 
 1. **Land the 24,000 threshold?** `cand/e27` `0256eed4` is one commit on main, tested and confirmed (86.1 % right against 54.3 % on packs of about 20,700 tokens; spoken first word 0.77 s earlier, typed 0.49 s later; request 3.6 times the size on those turns). Not measured: models with a small context window, Windows, a packaged build. `git merge --ff-only cand/e27` in the main checkout, after rebasing if main has moved.
 2. **Merge or close draft PR #638.** Merging puts the blind holdout's questions on public main.

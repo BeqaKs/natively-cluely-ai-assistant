@@ -41,6 +41,24 @@ This file is generated: `node evidence-rich/report/build-handoff.mjs` (from `ben
 
 ## 1. State in one screen
 
+**Read this first: the state on 12 October 2026, 02:10 UTC** (the table below it was last brought up to date on 11 October; where the two differ, this block is the later one).
+
+Evin's instruction of 11 October, evening: the priority is Technical Interview, Looking for work (with profile intelligence) and General; the other modes come next; the target is 9.5 in every mode; iterate overnight on autopilot.
+
+| Thing | State on 12 October |
+|---|---|
+| Judge | **No judgment was made on 12 October.** The window opened at 02:00:30 UTC; the probe was clean and cleared the access-block flag of 11 October; the calibration then got "account quota exhausted" on all 38 pairs. The AgentRouter account is the judge's, and about 3,900 generator replays sent through it on 11 October (21:32 to 22:00 UTC, on Evin's instruction to use AgentRouter for generation) spent its balance. Generation went back to the direct DeepSeek key at 22:05 UTC (`generator-route.mjs`, default `direct`; `ER_GENERATOR=agentrouter` by request). |
+| What waits for the judge, in order | `window-run-oct12-am/window-sales.txt`: E38's touched rows (8) → main on the three priority modes, runs dated 12 October (`er11-dev-main` three modes, `er13-dev2-main` two modes; 170) → E37's drafts (30) → the layout's priority-mode rows on dev (90) → the layout's and main's readable unseen rows of the priority modes (126) → the older lists (E31a's Sales pairs, E26, holdout). Readers: `report/e37-e38-judged.mjs e38\|e37`, `report/window-read.mjs`. |
+| Layout, `cand/e28b` `7067ab3c` (E30) | **Its registered line 4 failed** (unseen forbidden-string rows 10 → 14 against main's runs of 7 and 8 October), so by its rule it is not proposed and Evin's conditional word to land it does not apply. Every request carries the day's date, so runs of different days are different requests. **Against main of the same date the line holds** (E30b: unseen 173 → 189 right of 219, forbidden 12 → 14) **and a second run within the hour reproduced it** (E30c: 99 → 107 of 133 on the seven modes without a profile; the first run had 108). On dev the two builds are level (243 and 243 of 270). The purpose holds: cached share of prompt tokens, median 94.1 % against 34.7 %. Judged lines J1 to J3 (dev) and J4 (unseen, priority modes) are owed. Not landed. |
+| Profile read, `cand/e38` `daef3be5` (E38) | In the two profile modes a typed question the classifier answers from general knowledge read nothing when only the résumé or posting was loaded. Fix in `orchestrator.ts` (one condition), 13 tests. Judge-free lines P1 to P5 hold: 4 of 226 questions change path, right 2 → 4 on them, first word not later. Judged lines Q1, Q2 owed. Landing is Evin's word. |
+| Both in one build, `cand/e41` `3a86e45c` (E41) | Local, worktree `er-e21`. 2,909 tests, 2,907 pass, 0 fail; type check clean. Runs `er16-*-e41` (the two profile modes, 226 rows) against `er13-*-main`; lines S1 to S4 in the log. |
+| Closed on 11 and 12 October, no judge call spent | E34 (generator: no negative self-claim), E32 on the priority modes (pass: a denial is a claim), E36 (pass: a posting is not the candidate's past): each failed a judge-free line. E39 (the larger model `deepseek-v4-pro`, reasoning off): not better by the fixed checks, first word 0.4 s later. E40 (temperature 0): no gain. |
+| What the remaining errors are | On the same request one flash sample is right and the next is wrong on about 7 % of the priority-mode requests, and both are wrong on about 6 % (half of those are the fixed checks' own misses). The judged hard fails of the three modes share no cause that a wording, a retrieval rule, a larger model without reasoning or a colder draw removed. |
+| Sales | E31a holds its four judge-free lines and waits for the judge; E32 and E33 declared for Sales; all behind the priority modes. |
+| App `main` | Unchanged: local and GitHub `cdaedfad`. Nothing was landed or pushed to main on 11 or 12 October after the 24,000 threshold. |
+| Direct DeepSeek balance | USD 43.83 at 01:19 UTC on 12 October. |
+
+
 | Thing | State |
 |---|---|
 | App `main` | **Local and GitHub both `cdaedfad`** (the 24,000 threshold, landed 2026-10-10 19:50 UTC on Evin's "1) yes", pushed 21:22 UTC on his "do both"; any later commit on main needs his word again before it is pushed). `cdaedfad` = `cand/e27` rebased: a reference pack is read whole up to 24,000 tokens, the claim pass's material cap is 136,000 characters. Below it: two commits of another session (`95490839`, `ea316087`), then `67fb1b24` = E26 (a DeepSeek key can do structured extraction). The main checkout carries other sessions' uncommitted edits; land a commit there without touching them (compare-and-swap `update-ref`, check out the clean files, `reset` + `apply` for an edited one; log entry of 2026-10-10 19:58 UTC). |
@@ -637,6 +655,9 @@ Section 13 prints the pass's instruction block as it is on main and the full tex
 ## 11. Open decisions and next steps
 
 **Open with Evin**
+
+0. **Decisions of 12 October, first.** (a) **The judge has no balance**: the AgentRouter account needs a top-up before anything on the list above can be judged; the next window is Evin's to name. (b) **Generation route**: this session moved generation back to the direct DeepSeek key when AgentRouter ran out; confirm, or say that AgentRouter is to carry both (then its balance has to cover about 4,000 replay calls a night beside the judge). An AgentRouter-only profile also has no model for résumé parsing (the structured ladder has no AgentRouter rung). (c) **The layout** (`cand/e28b`): failed as registered, holds and reproduces on the same date; judge it and land it on your word, or close it. (d) **The profile read** (`cand/e38`): land on your word after its 8 judgments, or now on the judge-free lines. (e) **9.5 in every mode**: not reachable by the kind of change tried so far; the larger DeepSeek model without reasoning and temperature 0 were measured and do not help. What is left is reasoning on (ruled out by you, +1.3 s to the first word), a model of another vendor, or accepting about 9.0 in these modes. (f) **The fix-up pass in the two interview modes** (another session's uncommitted change switches it off): the 30 draft-against-shown pairs are queued (E37).
+
 
 1. **Land the 24,000 threshold?** `cand/e27` `0256eed4` is one commit on main, tested and confirmed (86.1 % right against 54.3 % on packs of about 20,700 tokens; spoken first word 0.77 s earlier, typed 0.49 s later; request 3.6 times the size on those turns). Not measured: models with a small context window, Windows, a packaged build. `git merge --ff-only cand/e27` in the main checkout, after rebasing if main has moved.
 2. **Merge or close draft PR #638.** Merging puts the blind holdout's questions on public main.
@@ -4938,6 +4959,35 @@ Entry headings with their line numbers in `docs/ITERATIONS-ER.md`, and every lin
 - L3520: Astra window of 2026-10-11, 02:00–02:28 UTC — E29 repetition 1 judged; closed by a provider access block (recorded 2026-10-11 02:42 UTC)
 - L3582: E31 — Sales: what the seller says when the material stops (declared 2026-10-11 17:18 UTC, on Evin's "fix sales mode"; nothing replayed or judged yet)
 - L3653: E31 — the new Sales sets are authored and frozen (recorded 2026-10-11 20:12 UTC; nothing run on them)
+- L3669: E31 — judge-free lines read (recorded 2026-10-11 20:35 UTC): E31a holds all four, E31b fails line 1
+- L3699: E32 — the fix-up pass: a product denial is a claim (declared 2026-10-11 20:35 UTC, before any replay of it is read)
+- L3739: E33 — both Sales changes together, in the app (declared 2026-10-11 21:20 UTC on Evin's "do them both"; the candidate is not built yet)
+- L3779: New priorities and route (Evin, 2026-10-11 21:36 UTC): Technical Interview, Looking for work with profile intelligence, and General first; AgentRouter for the generator
+- L3808: E34 — no negative self-claim when the user's own past is not in the material (declared 2026-10-11 21:36 UTC, before any replay)
+- L3826: E32 — amended before any of its replays is read (2026-10-11 21:36 UTC)
+- L3836: E34 — judge-free lines read (2026-10-11 21:52 UTC): fails lines 2 and 4; not proposed, not sent to the judge
+- L3858: Profile intelligence, checked before building anything (2026-10-11 21:54 UTC): lengths of time and employer attribution are right on current main
+- L3866: E36 — the fix-up pass: what a job posting describes is not the candidate's past (declared 2026-10-11 21:54 UTC, before any replay)
+- L3883: E32 — judge-free lines on the priority modes (2026-10-11 21:59 UTC): no arm holds line 1; not sent to the judge for these modes
+- L3907: AgentRouter's balance ran out at about 22:00 UTC; generation goes back to the direct key (2026-10-11 22:10 UTC)
+- L3926: E38 — profile intelligence: a general-knowledge turn in the two profile modes reads the résumé and the posting (declared 2026-10-11 22:10 UTC; candidate `cand/e38` `daef3be5`, built, not run)
+- L3958: E37 — is the fix-up pass worth its second request in the two interview modes? A measurement (declared 2026-10-11 22:11 UTC)
+- L3971: E30 — judge-free lines read (2026-10-12 01:15 UTC): line 4 fails on the unseen sets; not proposed, not judged, not landed
+- L3994: E38 — judge-free lines read (2026-10-12 01:12 UTC): P1 to P5 hold; the touched rows go to the judge
+- L4011: E36 — judge-free lines read on the direct key (2026-10-12 01:14 UTC): line 1 fails; not proposed, not judged
+- L4022: The priority list for the window of 12 October, as changed before any judgment (01:13 UTC)
+- L4029: E39 — a measurement: the larger DeepSeek model on the same recorded requests, reasoning off (declared 2026-10-12 01:16 UTC, before any call)
+- L4053: E30b — the documents-first layout's unseen line, against main of the same date (declared 2026-10-12 01:19 UTC, before the run)
+- L4071: E39 — read (2026-10-12 01:23 UTC): the larger model, reasoning off, is not better by the fixed checks and is slower; no judge call spent
+- L4086: E40 — a measurement: sampling temperature 0 on the same recorded requests (declared 2026-10-12 01:27 UTC, before any call)
+- L4103: E30b — read (2026-10-12 01:36 UTC): the line holds against main of the same date
+- L4118: E30 — a judged line for the unseen rows, declared before any judgment of them (2026-10-12 01:38 UTC)
+- L4129: E40 — read (2026-10-12 01:40 UTC): temperature 0 gives no gain by the fixed checks; no judge call spent
+- L4142: E30c — a repeat of the layout on the unseen sets within the hour of main's run (declared 2026-10-12 01:40 UTC, before the run)
+- L4151: E30c — read (2026-10-12 01:53 UTC): reproduced
+- L4165: Judge window of 12 October: opened at 02:00:30 UTC, access restored, account balance empty; nothing judged (recorded 02:03 UTC)
+- L4178: Line 3 of E30 against main of the same date, development 630 (declared 2026-10-12 02:04 UTC, before the run)
+- L4184: E41 — the layout and the profile read in one build, the two profile modes (declared 2026-10-12 02:08 UTC, before any run)
 
 ### B.1 The log
 
@@ -8608,6 +8658,540 @@ are caught by a required string naming the condition, not by a forbidden one, an
 could occur by accident; the plain items use the kind `over_deferral` (the lint's name; the brief said
 `excessive_deferral` and is corrected). So lines 2 and 3 of the rule see invented values and missing conditions;
 a bare presupposition ("how the X integration works") is visible only to the judge (J1, J2, J4).
+
+##### E31 — judge-free lines read (recorded 2026-10-11 20:35 UTC): E31a holds all four, E31b fails line 1
+Evin topped the DeepSeek account up (balance endpoint 20:16 UTC: available). Main `cdaedfad` in the app on
+`sales1` and `sales1-val`, 20:16:47–20:22:18 UTC (`er12-sales1-main`, `er12-sales1val-main`: 18 + 18 rows, every
+row answered). Replays 20:22:18–20:32:12 UTC, direct DeepSeek, k = 3, 125 Sales prompts, 375 samples per arm, none
+unanswered. `report/e31-read.mjs` (answers graded again with the fixed checks, obj-3):
+
+| | base | E31a | E31b |
+|---|---:|---:|---:|
+| Development, 70 prompts: right by the fixed checks | 91.9 % | 91.4 % (−0.5) | 88.6 % (−3.3) |
+| Development: samples with a forbidden string | 3 | 1 | 3 |
+| `sales1`, 18: right | 70.4 % | 77.8 % | 77.8 % |
+| `sales1`: samples with a forbidden string | 12 | 10 | 11 |
+| `sales1`: required strings found | 56 / 60 | 57 / 60 | 59 / 60 |
+| `sales1-val`, 18 (counts only): right | 96.3 % | 100 % | 98.1 % |
+| `sales1-val`: samples with a forbidden string | 2 | 0 | 1 |
+| Median answer length | 70 words | 69 | 70 |
+| Not lines — `challenge`, 13: right / forbidden | 69.2 % / 1 | 69.2 % / 3 | 56.4 % / 3 |
+| Not lines — `challenge-val`, 6: right / forbidden | 83.3 % / 0 | 83.3 % / 0 | 83.3 % / 0 |
+
+Line 1: E31a holds, **E31b fails** (−3.3 points; also −12.8 on `challenge`). Lines 2, 3, 4: both hold. **By the
+rule E31a goes on to the judged lines and E31b is out.**
+**What the strings do not show, read on nine development questions that hard-failed (two samples each, base and
+E31a side by side; a look, not a score):** the HubSpot question is now answered as the new RIGHT line ("I'll confirm
+whether we connect to HubSpot…") in one sample of two; the other eight still carry the fault in at least one
+sample ("drivers don't need an app", "we're not HIPAA certified", the excursion-alert pitch, a customer's
+installation told as the company's, "for an Operations rollout at your fleet size… 45 to 75 days"). So the
+paragraph moves the wording it names and little else; my expectation is that J1 (hard fails lower by at least 5)
+will not hold on E31a alone. It is still owed its judged reading by the rule, which needs the judge.
+The `sales1-val` base is already 96.3 % right by strings, so that half says little without the judge.
+
+#### E32 — the fix-up pass: a product denial is a claim (declared 2026-10-11 20:35 UTC, before any replay of it is read)
+**Why.** The generator's inventions in Sales survive the pass that exists to remove them. Its instructions list as
+a claim "[past] … a number, a price, a policy, a procedure, a capability, a customer, a result" and exempt, since
+E19, "a statement that the material does NOT contain, state or settle something". Several of the Sales faults are
+denials about the product or the company ("there's no driver phone app", "drivers don't need an app", "we're not
+HIPAA certified", "HubSpot isn't one of our native connectors"): nothing in [past] names a negative, and the E19
+exemption reads close enough to cover them. This is the narrow, source-aware provenance step of the standing
+brief (invented company facts), on the pass, not the generator. The CONFLICT instructions are not touched.
+**Arms** (`replay-claim-pass.mjs`, main's pass bundled from `cdaedfad` as `cv-main-cdaedfad.mjs`, cap 136,000,
+k = 2): `e32-base` (unchanged); `e32-a` = [past] also names "that the product, the company or a plan does NOT
+have, offer, support, include or need something", with four examples; `e32-b` = E32a plus a clause on the E19
+exemption ("it speaks of what they have in front of them, never of what the product, the company or a person has,
+offers or needs"). Drafts: every row of `er6-dev-main` that ran the pass (all nine modes: the pass is shared), and
+the Sales rows of `er6-dev2-main`, `er7-chal-main`, `er7-chalval-main`, `er12-sales1-main`,
+`er12-sales1val-main`.
+**Judge-free lines** (the shown text after the pass, fixed checks obj-3, each arm against `e32-base`):
+1. Sales, readable sets (dev, dev2, challenge, sales1): samples with a forbidden string fewer than base; right by
+   the fixed checks not more than 1.0 point below base.
+2. Sales, unread sets (sales1-val, challenge-val; counts only): forbidden-string samples at most base; right not
+   more than 2.0 points below.
+3. All nine modes, `er6-dev-main`: right not more than 1.0 point below base; required strings found not more than
+   1.0 point below (the pass must not strip stated facts); share of replays that edit the draft not more than 5
+   points above base.
+4. Pass time, median: not more than 150 ms above base.
+An arm failing a line is out; if both hold, fewer forbidden-string samples on line 1 goes on, a tie to E32a.
+**Judged lines** (gpt-6-astra, repetition 0, rows whose shown text differs between base and the arm):
+K1. Sales readable differing rows: mean higher and hard fails fewer than base; rows with an unsupported_* or
+    fabricated_* flag fewer;
+K2. Sales unread differing rows (aggregates): mean not lower, hard fails at most base;
+K3. the other eight modes' differing rows of `er6-dev-main`: mean not more than 0.20 lower, hard fails at most
+    base + 1.
+Landing would be Evin's word, and `electron/llm/claimVerifier.ts` carries another session's uncommitted edit in
+the main checkout, so a landing has to be agreed with that work.
+**A slip, recorded:** while checking the replay command's arguments I passed `--limit 0`, which the tool reads as
+"no limit", and it sent 18 pass requests (arm e32-b, the `sales1` drafts, k = 1) at 20:34 UTC, **while the
+E30 app run was using the same key** (the rule is never to overlap them) and before this rule was written. I saw
+only its summary line (13 unchanged, 5 edited); the file is set aside unread as
+`results/replay/_aside/e32-dry-unread.jsonl` and is in no reading. The real replays wait for the app runs to end
+(`~/natively-er-backup/chains/chain-e32.sh`).
+
+#### E33 — both Sales changes together, in the app (declared 2026-10-11 21:20 UTC on Evin's "do them both"; the candidate is not built yet)
+**His words and my reading.** After the E31 / E32 report (two lines of attack, and "nothing can be judged until I
+may probe the judge") he wrote "do them both". Read as: carry both Sales changes through to a judged result, which
+includes ONE judge probe at the next usual opening; a clean probe lifts the flag, an access block on it stops
+everything again. Not read as a word to land: landing is asked again with the numbers.
+**Candidate.** Branch `cand/e33` from main `cdaedfad`: the Sales paragraph of E31a; in the fix-up pass the E32 arm
+that E32's judge-free lines choose (if neither arm holds them, E33 is E31a alone); the two prompt-size ceilings
+raised; unit tests (the Sales block's new text; no other mode's system prompt changes; the pass sentence).
+**App runs** (direct DeepSeek, fresh user data, one app at a time, after the E30 and E32 chains end): the candidate
+on the Sales rows of dev, dev2, challenge, challenge-val, sales1, sales1-val (125 rows, runs `er13-*-e33`), and
+main `cdaedfad` on the 30 Sales rows of dev in the same hour (`er13-dev-main`) for the timing line only. Main's
+rows of the same 125 questions: `er6-dev-main`, `er6-dev2-main` (judged), `er7-chal-main`, `er7-chalval-main`,
+`er12-sales1-main`, `er12-sales1val-main` (55 rows still to judge).
+**Judge-free lines** (candidate rows against main's rows of the same questions, checks obj-3):
+F1. every candidate row answered (no error, timeout or empty answer);
+F2. the 101 readable rows: right by the fixed checks not more than 2.0 points below main; rows with a forbidden
+    string at most main's;
+F3. the 24 unread rows (counts only): right at most 2 rows fewer than main; forbidden-string rows at most main + 1;
+F4. rows with two second requests at most main's + 2 (the repair must not be set off more often);
+F5. same hour, 30 development rows: first word median not more than 150 ms later than main; time to the final
+    shown answer median not more than 300 ms later.
+**Judged lines** (gpt-6-astra, every question a pair: candidate row against main's row):
+G1. the 101 readable pairs: mean higher by at least 0.30 with a 95 % interval that excludes zero, and hard fails
+    at least 5 fewer (main has 18 on the 70 development rows; between two runs of main those rows moved by 7, so
+    less than 5 would be indistinguishable from turnover);
+G2. the 24 unread pairs (aggregates only): mean not lower than main, hard fails at most main's;
+G3. where the material answers the question (grounded_single and multi_source readable pairs): mean not more than
+    0.20 lower, hard fails at most main + 1, rows flagged excessive_deferral or important_question_unanswered at
+    most main + 1;
+G4. readable pairs with an unsupported_*, fabricated_* or unsafe_commitment flag: fewer than main.
+**Before any landing, if G1 to G4 hold and the pass was changed:** one app run of the other eight modes on dev
+(240 rows): right by the fixed checks not more than 1.0 point below main's run. Landing is Evin's word, and
+`claimVerifier.ts` has another session's uncommitted edit in the main checkout.
+**Judge window of 12 October** (`~/natively-er-backup/window-run-oct12-am/window-oct12.mjs`, detached, opens
+02:00:30 UTC): the first probe decides the flag; then calibration; then, in order: the E33 Sales rows when they are
+listed (`window-sales.txt`) → E30's development rows if its chain listed them → E31a against the unchanged prompt
+(generator replays, repetition 0, 125 pairs; derived runs `rg-e31-*-k0--…` are prepared) → listed plans (E32's
+differing rows) → E26 → the rest of the holdout → drafts → the larger-pack stages last (the block of 11 October
+arrived in that stage; nothing is singled out, but it no longer goes first).
+
+#### New priorities and route (Evin, 2026-10-11 21:36 UTC): Technical Interview, Looking for work with profile intelligence, and General first; AgentRouter for the generator
+His words: "first priority should be technical interview and looking for work modes and optimization with profile
+intelligence, and general mode… all other modes come next. start iterating at 7:30 am ist the astra would be
+available till roughly 9am ist max, run as many iterations as possible, even parallelly is possible, also use
+agentrouter for deepseek model also instead of current direct deepseek api key".
+**What changes.** (1) Sales (E31, E32 as a Sales fix, E33) moves behind the three priority modes; the queued Sales
+pass replays were stopped before they ran and the E33 branch is not built. (2) Everything started from now uses
+AgentRouter for the generator: `evidence-rich/generator-route.mjs` (default route `agentrouter`, model
+`deepseek-v4-flash` on `/v1/messages` with thinking disabled, the app's own route; `ER_GENERATOR=direct` restores
+the old one); every replay row records its route. One test call at 21:32 UTC answered HTTP 200 outside the judge's
+window, so this route is not bound to the judge's pool. Stop rules on it: 402 or the quota 403 moves to the other
+key; any other 403 ends the process's calls at once. **The E30 chain already running finishes on the direct key**
+(its candidate and same-hour main runs were both made on it; changing the route between them would break the
+pair). (3) **Replays through AgentRouter are not compared with replays or runs made on the direct key**: every
+comparison below has both arms on the same route in the same hour.
+**A finding that changes how tonight's runs are paired:** the app tells the model today's date, and tonight's runs
+say Monday 12 October where the judged baseline (`er6`, run on 9 October) said Friday 9 October. Questions that
+hang on a deadline in the documents (for example an acceptance date of 9 October) therefore have a different
+right answer tonight. So a run of tonight is paired with tonight's run of main (`er11-dev-main`), not with `er6`.
+For E30 this replaces the pairing its rule named (`er6-dev-main`); decided here, before any of its rows is judged.
+**Where the three priority modes stand** (judged baseline, 70 rows each; the two profile modes there are before
+E23 / E26): Technical Interview 8.83 with 11 hard fails, Looking for work 9.04 with 7, General 8.98 with 7. Read
+(development rows): in the profile modes, a question about the candidate's own past with nothing loaded about it
+gets either the job posting retold as their experience or a negative self-claim ("I don't have a pipeline of my
+own", "I don't have a clean story") before a sound general approach; résumé dates and employers mixed up (the
+class E23 / E26 addressed; not judged on development since); and the generator's own technical slips (a time
+zone, a code edge case, a reasoning step). In General: a binding rule in a second document passed over, a
+categorical "nothing to claim", invented specifics, and two answers spoken as the wrong person.
+
+#### E34 — no negative self-claim when the user's own past is not in the material (declared 2026-10-11 21:36 UTC, before any replay)
+**Change** (`replay-variants/e34-no-negative-biography.mjs`): the composer rule that already says "Never say the
+information is missing" gains one clause: never say the user has no such experience, story, example or project
+either. All modes carry the rule; tonight it is measured on the three priority modes.
+**Replays** (AgentRouter, k = 2, base and E34): the priority-mode prompts of `er11-dev-main` (90, tonight's main),
+`er9-dev2-e26` (80, the two profile modes), `er6-dev2-main` (40, General), `er7-chal-main` (39),
+`er7-chalval-main` (18), `er8-prov1-main` (24), `er8-prov1val-main` (24).
+**Judge-free lines** (obj-3, samples pooled): (1) readable prompts: right not more than 1.5 points below base,
+forbidden-string samples at most base; (2) unread prompts (counts): right not more than 3.0 points below,
+forbidden-string samples at most base + 1; (3) evidence-missing prompts: samples that contain a negative
+self-claim (a fixed pattern, written in `report/e34-read.mjs` before the replays are read) fewer than base; (4)
+median length within 15 %, every call answered.
+**Judged lines** (repetition 0): L1. the evidence-missing prompts (all of them, readable and unread reported
+apart): mean higher than base and hard fails fewer on the readable ones; not lower and not more on the unread
+ones. L2. a control of 30 development prompts whose question the material answers (the first ten grounded_single
+ids of each mode in id order): mean not more than 0.20 lower, hard fails at most base + 1.
+Before any landing: the other six modes replayed with the same judge-free lines. Landing is Evin's word.
+
+##### E32 — amended before any of its replays is read (2026-10-11 21:36 UTC)
+Drafts are now tonight's: every row of `er11-dev-main` that ran the pass (main `cdaedfad`, all nine modes) and the
+profile-mode rows of `er9-dev2-e26`; route AgentRouter. A third arm, `e32-c`: E32b with the [past] sentence
+widened from the product to anything ("that something does NOT exist, was never done, is not offered, supported,
+needed or owed", with a personal and a contract example), because the same fault appears in the priority modes
+("I don't have a pipeline of my own", "there's nothing to claim"). Lines 1 and 2 are read on the three priority
+modes (readable: these development rows; no unread rows tonight); line 3 on all nine modes; line 4 unchanged.
+Judged: rows of the priority modes whose shown text differs between base and the chosen arm (K1 on them, K3 on
+the other modes' differing rows if the pool allows). The Sales sets wait.
+
+##### E34 — judge-free lines read (2026-10-11 21:52 UTC): fails lines 2 and 4; not proposed, not sent to the judge
+Replays 21:36:58–21:46:56 UTC through AgentRouter (`deepseek-v4-flash`), k = 2, 315 priority-mode prompts, 630
+samples per arm. `report/arm-read.mjs --kind gen --base e34-base --arms e34-a` (its pattern for a negative
+self-claim was written before the replays were read):
+
+| | base | E34 |
+|---|---:|---:|
+| Readable prompts (273): right by the fixed checks | 90.7 % | 90.7 % |
+| Readable: samples with a forbidden string | 15 | 14 |
+| Unread prompts (42; counts only): right | 83.3 % | **78.6 % (−4.8)** |
+| Unread: samples with a forbidden string | 10 | 10 |
+| Evidence missing, readable (35 prompts): samples with a negative self-claim | 7 | 4 |
+| Evidence missing, unread (9): samples with a negative self-claim | 1 | 0 |
+| Median length | 51 words | 52 |
+| Calls not answered | 0 | **1 (empty answer)** |
+
+Line 1 holds, line 3 holds (7 → 4), **line 2 fails** (the limit was 3.0 points; the base arm's own two repetitions
+differ by 2 of 42 on those prompts, so 4 samples of 84 is not far outside replay spread, but the line is the
+line), **line 4 fails** on one empty answer. By mode on the readable prompts: Looking for work 91.1 → 93.2 %,
+Technical Interview 88.4 → 87.4 %, General 92.8 → 91.6 %. The clause removes about half of the few negative
+self-claims the pattern can see and moves nothing else. **E34 stops here.**
+
+##### Profile intelligence, checked before building anything (2026-10-11 21:54 UTC): lengths of time and employer attribution are right on current main
+By the fixed checks, current main answers `prov1` 24 of 24 (employer and title 4 / 4, lengths of time 3 / 3 per
+mode file, posting facts 2 / 2, own history with only the posting 3 / 3) and 17 of the 18 profile-mode questions
+that ask for a length of time across tonight's dev run, `er9-dev2-e26`, `challenge` and `prov1`. The derived
+"Complete employment history" block gives every role with its dates and the model counts correctly from it. So a
+computed-tenure block (considered as a profile-intelligence change) has nothing to fix and is not built. What the
+judged baseline showed as résumé mistakes (three of the 18 profile-mode hard fails) predates E23 / E26.
+
+#### E36 — the fix-up pass: what a job posting describes is not the candidate's past (declared 2026-10-11 21:54 UTC, before any replay)
+**Why.** With only the posting loaded, "walk me through a system you designed" is answered with the posting's own
+system told in the first person ("my part was the design and the build: the idempotency layer…"; tonight's main
+still does it), and the pass edits the row without removing it: every noun of the claim is in the material, as the
+employer's duty, not as the candidate's history. Source attribution, on the pass; the generator-side notices for
+this (E24, E24b) failed and are not repeated.
+**Arm** `e36-a` (`replay-variants/e36-posting-is-not-their-past.mjs`): one clause on the [past] kind. Base
+`e36-base`. Drafts, the two profile modes only: `er11-dev-main`, `er9-dev2-e26`, `er7-chal-main`,
+`er8-prov1-main` (readable); `er7-chalval-main`, `er8-prov1val-main` (unread). AgentRouter, k = 2, cap 136,000.
+**Judge-free lines** (shown text, obj-3): (1) readable: right not more than 1.0 point below base, forbidden-string
+samples at most base; (2) unread (counts): at most 2 samples fewer right, forbidden-string samples at most base +
+1; (3) rows whose answer IS a posting fact (`prov1` categories `prov_posting_fact` and `prov_jd_fact_*`): right
+not lower than base, readable and unread; (4) share of replays that edit the draft not more than 5 points above
+base, pass time median not more than 150 ms above.
+**Judged lines** (rows whose shown text differs between the arms, repetition 0): M1. readable rows: mean higher
+and hard fails fewer than base; M2. unread rows: mean not lower, hard fails at most base.
+
+##### E32 — judge-free lines on the priority modes (2026-10-11 21:59 UTC): no arm holds line 1; not sent to the judge for these modes
+Pass replays 21:46:56–21:58:13 UTC through AgentRouter, k = 2, 255 drafts that ran the pass (all nine modes of
+`er11-dev-main`, the profile modes of `er9-dev2-e26`), 510 samples per arm, none unanswered.
+`report/arm-read.mjs --kind pass --base e32-base --arms e32-a,e32-b,e32-c`:
+
+| | base | E32a | E32b | E32c |
+|---|---:|---:|---:|---:|
+| Priority modes (107 drafts): right as shown | 89.3 % | 89.3 % | 88.3 % | 87.9 % |
+| Priority modes: samples with a forbidden string | 2 | 2 | 2 | 2 |
+| Priority modes, evidence missing (13 drafts): replays that edit the draft | 69.2 % | 80.8 % | 80.8 % | 88.5 % |
+| Priority modes, evidence missing: samples with a negative self-claim | 2 | 2 | 2 | 2 |
+| All nine modes (255): right as shown | 87.6 % | 87.6 % | 86.7 % | 87.1 % |
+| All nine modes: required strings found | 565 / 626 | 566 | 562 | 561 |
+| All nine modes: replays that edit the draft | 24.1 % | 22.2 % | 23.3 % | 25.7 % |
+| Pass time, median | 1,203 ms | 1,343 | 1,221 | 1,252 |
+
+Line 1 asked for fewer forbidden-string samples than base and at most 1.0 point fewer right: **all three arms
+fail it** (2 → 2; E32c also −1.4 points). Lines 3 and 4 hold for all three (E32b sits exactly at the 1.0-point
+limit). The line was written for the Sales sets, where the base has a dozen such samples; on these modes the base
+has two, neither of the targeted kind, so the strings could not have shown the effect. What they do show: the
+arms make the pass edit more evidence-missing drafts (69 → 81 to 89 %) without removing the two negative
+self-claims the pattern sees. So on the priority modes E32 stops under its rule, and on substance nothing
+visible was gained. For Sales, its original target, it has still not been replayed (those sets wait).
+
+##### AgentRouter's balance ran out at about 22:00 UTC; generation goes back to the direct key (2026-10-11 22:10 UTC)
+The second arm of E36's pass replays ended with 142 of 308 calls refused. The gateway's reply on the first key:
+"pre-consume quota failed, user quota: $0.0097, need quota: $0.0525"; the second key: "user quota is not enough".
+That is the account's balance, the same one the judge draws on. It was not empty at 21:32 UTC; between then and
+22:00 this session sent about 3,900 generator and pass calls through it (E34: 1,260; E32: 2,040; E36: about 470),
+each with a 15,000-token prompt. So Evin's instruction to generate through AgentRouter cannot be followed until
+that balance is refilled, and once it is, every generator call there is taken from the judge. **Decision on
+autopilot, to be confirmed by him:** from now generation uses the direct DeepSeek key again (it holds the 49.99 USD
+he added tonight); AgentRouter is kept for the judge. `generator-route.mjs` defaults to `direct`;
+`ER_GENERATOR=agentrouter` selects the other route. Nothing made on one route is compared with anything made on
+the other. Whether the 02:00 UTC window finds a refilled balance is not known until its probe.
+**A second reason the app runs stay on the direct key:** the app's structured-extraction ladder (résumé and
+posting parsing) has no AgentRouter rung. A profile holding only an AgentRouter key would drop Profile
+Intelligence to the rule-based parser, the state E26 fixed for DeepSeek-only users. That is a product gap for
+AgentRouter-only users, noted for Evin, not changed here.
+**E36:** its second arm is incomplete (166 of 308 rows answered before the balance ran out; the refused rows are
+set aside in `results/replay/_aside/`). Nothing is read from it. It is replayed again, both arms, on the direct
+key after tonight's app runs (`e36d-base`, `e36d-a`).
+
+#### E38 — profile intelligence: a general-knowledge turn in the two profile modes reads the résumé and the posting (declared 2026-10-11 22:10 UTC; candidate `cand/e38` `daef3be5`, built, not run)
+**Cause, found in tonight's main run.** In Looking for work and Technical Interview, a question the classifier
+types as general technical takes the no-retrieval path. When a reference pack is loaded such a turn still reads
+it (2026-10-04); when the only documents are the résumé and the job description it reads nothing
+(`profileOnlyDocuments` is excluded). On the readable sets, Looking for work: 95 turns, 5 on that path with a
+profile loaded, 3 of them asking for something the profile states, all 3 wrong ("I don't have Fernlatch
+performance numbers in front of me" with the résumé loaded; "I'll confirm the rotation" with the posting loaded).
+Questions that need a document fact go wrong on 11 % of the turns that retrieve.
+**Change** (`electron/context-intelligence/orchestration/orchestrator.ts`, one condition beside the pack rule):
+such a turn plans RESUME and JOB_DESCRIPTION when the mode hydrates the user's profile and the profile is handed
+over whole (at most 6,000 tokens). The turn stays FAST and no claim is added. Kept out: an instruction-extraction
+request, a coding or system-design task, and a request for code the classifier does not type as one. New test
+file (13 tests); type check clean; context-intelligence + intelligence 2,900 tests, 2,898 pass, 0 fail, 2 skipped;
+llm the same single failure as main.
+**Runs** (the app, direct DeepSeek, fresh user data, one app at a time, after the E30 chain): the two profile
+modes on dev, dev2, challenge, challenge-val, prov1, prov1-val (226 rows) for the candidate (`er13-*-e38`) and for
+main `cdaedfad` (`er13-*-main`), alternating set by set so each pair is of the same hour.
+**Judge-free lines** (obj-3; "touched" = a row main answered on the no-retrieval path with a profile loaded and
+the candidate answered with the profile in the prompt):
+P1. every candidate row answered;
+P2. touched rows, readable and unread together: right by the fixed checks more often than main; forbidden-string
+    rows at most main;
+P3. untouched rows: right not more than 2.0 points below main on the readable sets, at most 2 rows fewer on the
+    unread ones;
+P4. first word: touched rows median not more than 400 ms later than main's same rows; all rows median not more
+    than 100 ms later;
+P5. touched rows whose oracle requires no document fact: right not lower than main, forbidden-string rows at
+    most main (a general question must not get worse for seeing the résumé).
+**Judged lines** (gpt-6-astra; the touched rows, both arms): Q1. mean higher than main and hard fails not more;
+Q2. touched rows that need no document fact: mean not more than 0.30 lower, hard fails at most main.
+Landing is Evin's word.
+
+#### E37 — is the fix-up pass worth its second request in the two interview modes? A measurement (declared 2026-10-11 22:11 UTC)
+**Why.** Another session has an uncommitted change that switches the pass off in Looking for work and Technical
+Interview (Evin: no second pass, no delay before the answer is final), with a judged comparison still owed. The
+data for it exists in tonight's runs: every row keeps its draft (what the user would see with the pass off) and
+its shown answer. By the fixed checks the pass is neutral there (Looking for work, readable rows: 39 edited, right
+32 as drafted, 31 as shown, forbidden strings 1 → 0; Technical Interview: 11 edited, 10 → 10).
+**Judged:** the drafts of the profile-mode rows the pass edited in `er11-dev-main` and `er9-dev2-e26`
+(`results/replay/astra-plan-e37-drafts.json`); the shown answers of the same rows are judged with the baseline.
+**Reading, written now:** if the shown answers' mean is at least 0.15 above the drafts' and their hard fails are
+not more, the pass earns its place in these modes. If the drafts' mean is within 0.05 of the shown answers' or
+higher and their hard fails are at most one more, switching it off costs nothing measurable. Anything between is
+unsettled. No change is made by this session either way; it is input for Evin and for that session.
+
+##### E30 — judge-free lines read (2026-10-12 01:15 UTC): line 4 fails on the unseen sets; not proposed, not judged, not landed
+`chains/e30-gate.txt`, `chains/e30-gate-630.txt`, checks obj-3.
+- Line 1 (layout as replayed): holds. 612 of 612 development requests with evidence have it first and end with the
+  repeated question; the 18 without evidence keep the old layout; unseen 219 of 219.
+- Line 2 (answered): holds. 630 of 630 and 219 of 219.
+- Line 3 (development 630, against `er6`): holds. Right 561 → 573 (89.0 % → 91.0 %), forbidden-string rows 6 → 6.
+  Against main of the same night on dev (`er11-dev-main`, 270): right 90.0 % → 90.0 %, forbidden-string rows 4 → 2.
+- **Line 4 (unseen 219, against `er7`/`er8`): FAILS.** Right 181 → 189 (82.6 % → 86.3 %), but forbidden-string rows
+  10 → 14 (the line allows main + 3). The seven modes without a profile: 6 → 12; the two profile modes: 4 → 2.
+- Line 5 (pass and repair): holds. Edited 15.4 % → 13.8 %; a second request 76.5 % → 76.3 %; two 10.8 % → 10.8 %.
+- Line 6 (first word, same hour): holds. Spoken median 1414 → 1347 ms, typed 714 → 804 ms (+90, the line is 150).
+- Line 7 (the purpose; replay of the recorded dev prompts in order, one session id): holds. Cached share of the
+  prompt tokens, median 94.1 % (main's own prompts the same way: 34.7 %); pooled 75.6 % against 36.3 %.
+
+**Decision by the rule: one line failed, so `cand/e28b` is not proposed and nothing of it was listed for the judge.**
+Evin's conditional word to land it does not apply. Not landed.
+
+**What the failed line does and does not show.** It compares the candidate's runs of 11 October with main's runs of
+7 and 8 October. The app tells the model today's date, and on dev the same comparison against `er6` (9 October)
+reads +1.9 points while against main of the same night it reads 0.0, so a difference of days moves these counts.
+The rule was written before that was known and its verdict stands as written. A fair test needs main on the
+unseen sets in the same night; that would be a new experiment with its own rule (E30b), not a re-reading of this one.
+
+##### E38 — judge-free lines read (2026-10-12 01:12 UTC): P1 to P5 hold; the touched rows go to the judge
+`report/e38-read.mjs`, 226 questions in both arms (190 readable, 36 unread), runs `er13-*-e38` against `er13-*-main`,
+set by set in the same hour.
+- P1 holds: 0 of 226 candidate rows unanswered.
+- P2 holds: 4 touched rows (all readable; Looking for work 3, Technical Interview 1). Right 2 → 4; forbidden-string
+  rows 0 → 0. The two that changed: "whats the on call setup for this job" ("I'll confirm the on-call setup" →
+  "one week in six as primary … a compensatory day off after each on-call week"), and "fernlatch speed numbers,
+  before and after" ("I don't have Fernlatch numbers in front of me" → all three pairs of numbers).
+- P3 holds: untouched readable rows 89.2 % → 87.6 % (−1.6, the line is 2.0; these rows' requests are the same in
+  both builds, so this is the run-to-run turnover); unread 32 → 34 of 36.
+- P4 holds: first word, touched rows 1012 → 748 ms; all rows 871 → 831 ms.
+- P5 holds: the two touched rows that need no document fact (the outbox pattern; idempotency) are right in both
+  arms, no forbidden string, and read as general explanations in both.
+One candidate row is still on the no-retrieval path with nothing read (a kept-out kind). The effect is small in
+count because the classifier sends few profile-mode questions down that path: 4 of 226 tonight.
+Plan `results/replay/astra-plan-e38.json` (8 judgments) is first in the priority list. Landing is Evin's word.
+
+##### E36 — judge-free lines read on the direct key (2026-10-12 01:14 UTC): line 1 fails; not proposed, not judged
+Arms `e36d-base`, `e36d-a`, 308 samples each (154 questions, k = 2), no error, no empty answer.
+- **Line 1 FAILS:** readable right 87.7 % → 87.3 % (−0.4, inside the line) but forbidden-string samples 3 → 5 (the
+  line is "at most base"). Looking for work 1 → 3, Technical Interview 2 → 2.
+- Line 2 holds: unread right 50 → 51 of 56, forbidden-string samples 3 → 3.
+- Line 3 holds: posting-fact rows right 4 of 4 readable and 4 of 4 unread in both arms.
+- Line 4 holds: edited 36.4 % → 35.4 %; pass median 1002 → 956 ms.
+On the rows it was written for (evidence missing, readable, 40 samples) the pass edits more often (75.0 % → 87.5 %)
+and the fixed checks do not improve (right 39 → 38, forbidden 1 → 2). Stopped. Third pass-side or generator-side
+wording for the posting-as-experience row that fails (after E24, E24b); the next attempt, if any, is not a wording.
+
+##### The priority list for the window of 12 October, as changed before any judgment (01:13 UTC)
+`window-sales.txt`: (1) E38's plan; (2) tonight's main on the three priority modes: `er11-dev-main` (Technical
+Interview, Looking for work, General, 90 rows) and `er13-dev2-main` (the two profile modes, 80 rows; it replaces
+`er9-dev2-e26`, which is the same code on 9 October); (3) E37's drafts, whose dev2 half moved with it to
+`er13-dev2-main` (12 edited rows there; 18 in `er11-dev-main`; the earlier plan is kept as
+`astra-plan-e37-drafts.before-er13.json`).
+
+#### E39 — a measurement: the larger DeepSeek model on the same recorded requests, reasoning off (declared 2026-10-12 01:16 UTC, before any call)
+**Why.** Evin's target is 9.5 in every mode. The judged hard fails of the three priority modes on main (Technical
+Interview 11, Looking for work 7, General 7 of 70 each) do not share a cause a prompt or a retrieval rule can
+remove: a wrong time zone, a promotion date read as a joining date, a reasoning slip in a sizing answer, an
+invented detail, a wrong speaker. Four narrow candidates tonight (E34, E32, E36 failed; E38 holds and touches 4
+rows of 226). Whether a stronger generator removes these is not known and has never been measured here.
+**This is a measurement, not a candidate.** Nothing in the app changes, the canonical generator stays
+`deepseek-flash`, and choosing another model is Evin's decision (cost and speed are his to weigh).
+**Arms** (`replay-generator.mjs`, the app's own request, temperature 0.2, seed 7, `thinking: disabled`, direct
+key): `e39-flash` (`deepseek-flash`, k = 2) and `e39-pro` (`--model deepseek-v4-pro`, k = 1). Requests: tonight's
+main, the three priority modes. Readable: `er11-dev-main` (90), `er13-dev2-main` (80), `er6-dev2-main` General
+(40), `er13-chal-main`, `er13-prov1-main`, `er7-chal-main` General. Unread, counts only: `er13-chalval-main`,
+`er13-prov1val-main`, `er7-chalval-main` General. The replayed text is the draft in both arms (no fix-up pass).
+**Lines, written now** (`report/arm-read.mjs --kind gen`, obj-3):
+R1. the measurement is valid: every `e39-pro` sample answered, no reasoning text on any sample, the served model
+    is the one asked for. If reasoning text arrives, the arm is not read (reasoning is not to be enabled).
+R2. worth a judged comparison if right by the fixed checks is at least 3.0 points above `e39-flash` on the
+    readable sets and not lower on the unread ones, with forbidden-string samples not a larger share.
+R3. first word, median over the same requests: reported beside flash's. More than 300 ms later is reported as a
+    cost against Evin's "answer fast", whatever R2 says.
+If R1 and R2 hold: the drafts of both arms for `er11-dev-main`'s 90 rows (repetition 0) are listed for the judge
+after the priority list, as derived runs. If R2 does not hold, the larger model is recorded as not helping by
+these checks and no judge call is spent.
+
+#### E30b — the documents-first layout's unseen line, against main of the same date (declared 2026-10-12 01:19 UTC, before the run)
+**Why.** E30's line 4 failed against main's runs of 7 and 8 October. Every request carries "It is Monday 12 October
+2026 where the user is", so a run of another day is a different request. Context read before this declaration (not
+lines): on the unseen profile-mode rows main already has runs of the same date (`er13-*-main`, 86 rows): right
+86.0 % → 94.2 %, forbidden-string rows 3 → 2. On dev against main of the same night: right 90.0 % → 90.0 %,
+forbidden 4 → 2; by mode it is turnover either way (Looking for work 26 → 24 of 30, Technical Interview 26 → 27,
+General 29 → 30).
+**Run.** Main `cdaedfad` (worktree `er-main`, built), the seven modes without a profile, challenge and
+challenge-val: `er14-chal-main`, `er14-chalval-main` (133 rows). Direct key, fresh user data, one app.
+**Line** (the same as E30's line 4, same reader): the candidate's 219 unseen rows against main of the same date
+(`er14-chal-main`, `er14-chalval-main`, `er13-chal-main`, `er13-chalval-main`, `er13-prov1-main`,
+`er13-prov1val-main`): right not more than 2.0 points below main; forbidden-string rows at most main + 3.
+**What it can change.** E30's verdict as registered stays "line 4 failed". If this line holds, the layout is
+reported to Evin as failing its registered line on a comparison across days and holding the same line on the same
+date, with its judged lines J1 to J3 still owed (pair: `er11-dev-e28b` with `er11-dev-main`); the three priority
+modes' rows of `er11-dev-e28b` (90) are then listed for the judge after the priority list. If it fails, the layout
+is closed. Nothing is landed either way without the judged lines and Evin's word.
+
+##### E39 — read (2026-10-12 01:23 UTC): the larger model, reasoning off, is not better by the fixed checks and is slower; no judge call spent
+`gen-e39-pro.jsonl` (315 samples, k = 1), `gen-e39-flash.jsonl` (630 samples, k = 2), the same 315 recorded requests
+of the three priority modes (273 readable, 42 unread). `report/arm-read.mjs --kind gen`, obj-3.
+- **R1 holds.** 315 of 315 answered, no reasoning text on any sample, served model `deepseek-v4-pro`.
+- **R2 does not hold.** Readable: right 90.8 % → 88.3 % (−2.6; the line asks for +3.0). Unread: 85.7 % → 88.1 %
+  (72 of 84 → 37 of 42). Forbidden-string samples, all sets: 18 of 630 → 9 of 315, the same share.
+  By mode, readable: General 90.4 % → 90.4 %; Looking for work 90.0 % → 88.4 %; Technical Interview 92.1 % → 86.3 %.
+  Negative self-claim samples 6 of 630 → 2 of 315. Answers a little shorter (median 51 → 46 words).
+- **R3.** First word, median 660 → 1055 ms (+395 ms); 90th percentile 890 → 1688 ms. Whole answer 1244 → 1948 ms.
+- Cost of the arm: about USD 0.61 for 315 calls and 3.9 million prompt tokens (balance 44.44 → 43.83).
+**Recorded:** with reasoning off, `deepseek-v4-pro` does not answer these requests more correctly than
+`deepseek-flash` by the fixed checks, and it starts about 0.4 s later. No judge call is spent on it. What this does
+not test: the judge's finer grounds (an unsupported aside, a wrong speaker), another vendor's model, or reasoning
+on (ruled out by Evin). The prompts were written and tuned against flash, which may favour it.
+
+#### E40 — a measurement: sampling temperature 0 on the same recorded requests (declared 2026-10-12 01:27 UTC, before any call)
+**Why.** E39's samples show what the remaining errors in the priority modes are: on the same request, one flash
+sample converts 10:00 to 15:00 CET to 09:00 to 14:00 in Porto and the next says Porto is on CET; one counts the
+Software Engineer II year and the next leaves it out. The error is in the draw, not in the prompt, and the larger
+model draws no better. The app sends temperature 0.2. Whether 0 draws the right answer more often is not known.
+**A measurement, not a candidate.** The benchmark's generator setting stays 0.2 (Evin's specification); a change of
+the app's temperature would be his decision.
+**Arm** `e40-t0`: `replay-generator.mjs --temperature 0`, `deepseek-flash`, thinking off, k = 2, the same 315
+requests as E39. Base: `e39-flash` (0.2, k = 2, already recorded tonight).
+**Lines, written now** (`report/arm-read.mjs --kind gen`, obj-3):
+T1. every sample answered.
+T2. worth a judged comparison if right by the fixed checks is at least 2.0 points above the base on the readable
+    sets and not lower on the unread ones, with forbidden-string samples at most the base's.
+T3. reported: on how many requests the two samples of an arm are both right, both wrong, or split, for each arm
+    (how much of the error is the draw).
+If T2 does not hold it is recorded as no gain and no judge call is spent.
+
+##### E30b — read (2026-10-12 01:36 UTC): the line holds against main of the same date
+`chains/e30b-gate.txt`. Main `cdaedfad` on challenge and challenge-val, the seven modes without a profile
+(`er14-chal-main` 91 rows, `er14-chalval-main` 42 rows, 01:22 to 01:35 UTC, all answered), with `er13-*-main` for the
+two profile modes: 219 questions on both sides, every request dated 12 October.
+- Right by the fixed checks: 173 → 189 of 219 (79.0 % → 86.3 %, +7.3 points; wrong → right 27, right → wrong 11).
+  The seven modes without a profile: 99 → 108 of 133. The two profile modes: 74 → 81 of 86.
+- Forbidden-string rows: 12 → 14 (the line allows main + 3). **HOLDS.**
+- Pass and repair unchanged: edited 18.3 % → 18.3 %; a second request 77.2 % → 77.2 %.
+**Where the layout stands.** As registered, E30's line 4 failed (against runs of 7 and 8 October). On the same date
+the same line holds, and the layout is 16 questions ahead on the unseen sets while level on dev (243 → 243 of 270).
+Its judged lines J1 to J3 are owed before anything is proposed. Listed for this window, after the priority list's
+first three sections: the layout's rows of the three priority modes in `er11-dev-e28b` (90), which pair with the
+90 rows of `er11-dev-main` judged in section 2. Not landed; Evin's conditional word asked for every line to hold
+as written, and one did not, so landing needs his word again whatever the judge says.
+
+##### E30 — a judged line for the unseen rows, declared before any judgment of them (2026-10-12 01:38 UTC)
+By mode on the readable unseen sets (challenge and prov1, 141 questions, same date): right 107 → 122 (75.9 % →
+86.5 %; wrong → right 20, right → wrong 5), forbidden-string rows 9 → 9. The three priority modes: Looking for
+work 19 → 22 of 25, Technical Interview 23 → 24 of 25, General 11 → 12 of 13. The two runs are three to four
+hours apart, and on dev the same pair of builds is level, so the fixed checks alone do not settle whether this is
+the layout. The judge can.
+**J4** (gpt-6-astra; the readable unseen rows of the three priority modes, 63 pairs: `er11-chal-e28b` with
+`er13-chal-main` for the two profile modes and `er14-chal-main` for General, `er11-prov1-e28b` with
+`er13-prov1-main`): the layout's mean is not lower than main's and its hard fails are not more. Reported with its
+interval; 63 pairs cannot show a small difference. Listed as section 5 of the priority list, after J1 to J3's rows.
+
+##### E40 — read (2026-10-12 01:40 UTC): temperature 0 gives no gain by the fixed checks; no judge call spent
+`gen-e40-t0.jsonl`, 630 samples (315 requests, k = 2), against `e39-flash` (0.2, the same requests).
+- T1 holds: 630 of 630 answered.
+- **T2 does not hold.** Readable: right 90.8 % → 91.6 % (+0.7; the line asks for +2.0). Unread: 72 → 70 of 84.
+  Forbidden-string samples 18 → 16. By mode, readable: General 90.4 % → 90.4 %, Looking for work 90.0 % → 93.7 %,
+  Technical Interview 92.1 % → 90.5 %.
+- T3. Per request, two samples: at 0.2, both right 273, split 22, both wrong 20; at 0, both right 278, split 14,
+  both wrong 23. Temperature 0 is not deterministic on this API (the two samples are the same text on 35 of 315
+  requests; 37 at 0.2). About a third of the wrong samples at 0.2 sit on requests the other sample gets right; at 0
+  fewer requests split, and as many of them settle on the wrong answer as on the right one.
+**Recorded:** no gain; the setting stays 0.2. Read with E39: the errors that remain in the priority modes are not
+removed by a larger model without reasoning or by a colder draw.
+
+##### E30c — a repeat of the layout on the unseen sets within the hour of main's run (declared 2026-10-12 01:40 UTC, before the run)
+E30b's pair is three to four hours apart. Repeat: `cand/e28b` `7067ab3c` built again in `er-main`, the seven modes
+without a profile on challenge and challenge-val (`er15-chal-e28b`, `er15-chalval-e28b`, 133 rows), against
+`er14-chal-main` and `er14-chalval-main` of 01:22 to 01:35 UTC. Same reader.
+**Reading, written now:** the repeat confirms E30b's direction if the candidate is right on at least as many of
+the 133 rows as main with forbidden-string rows at most main + 3. A gain of 5 rows or more is called reproduced;
+less than that is called not reproduced, and E30b's +9 on these rows is then read as turnover between runs.
+Afterwards `er-main` goes back to `cdaedfad` and is rebuilt.
+
+##### E30c — read (2026-10-12 01:53 UTC): reproduced
+`chains/e30c-gate.txt`. `er15-chal-e28b` + `er15-chalval-e28b` (01:39 to 01:52 UTC, 133 rows, all answered, every
+request in the new layout) against `er14-chal-main` + `er14-chalval-main` (01:22 to 01:35 UTC).
+- Right by the fixed checks: 99 → 107 of 133 (74.4 % → 80.5 %; wrong → right 18, right → wrong 10). Forbidden-string
+  rows 9 → 5. **A gain of 8 rows: reproduced** (the first candidate run, three hours earlier, had 108).
+- By mode (19 each): Call Center 13 → 15, General 16 → 17, Lecture 16 → 17, Seminar 12 → 16, Team Meet 13 → 16;
+  Recruiting 15 → 13, Sales 14 → 13.
+- Pass and repair unchanged (edited 15.8 % → 16.5 %; a second request 82.0 % → 82.0 %).
+`er-main` is back at `cdaedfad` and rebuilt.
+**Reading.** Two candidate runs against one main run on the unseen sets give +9 and +8 rows of 133; on dev the same
+builds are level. The unseen sets hold more questions that need two documents or a later revision, which is where
+putting the documents first and the question last was expected to help. The judged lines (J1 to J3 on dev, J4 on
+the unseen rows of the priority modes) are still owed.
+
+#### Judge window of 12 October: opened at 02:00:30 UTC, access restored, account balance empty; nothing judged (recorded 02:03 UTC)
+- Probe 02:00:52: clean (exact `gpt-6-astra`, no access block). The flag of 11 October was moved aside
+  (`/tmp/er-access-block-20261008-1630.cleared-1791770452452.json`).
+- Calibration 02:00:54: 0 of 38, every pair answered "account quota exhausted (insufficient_user_quota)" within two
+  seconds. Not a calibration result; no judgment was made and no score exists for this window.
+- Cause: the AgentRouter account is the judge's and the generator replays of 21:32 to 22:00 UTC on 11 October
+  (about 3,900 calls, on Evin's instruction to use AgentRouter for generation) spent its balance. Both keys.
+- `window-run-oct12-am/quota-watch.mjs` asks once every 12 minutes, one small call per key, until 03:20 UTC. If a
+  key answers, it starts the window script (probe, calibration, then the priority list). First check 02:02: both
+  keys still without balance. A terminal notification was sent to Evin (the phone push was not delivered).
+- Not judged, in list order: E38's touched rows (8), tonight's main on the three priority modes (170), E37's drafts
+  (30), the layout's priority-mode rows on dev (90) and on the readable unseen sets (126), E31a's Sales pairs.
+
+##### Line 3 of E30 against main of the same date, development 630 (declared 2026-10-12 02:04 UTC, before the run)
+Main `cdaedfad` on dev2, the seven modes without a profile: `er14-dev2-main` (280 rows). With `er11-dev-main` (270)
+and `er13-dev2-main` (80) that is main on all 630 development questions dated 12 October, against
+`er11-dev-e28b` + `er11-dev2-e28b`. Same line as written for E30: right not more than 2.0 points below main,
+forbidden-string rows at most main + 5. Read by mode for the three priority modes.
+
+#### E41 — the layout and the profile read in one build, the two profile modes (declared 2026-10-12 02:08 UTC, before any run)
+**Why.** The two changes that hold their judge-free lines tonight touch different places (`composePrompt`; the
+orchestrator's plan) and both act on Looking for work and Technical Interview. If Evin lands both, the build that
+ships is neither of the two that were measured.
+**Candidate** `cand/e41` `3a86e45c` (local, worktree `er-e21`): `cand/e28b` `7067ab3c` with `daef3be5` picked on
+top, no conflict. Built; both changes' test files 22 of 22; context-intelligence + intelligence 2,909 tests, 2,907
+pass, 0 fail, 2 skipped; type check clean.
+**Runs.** The two profile modes on dev, dev2, challenge, challenge-val, prov1, prov1-val (226 rows), `er16-*-e41`,
+against main's `er13-*-main` of the same date. Direct key, fresh user data, one app, after `er14-dev2-main`.
+**Judge-free lines** (obj-3):
+S1. every row answered; every request with evidence is in the new layout (`e30-read.mjs` lines 1 and 2).
+S2. right by the fixed checks on the 226 rows not more than 2.0 points below main; forbidden-string rows at most
+    main + 3 (`e30-read.mjs`).
+S3. the rows E38 touches (`e38-read.mjs --cand er16-{s}-e41`): right more often than main, forbidden-string rows
+    at most main; touched rows that need no document fact not worse.
+S4. first word, all rows, median not more than 150 ms later than main's.
+A stack that holds S1 to S4 is the build to judge when the judge has balance (its 226 rows against main's). It is
+not a proposal by itself: each part keeps its own rule, and landing is Evin's word.
 
 ---
 
