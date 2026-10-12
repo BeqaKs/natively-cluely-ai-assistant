@@ -4199,3 +4199,16 @@ S3. the rows E38 touches (`e38-read.mjs --cand er16-{s}-e41`): right more often 
 S4. first word, all rows, median not more than 150 ms later than main's.
 A stack that holds S1 to S4 is the build to judge when the judge has balance (its 226 rows against main's). It is
 not a proposal by itself: each part keeps its own rule, and landing is Evin's word.
+
+### Line 3 of E30 against main of the same date, development 630 — read (2026-10-12 02:26 UTC): holds, level
+`chains/e30d-gate.txt`. Main: `er11-dev-main` (270), `er13-dev2-main` (80), `er14-dev2-main` (280, 02:02 to 02:25
+UTC, all answered). Candidate: `er11-dev-e28b`, `er11-dev2-e28b`.
+- Right by the fixed checks: 573 → 573 of 630 (91.0 %; wrong → right 27, right → wrong 27). Forbidden-string rows
+  8 → 6. **HOLDS.** Layout line and answered line hold on 630; pass and repair unchanged (edited 15.2 % → 13.8 %).
+- The three priority modes (70 each): General 68 → 69, Looking for work 64 → 62, Technical Interview 61 → 64.
+  The others: Sales 61 → 64, Lecture 67 → 68, Call Center 60 → 59, Recruiting 62 → 61, Seminar 66 → 65, Team Meet
+  64 → 61. No mode moves by more than the turnover between two runs of one build (27 rows each way).
+**The layout, all same-date readings together:** development 573 → 573 of 630; unseen 173 → 189 of 219 (repeat on
+133 of them: 99 → 107); forbidden-string rows 8 → 6 and 12 → 14 (repeat 9 → 5); first word not later; cached
+share of prompt tokens 34.7 % → 94.1 % at the median. Level where the questions were written beside the prompts,
+ahead where they were not. Judged lines owed.
