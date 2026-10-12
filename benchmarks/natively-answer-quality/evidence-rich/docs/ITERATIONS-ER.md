@@ -4082,3 +4082,35 @@ of the three priority modes (273 readable, 42 unread). `report/arm-read.mjs --ki
 `deepseek-flash` by the fixed checks, and it starts about 0.4 s later. No judge call is spent on it. What this does
 not test: the judge's finer grounds (an unsupported aside, a wrong speaker), another vendor's model, or reasoning
 on (ruled out by Evin). The prompts were written and tuned against flash, which may favour it.
+
+## E40 — a measurement: sampling temperature 0 on the same recorded requests (declared 2026-10-12 01:27 UTC, before any call)
+**Why.** E39's samples show what the remaining errors in the priority modes are: on the same request, one flash
+sample converts 10:00 to 15:00 CET to 09:00 to 14:00 in Porto and the next says Porto is on CET; one counts the
+Software Engineer II year and the next leaves it out. The error is in the draw, not in the prompt, and the larger
+model draws no better. The app sends temperature 0.2. Whether 0 draws the right answer more often is not known.
+**A measurement, not a candidate.** The benchmark's generator setting stays 0.2 (Evin's specification); a change of
+the app's temperature would be his decision.
+**Arm** `e40-t0`: `replay-generator.mjs --temperature 0`, `deepseek-flash`, thinking off, k = 2, the same 315
+requests as E39. Base: `e39-flash` (0.2, k = 2, already recorded tonight).
+**Lines, written now** (`report/arm-read.mjs --kind gen`, obj-3):
+T1. every sample answered.
+T2. worth a judged comparison if right by the fixed checks is at least 2.0 points above the base on the readable
+    sets and not lower on the unread ones, with forbidden-string samples at most the base's.
+T3. reported: on how many requests the two samples of an arm are both right, both wrong, or split, for each arm
+    (how much of the error is the draw).
+If T2 does not hold it is recorded as no gain and no judge call is spent.
+
+### E30b — read (2026-10-12 01:36 UTC): the line holds against main of the same date
+`chains/e30b-gate.txt`. Main `cdaedfad` on challenge and challenge-val, the seven modes without a profile
+(`er14-chal-main` 91 rows, `er14-chalval-main` 42 rows, 01:22 to 01:35 UTC, all answered), with `er13-*-main` for the
+two profile modes: 219 questions on both sides, every request dated 12 October.
+- Right by the fixed checks: 173 → 189 of 219 (79.0 % → 86.3 %, +7.3 points; wrong → right 27, right → wrong 11).
+  The seven modes without a profile: 99 → 108 of 133. The two profile modes: 74 → 81 of 86.
+- Forbidden-string rows: 12 → 14 (the line allows main + 3). **HOLDS.**
+- Pass and repair unchanged: edited 18.3 % → 18.3 %; a second request 77.2 % → 77.2 %.
+**Where the layout stands.** As registered, E30's line 4 failed (against runs of 7 and 8 October). On the same date
+the same line holds, and the layout is 16 questions ahead on the unseen sets while level on dev (243 → 243 of 270).
+Its judged lines J1 to J3 are owed before anything is proposed. Listed for this window, after the priority list's
+first three sections: the layout's rows of the three priority modes in `er11-dev-e28b` (90), which pair with the
+90 rows of `er11-dev-main` judged in section 2. Not landed; Evin's conditional word asked for every line to hold
+as written, and one did not, so landing needs his word again whatever the judge says.

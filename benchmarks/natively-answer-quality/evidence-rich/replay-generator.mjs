@@ -17,6 +17,8 @@ const CS = await import(path.join(HERE, 'results', '.cv', 'calcScratch.mjs'));
 const KEY = (fs.readFileSync('/Users/evin/natively-cluely-ai-assistant/.env', 'utf8').match(/^DEEPSEEK_API_KEY=(.*)$/m)?.[1] ?? '').trim().replace(/^["']|["']$/g, '');
 // --model <id>: a measurement of another DeepSeek model on the same request (E39). Direct route only; thinking stays off.
 const MODEL = opt('model', 'deepseek-flash'); if (MODEL !== 'deepseek-flash' && ROUTE !== 'direct') throw new Error('--model is for the direct route');
+// --temperature <t>: a measurement of another sampling temperature on the same request (E40). The app sends 0.2.
+const TEMP = Number(opt('temperature', 0.2));
 const variant = opt('variant') ? await import(path.resolve(opt('variant'))) : null;
 const name = opt('name', 'base'); const K = Number(opt('k', 6)); const select = String(opt('select', 'calc'));
 const OUT = path.join(HERE, 'results', 'replay', `gen-${name}.jsonl`); fs.mkdirSync(path.dirname(OUT), { recursive: true });
@@ -50,7 +52,7 @@ async function one(t) {
   const t0 = Date.now(); let text = ''; let err = null; let first = null; let visible = null; let usage = null; let reasoned = 0; let served = null;
   try {
     const res = await genFetch('https://api.deepseek.com/chat/completions', { method: 'POST', headers: { Authorization: `Bearer ${KEY}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ model: MODEL, stream: true, stream_options: { include_usage: true }, temperature: 0.2, seed: 7, max_tokens: 8192, thinking: { type: 'disabled' }, messages: [{ role: 'system', content: t.system }, { role: 'user', content: t.user }] }) });
+      body: JSON.stringify({ model: MODEL, stream: true, stream_options: { include_usage: true }, temperature: TEMP, seed: 7, max_tokens: 8192, thinking: { type: 'disabled' }, messages: [{ role: 'system', content: t.system }, { role: 'user', content: t.user }] }) });
     if (!res.ok) throw new Error(`deepseek ${res.status}`);
     const dec = new TextDecoder(); let buf = '';
     for await (const chunk of res.body) { if (visible === null && isVisible(text)) visible = Date.now() - t0; buf += dec.decode(chunk, { stream: true }); let i; while ((i = buf.indexOf('\n')) >= 0) { const line = buf.slice(0, i).trim(); buf = buf.slice(i + 1); if (!line.startsWith('data:')) continue; const b = line.slice(5).trim(); if (b === '[DONE]') continue; try { const j = JSON.parse(b); if (j.usage) usage = j.usage; if (j.model) served = j.model; reasoned += (j.choices?.[0]?.delta?.reasoning_content ?? '').length; const d = j.choices?.[0]?.delta?.content ?? ''; if (d) { text += d; if (first === null) first = Date.now() - t0; } } catch { /* */ } } }
@@ -58,7 +60,7 @@ async function one(t) {
   const stripped = CS.stripCalcScratch(text); const shown = stripped.text.trim(); const visibleAt = text.indexOf('[[/CALC]]');
   const hits = t.req.map((r) => r.answer_needles.some((n) => squash(shown).includes(squash(n))));
   const forbidden = t.forb.filter((c) => c.answer_needles.some((n) => squash(shown).includes(squash(n)))).map((c) => c.kind ?? 'forbidden');
-  return { run: t.run, id: t.id, k: t.k, mode: t.mode, condition: t.condition, route: ROUTE, route_model: ROUTE === 'direct' ? MODEL : ROUTE_MODEL, served_model: served, reasoning_chars: reasoned, completion_tokens: usage?.completion_tokens ?? null, err, prompt_tokens: usage?.prompt_tokens ?? null, cached_tokens: usage?.prompt_cache_hit_tokens ?? usage?.prompt_tokens_details?.cached_tokens ?? null, ms_first: first, ms_visible: visible ?? (shown ? Date.now() - t0 : null), ms_total: Date.now() - t0, calc_block: !!stripped.scratch, calc_chars: stripped.scratch?.length ?? 0, shown_chars: shown.length,
+  return { run: t.run, id: t.id, k: t.k, mode: t.mode, condition: t.condition, route: ROUTE, route_model: ROUTE === 'direct' ? MODEL : ROUTE_MODEL, served_model: served, temperature: TEMP, reasoning_chars: reasoned, completion_tokens: usage?.completion_tokens ?? null, err, prompt_tokens: usage?.prompt_tokens ?? null, cached_tokens: usage?.prompt_cache_hit_tokens ?? usage?.prompt_tokens_details?.cached_tokens ?? null, ms_first: first, ms_visible: visible ?? (shown ? Date.now() - t0 : null), ms_total: Date.now() - t0, calc_block: !!stripped.scratch, calc_chars: stripped.scratch?.length ?? 0, shown_chars: shown.length,
     required: t.req.length, required_hit: hits.filter(Boolean).length, all_required: t.req.length > 0 && hits.every(Boolean), forbidden, text: shown, scratch: stripped.scratch ?? null };
 }
 let next = 0, n = 0;
