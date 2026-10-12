@@ -16,7 +16,7 @@ const hasEvidence = (run, id) => /<evidence\b/.test((run.wire[id]?.messages ?? [
 const med = (xs) => { const v = xs.filter((x) => Number.isFinite(x)).sort((a, b) => a - b); return v.length ? Math.round(v[Math.floor(v.length / 2)]) : null; };
 const P = []; const need = {};
 for (const [s, unread] of SETS) {
-  const mn = `er13-${s}-main`, cn = `er13-${s}-e38`; if (!fs.existsSync(path.join(ER, 'results', mn, 'rows.jsonl')) || !fs.existsSync(path.join(ER, 'results', cn, 'rows.jsonl'))) { console.log(`${s}: runs missing`); continue; }
+  const mn = `er13-${s}-main`, cn = String(opt('cand', 'er13-{s}-e38')).replace('{s}', s);   // --cand er16-{s}-e41: another build against the same main runs (E41) if (!fs.existsSync(path.join(ER, 'results', mn, 'rows.jsonl')) || !fs.existsSync(path.join(ER, 'results', cn, 'rows.jsonl'))) { console.log(`${s}: runs missing`); continue; }
   const M = loadRun(path.join(ER, 'results', mn)), C = loadRun(path.join(ER, 'results', cn)); const mById = new Map(M.rows.map((r) => [r.benchmark_id, r]));
   for (const c of C.rows) { const m = mById.get(c.benchmark_id); const item = C.ds.byId[c.benchmark_id]; if (!m || !item) continue;
     const mt = m.v3_trace ?? {}; const touched = mt.path === 'FAST' && (mt.profileSources ?? 0) > 0 && !hasEvidence(M, m.benchmark_id) && hasEvidence(C, c.benchmark_id);

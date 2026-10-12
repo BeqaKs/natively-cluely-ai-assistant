@@ -4180,3 +4180,22 @@ Main `cdaedfad` on dev2, the seven modes without a profile: `er14-dev2-main` (28
 and `er13-dev2-main` (80) that is main on all 630 development questions dated 12 October, against
 `er11-dev-e28b` + `er11-dev2-e28b`. Same line as written for E30: right not more than 2.0 points below main,
 forbidden-string rows at most main + 5. Read by mode for the three priority modes.
+
+## E41 — the layout and the profile read in one build, the two profile modes (declared 2026-10-12 02:08 UTC, before any run)
+**Why.** The two changes that hold their judge-free lines tonight touch different places (`composePrompt`; the
+orchestrator's plan) and both act on Looking for work and Technical Interview. If Evin lands both, the build that
+ships is neither of the two that were measured.
+**Candidate** `cand/e41` `3a86e45c` (local, worktree `er-e21`): `cand/e28b` `7067ab3c` with `daef3be5` picked on
+top, no conflict. Built; both changes' test files 22 of 22; context-intelligence + intelligence 2,909 tests, 2,907
+pass, 0 fail, 2 skipped; type check clean.
+**Runs.** The two profile modes on dev, dev2, challenge, challenge-val, prov1, prov1-val (226 rows), `er16-*-e41`,
+against main's `er13-*-main` of the same date. Direct key, fresh user data, one app, after `er14-dev2-main`.
+**Judge-free lines** (obj-3):
+S1. every row answered; every request with evidence is in the new layout (`e30-read.mjs` lines 1 and 2).
+S2. right by the fixed checks on the 226 rows not more than 2.0 points below main; forbidden-string rows at most
+    main + 3 (`e30-read.mjs`).
+S3. the rows E38 touches (`e38-read.mjs --cand er16-{s}-e41`): right more often than main, forbidden-string rows
+    at most main; touched rows that need no document fact not worse.
+S4. first word, all rows, median not more than 150 ms later than main's.
+A stack that holds S1 to S4 is the build to judge when the judge has balance (its 226 rows against main's). It is
+not a proposal by itself: each part keeps its own rule, and landing is Evin's word.
