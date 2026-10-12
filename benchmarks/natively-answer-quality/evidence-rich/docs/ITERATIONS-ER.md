@@ -4436,3 +4436,12 @@ Checked again at 14:40 UTC on Evin's "check again": the value under that name wa
 `sk-` then lowercase letters, digits and dashes; equal to no other key in the file; not the DeepSeek format, not
 the 51-character AgentRouter format). Its shape was read first, then two billing GETs: HTTP 401 "invalid token"
 again. Not sent anywhere else; not added to the key lists.
+
+### Evin, 12 October about 14:45 UTC: "continue with remaning with the agent router remianing credits at 7:30 ist"
+Taken as: at 02:00 UTC on 13 October the judge window runs its list, and what is left of the AgentRouter credits
+then goes on the next iteration the judged results point to, declared with its cost before any call. Nothing is
+spent before then. Checked before settling on that, at no cost (9 October judgments): of the 10 priority-mode rows
+flagged "a question left unanswered", 7 were edited by the fix-up pass and 3 have a several-part question, so a
+generator wording for several-part questions has no target; the pass (E37) is again where those rows are.
+Two session reminders are set (02:03 and 03:37 UTC); they fire only while this session is open. The window script
+itself runs detached and does not need the session.
