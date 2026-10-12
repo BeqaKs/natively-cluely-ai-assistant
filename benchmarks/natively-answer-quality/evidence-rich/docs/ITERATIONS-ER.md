@@ -4423,3 +4423,12 @@ No benchmark run was made on `cand/e43`: the runs behind each candidate are on `
 Counter 20,013.40 cents when Evin gave the key (his figure: USD 174 left) → 23,066.59 at 14:05 UTC: USD 30.53
 spent (price measurements 11.01, E42's two runs 16.12, the 30-call speed replay 3.40). About USD 143 left by that
 arithmetic. Nothing is running against it. The two older keys were not used for generation.
+
+### A fourth key name, `AGENTROUTER_API_KEY_3`: not an AgentRouter key (checked 2026-10-12 14:28 UTC)
+Evin: "i have added one more api key check its balcne". The value under that name is 125 characters with the
+`sk-cp-` prefix and is identical to `MINIMAX_API_KEY` in the same file (the AgentRouter keys are 51 characters).
+AgentRouter answers it HTTP 401 "invalid token" on the billing endpoints and on one 8-token call, so it has no
+balance to read there. Before its shape was looked at it was sent to agentrouter.org as a bearer token in six
+requests (four billing GETs, one usage GET variant, one tiny call); Evin is told, since that is a MiniMax
+credential shown to another service. It is not added to the judge's or the generator's key lists.
+The other three, same reading: usage counters 24,999.09, 67,968.12 and 23,066.59 cents, unchanged since 14:05 UTC.
