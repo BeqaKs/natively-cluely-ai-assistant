@@ -4138,3 +4138,26 @@ interval; 63 pairs cannot show a small difference. Listed as section 5 of the pr
   fewer requests split, and as many of them settle on the wrong answer as on the right one.
 **Recorded:** no gain; the setting stays 0.2. Read with E39: the errors that remain in the priority modes are not
 removed by a larger model without reasoning or by a colder draw.
+
+### E30c — a repeat of the layout on the unseen sets within the hour of main's run (declared 2026-10-12 01:40 UTC, before the run)
+E30b's pair is three to four hours apart. Repeat: `cand/e28b` `7067ab3c` built again in `er-main`, the seven modes
+without a profile on challenge and challenge-val (`er15-chal-e28b`, `er15-chalval-e28b`, 133 rows), against
+`er14-chal-main` and `er14-chalval-main` of 01:22 to 01:35 UTC. Same reader.
+**Reading, written now:** the repeat confirms E30b's direction if the candidate is right on at least as many of
+the 133 rows as main with forbidden-string rows at most main + 3. A gain of 5 rows or more is called reproduced;
+less than that is called not reproduced, and E30b's +9 on these rows is then read as turnover between runs.
+Afterwards `er-main` goes back to `cdaedfad` and is rebuilt.
+
+### E30c — read (2026-10-12 01:53 UTC): reproduced
+`chains/e30c-gate.txt`. `er15-chal-e28b` + `er15-chalval-e28b` (01:39 to 01:52 UTC, 133 rows, all answered, every
+request in the new layout) against `er14-chal-main` + `er14-chalval-main` (01:22 to 01:35 UTC).
+- Right by the fixed checks: 99 → 107 of 133 (74.4 % → 80.5 %; wrong → right 18, right → wrong 10). Forbidden-string
+  rows 9 → 5. **A gain of 8 rows: reproduced** (the first candidate run, three hours earlier, had 108).
+- By mode (19 each): Call Center 13 → 15, General 16 → 17, Lecture 16 → 17, Seminar 12 → 16, Team Meet 13 → 16;
+  Recruiting 15 → 13, Sales 14 → 13.
+- Pass and repair unchanged (edited 15.8 % → 16.5 %; a second request 82.0 % → 82.0 %).
+`er-main` is back at `cdaedfad` and rebuilt.
+**Reading.** Two candidate runs against one main run on the unseen sets give +9 and +8 rows of 133; on dev the same
+builds are level. The unseen sets hold more questions that need two documents or a later revision, which is where
+putting the documents first and the question last was expected to help. The judged lines (J1 to J3 on dev, J4 on
+the unseen rows of the priority modes) are still owed.
