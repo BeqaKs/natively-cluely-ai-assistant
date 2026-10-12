@@ -41,7 +41,7 @@ This file is generated: `node evidence-rich/report/build-handoff.mjs` (from `ben
 
 ## 1. State in one screen
 
-**Read this first: the state on 12 October 2026, 02:10 UTC** (the table below it was last brought up to date on 11 October; where the two differ, this block is the later one).
+**Read this first: the state on 12 October 2026, 04:25 UTC** (the table below it was last brought up to date on 11 October; where the two differ, this block is the later one).
 
 Evin's instruction of 11 October, evening: the priority is Technical Interview, Looking for work (with profile intelligence) and General; the other modes come next; the target is 9.5 in every mode; iterate overnight on autopilot.
 
@@ -51,7 +51,9 @@ Evin's instruction of 11 October, evening: the priority is Technical Interview, 
 | What waits for the judge, in order | `window-run-oct12-am/window-sales.txt`: E38's touched rows (8) → main on the three priority modes, runs dated 12 October (`er11-dev-main` three modes, `er13-dev2-main` two modes; 170) → E37's drafts (30) → the layout's priority-mode rows on dev (90) → the layout's and main's readable unseen rows of the priority modes (126) → the older lists (E31a's Sales pairs, E26, holdout). Readers: `report/e37-e38-judged.mjs e38\|e37`, `report/window-read.mjs`. |
 | Layout, `cand/e28b` `7067ab3c` (E30) | **Its registered line 4 failed** (unseen forbidden-string rows 10 → 14 against main's runs of 7 and 8 October), so by its rule it is not proposed and Evin's conditional word to land it does not apply. Every request carries the day's date, so runs of different days are different requests. **Against main of the same date the line holds** (E30b: unseen 173 → 189 right of 219, forbidden 12 → 14) **and a second run within the hour reproduced it** (E30c: 99 → 107 of 133 on the seven modes without a profile; the first run had 108). On dev the two builds are level (243 and 243 of 270). The purpose holds: cached share of prompt tokens, median 94.1 % against 34.7 %. Judged lines J1 to J3 (dev) and J4 (unseen, priority modes) are owed. Not landed. |
 | Profile read, `cand/e38` `daef3be5` (E38) | In the two profile modes a typed question the classifier answers from general knowledge read nothing when only the résumé or posting was loaded. Fix in `orchestrator.ts` (one condition), 13 tests. Judge-free lines P1 to P5 hold: 4 of 226 questions change path, right 2 → 4 on them, first word not later. Judged lines Q1, Q2 owed. Landing is Evin's word. |
-| Both in one build, `cand/e41` `3a86e45c` (E41) | Local, worktree `er-e21`. 2,909 tests, 2,907 pass, 0 fail; type check clean. Runs `er16-*-e41` (the two profile modes, 226 rows) against `er13-*-main`; lines S1 to S4 in the log. |
+| Both in one build, `cand/e41` `3a86e45c` (E41) | Local, worktree `er-e21`. 2,909 tests, 2,907 pass, 0 fail; type check clean. **Lines S1 to S4 hold** on the two profile modes (`er16-*-e41` against `er13-*-main`, 226 rows): right 200 → 204, forbidden-string rows 4 → 4, the 4 rows E38 touches 2 → 4. First word in the same hour (`er17-dev-main` then `er17-dev-e41`): spoken 902 → 842 ms, typed 906 → 784 ms. Not judged. |
+| The layout on all 630 development questions, same date | 573 → 573 right, forbidden-string rows 8 → 6 (main: `er11-dev-main`, `er13-dev2-main`, `er14-dev2-main`). General 68 → 69, Looking for work 64 → 62, Technical Interview 61 → 64 of 70. |
+| The fix-up pass in the two profile modes (judge-free, 858 rows of 12 October) | With no résumé loaded its edits lose no right answer and halve the forbidden strings (53 edits: right 45 → 47, forbidden 4 → 2). With a résumé loaded they cost right answers (128 edits: 104 → 90; 10 deferrals on questions the documents answer), nearly all in Looking for work. One traced case: `ER-D-LFW-012`, where the pass lists the user's own notes as unsupported (4 of 6 replays on main's request). Same trade E4 measured on 3 October; no gate is proposed; E37's judged pairs settle it. |
 | Closed on 11 and 12 October, no judge call spent | E34 (generator: no negative self-claim), E32 on the priority modes (pass: a denial is a claim), E36 (pass: a posting is not the candidate's past): each failed a judge-free line. E39 (the larger model `deepseek-v4-pro`, reasoning off): not better by the fixed checks, first word 0.4 s later. E40 (temperature 0): no gain. |
 | What the remaining errors are | On the same request one flash sample is right and the next is wrong on about 7 % of the priority-mode requests, and both are wrong on about 6 % (read row by row, at least 5 of the 17 readable ones are the fixed checks' own misses, not wrong answers). The judged hard fails of the three modes share no cause that a wording, a retrieval rule, a larger model without reasoning or a colder draw removed. |
 | Sales | E31a holds its four judge-free lines and waits for the judge; E32 and E33 declared for Sales; all behind the priority modes. |
@@ -4988,6 +4990,12 @@ Entry headings with their line numbers in `docs/ITERATIONS-ER.md`, and every lin
 - L4165: Judge window of 12 October: opened at 02:00:30 UTC, access restored, account balance empty; nothing judged (recorded 02:03 UTC)
 - L4178: Line 3 of E30 against main of the same date, development 630 (declared 2026-10-12 02:04 UTC, before the run)
 - L4184: E41 — the layout and the profile read in one build, the two profile modes (declared 2026-10-12 02:08 UTC, before any run)
+- L4203: Line 3 of E30 against main of the same date, development 630 — read (2026-10-12 02:26 UTC): holds, level
+- L4216: The judge's balance did not return by 03:20 UTC (recorded 2026-10-12 03:16 UTC)
+- L4221: E41 — judge-free lines read (2026-10-12 03:44 UTC): S1 to S4 hold; the first-word line only narrowly, across hours
+- L4237: E41 — first word in the same hour, read (2026-10-12 04:09 UTC): the stack is not later
+- L4249: Why `ER-D-LFW-012` goes wrong under the new layout: the fix-up pass, not the layout's draft (diagnostic, 04:15 UTC)
+- L4266: The fix-up pass in the two profile modes, by what the app knows (judge-free, 04:20 UTC; input for E37)
 
 ### B.1 The log
 
@@ -9192,6 +9200,86 @@ S3. the rows E38 touches (`e38-read.mjs --cand er16-{s}-e41`): right more often 
 S4. first word, all rows, median not more than 150 ms later than main's.
 A stack that holds S1 to S4 is the build to judge when the judge has balance (its 226 rows against main's). It is
 not a proposal by itself: each part keeps its own rule, and landing is Evin's word.
+
+##### Line 3 of E30 against main of the same date, development 630 — read (2026-10-12 02:26 UTC): holds, level
+`chains/e30d-gate.txt`. Main: `er11-dev-main` (270), `er13-dev2-main` (80), `er14-dev2-main` (280, 02:02 to 02:25
+UTC, all answered). Candidate: `er11-dev-e28b`, `er11-dev2-e28b`.
+- Right by the fixed checks: 573 → 573 of 630 (91.0 %; wrong → right 27, right → wrong 27). Forbidden-string rows
+  8 → 6. **HOLDS.** Layout line and answered line hold on 630; pass and repair unchanged (edited 15.2 % → 13.8 %).
+- The three priority modes (70 each): General 68 → 69, Looking for work 64 → 62, Technical Interview 61 → 64.
+  The others: Sales 61 → 64, Lecture 67 → 68, Call Center 60 → 59, Recruiting 62 → 61, Seminar 66 → 65, Team Meet
+  64 → 61. No mode moves by more than the turnover between two runs of one build (27 rows each way).
+**The layout, all same-date readings together:** development 573 → 573 of 630; unseen 173 → 189 of 219 (repeat on
+133 of them: 99 → 107); forbidden-string rows 8 → 6 and 12 → 14 (repeat 9 → 5); first word not later; cached
+share of prompt tokens 34.7 % → 94.1 % at the median. Level where the questions were written beside the prompts,
+ahead where they were not. Judged lines owed.
+
+##### The judge's balance did not return by 03:20 UTC (recorded 2026-10-12 03:16 UTC)
+`quota-watch.json`: 7 checks of two keys between 02:02 and 03:14 UTC, every one the gateway's quota reply. The
+check has ended; no window is running or scheduled. **No judgment exists for 12 October.** The list
+(`window-run-oct12-am/window-sales.txt`) is kept as it stands for the next window, which starts with one probe.
+
+##### E41 — judge-free lines read (2026-10-12 03:44 UTC): S1 to S4 hold; the first-word line only narrowly, across hours
+`chains/e41-gate.txt`. `er16-*-e41` (226 rows; the dev2 run was repeated at 03:28 UTC because the app did not come
+up within five minutes at 02:39, no row of the failed start exists) against `er13-*-main`.
+- S1 holds: 226 of 226 answered; 222 requests carry evidence and all 222 are in the new layout (4 carry none).
+- S2 holds: right 200 → 204 of 226 (88.5 % → 90.3 %; wrong → right 12, right → wrong 8); forbidden-string rows
+  4 → 4. Looking for work 100 → 103 of 113, Technical Interview 100 → 101 of 113.
+- S3 holds: the 4 rows E38 touches, right 2 → 4, no forbidden string; the two that need no document fact right
+  in both. Untouched rows: readable 89.2 % → 89.8 %, unread 32 → 33 of 36.
+- S4 holds as written (150 ms): first word, all rows, median 871 → 1011 ms (+140); spoken 878 → 1023 (+145),
+  typed 779 → 920 (+141). **The two sides are two to four hours apart**, and the layout alone against main of the
+  same hour read −67 ms spoken and +90 ms typed. A margin this thin across hours is not a finding either way.
+**First-word check in the same hour, declared now (03:45 UTC):** main then the stack, dev, the two profile modes
+(60 rows each, `er17-dev-main`, `er17-dev-e41`), back to back. Line: the stack's median first word not more than
+150 ms later than main's, spoken and typed (`e30-read.mjs --latency`). If it is later than that, the stack is
+reported as costing first-word time, whatever the fixed checks say.
+
+##### E41 — first word in the same hour, read (2026-10-12 04:09 UTC): the stack is not later
+`chains/e41c-gate.txt`. `er17-dev-main` (03:44 to 03:56 UTC) then `er17-dev-e41` (03:56 to 04:08), 60 questions each.
+- First word, spoken (43): median 902 → 842 ms (−60); 90th percentile 1226 → 1321. Typed (17): 906 → 784 ms (−122).
+  **The line holds; the +140 ms of the runs three hours apart was the hour, not the build.**
+- Not a line of this check, reported because it was seen: right by the fixed checks on these 60 rows 55 → 52
+  (wrong → right 1, right → wrong 4), forbidden-string rows 0 → 2.
+**All seven runs of 12 October on these 60 questions:** old layout (three of main, one of `cand/e38`) 52, 53, 55, 53
+right; new layout (`cand/e28b`, `cand/e41` twice) 51, 53, 52. Looking for work 26, 27, 28, 28 against 24, 26, 27;
+Technical Interview 26, 26, 27, 25 against 27, 27, 25. Three questions split by build by at least two runs:
+`ER-D-LFW-011` and `ER-D-LFW-012` go against the new layout (4 of 4 right → 1 of 3), `ER-D-TI-011` for it (2 of 4 →
+3 of 3).
+
+##### Why `ER-D-LFW-012` goes wrong under the new layout: the fix-up pass, not the layout's draft (diagnostic, 04:15 UTC)
+Typed: "they asked if I'd ever move to rotterdam or if remote is the plan. what do I say". The user's notes in the
+request say "Staying in Porto. I'm not moving to Rotterdam or anywhere else, so remote within Europe is a condition,
+not a preference. … up to about six weeks of travel a year works for me." In all three new-layout runs the DRAFT
+says exactly that, opening with "Remote is the plan."; the pass lists those sentences as unsupported [self]
+statements and the shown answer becomes "Remote is the plan. I'll confirm the details and come back to you on it."
+Replays of the pass on this one row, 6 each (`diag012-*.jsonl`, the app's pass and cap):
+| Material | Draft | Supported sentences removed |
+|---|---|---|
+| new layout, as recorded | new layout's | 6 of 6 |
+| new layout without the repeated question | new layout's | 6 of 6 |
+| old order (question first) | new layout's | 6 of 6 |
+| main's own request | main's | 4 of 6 |
+So the order of the material is not the cause. The pass is unstable on this row on main too (the app's four main
+runs happened to keep the draft), and the new layout's draft, which answers the either-or first, tips it every
+time. The defect is the pass listing as unsupported what the user's own notes state.
+
+##### The fix-up pass in the two profile modes, by what the app knows (judge-free, 04:20 UTC; input for E37)
+`report/pass-in-profile-modes.mjs`, every profile-mode run of 12 October (21 runs, 858 rows, both layouts; the
+edited rows graded as drafted and as shown, obj-3):
+| | Rows | Edited | Right as drafted → as shown | Forbidden-string rows | Shown defers where the draft did not |
+|---|---:|---:|---|---|---|
+| No résumé loaded | 219 | 53 | 45 → 47 (lost 0, gained 2) | 4 → 2 | 15 (0 on questions the documents answer) |
+| A résumé is loaded | 639 | 128 | 104 → 90 (lost 19, gained 5) | 9 → 5 | 26 (10 on questions the documents answer) |
+| Evidence missing (oracle) | 126 | 74 | 61 → 67 (lost 0, gained 6) | 13 → 7 | 28 |
+| Evidence present (oracle) | 732 | 107 | 88 → 70 (lost 19, gained 1) | 0 → 0 | 13 |
+By mode: Looking for work 142 edits of 429 rows, right 120 → 108; Technical Interview 39 edits of 429, 29 → 29.
+**Reading.** The pass earns its place where the asked thing is not in the documents (no right answer lost, the
+forbidden strings halved) and costs right answers where it is, nearly all of it in Looking for work. This is E4's
+measurement of 3 October again, on today's build and in these two modes; E4's gate (no pass when the files are in
+the prompt) raised the mean and let four more hard fails through on the holdout, so a gate is not proposed here.
+The fixed checks do not see an invented aside the pass removes; the judged draft-against-shown pairs (E37) are what
+settles it, and they wait for the judge.
 
 ---
 
