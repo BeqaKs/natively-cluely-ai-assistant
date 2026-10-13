@@ -56,6 +56,7 @@ Evin, 13 October about 21:00 UTC: "we are stopping this optimizationsince we are
 | Not landed | The layout `cand/e28b` (no judged gain; 211 judgments never made), the stack `cand/e41`, anything for own-history questions with no résumé loaded (closed for this generator, a product decision), E31a for Sales (never judged). |
 | Another session's uncommitted work | Its both-modes pass switch in the main checkout was replaced by the landed Technical-Interview-only version; the original is a patch in `~/natively-er-backup/final-1014/`. Its "make things up" filter edit (`userInstructionContract.ts` and test) is untouched and still uncommitted. |
 | Keys | Third AgentRouter key about USD 57 left; the first two empty. Nothing is running or scheduled. |
+| PR #638 | **Closed, not merged**, at Evin's "close the pr then" (13 October, about 22:10 UTC). The branch `bench/evidence-rich` stays on GitHub and locally; the benchmark and the blind holdout's questions are not on main. |
 | Worktrees | `er-e21` on `cand/final-1014-pass` (`cb0fadac`, built); `er-main` detached at `293db92b` (built). Local branches `cand/final-1014`, `cand/final-1014-pass` are records; no candidate branch was pushed. |
 
 **If this work is picked up again:** start from a fresh judged run of main `cb0fadac` on the three priority modes (210 judgments; about USD 20 on the first key's account, about USD 78 on the others), since no score exists for it. The largest stable loss is still a question about the user's own history with no résumé loaded, and it is a product decision, not a prompt.

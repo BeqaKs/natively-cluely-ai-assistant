@@ -4691,3 +4691,8 @@ The 9.5 target is not met; with a résumé loaded both interview modes were at 9
 
 **Left on the keys:** the third AgentRouter key about USD 57 (counter 31,739.71 at 03:00 UTC, not read since; nothing
 has called it). The first two are empty.
+
+**PR #638 closed (13 October, about 22:10 UTC).** Asked what "merge it both locally and on remote" meant, Evin chose
+"The app changes only" (already on local and GitHub main `cb0fadac`), then: "close the pr then". The draft PR is
+closed, not merged. The branch `bench/evidence-rich` is kept on GitHub and locally: it is the only home of the
+harness, the question sets and this log. The blind holdout's questions are not on main.
