@@ -41,7 +41,26 @@ This file is generated: `node evidence-rich/report/build-handoff.mjs` (from `ben
 
 ## 1. State in one screen
 
-**Read this first: the state on 13 October 2026, 03:00 UTC** (later than the blocks under it; where they differ, this one holds).
+**Read this first: the optimisation was stopped on 13 October 2026, 21:45 UTC** (later than every block under it; where they differ, this one holds).
+
+Evin, 13 October about 21:00 UTC: "we are stopping this optimizationsince we are out of budget , do all things you can do to make the last inal push of imporvements to all the modes". Asked, he chose: land on main and push; the fix-up pass off in Technical Interview only; the AgentRouter rung included.
+
+| Thing | State at 21:45 UTC on 13 October |
+|---|---|
+| App `main` | **Local and GitHub `cb0fadac`** = `293db92b` + three commits of this work, fast-forwarded and pushed at 21:43 UTC. |
+| `070f29c7` | E38, the profile read (a typed general-knowledge question in the two profile modes reads the résumé and posting when they fit). Target rows judged 5.5 → 10.0 and 4.2 → 9.8; its lines Q1 / Q2 failed on one draw-level hard fail (E38r: 9.85 against 9.81, none). Landed at his word. |
+| `7307c836` | E42, the AgentRouter rung, last in the structured-extraction ladder. 23 of 25 profiles read by the model; its line X1 failed (two timeouts past 45 s on a slow gateway, which fall back to the parser as on main). Landed at his word. |
+| `cb0fadac` | The fix-up pass is off in Technical Interview (judged 9.11 with it and without) and stays on in Looking for work (9.31 with it, 9.17 and four more hard fails without). `NATIVELY_CLAIM_VERIFIER_INTERVIEW=1` restores it. |
+| Checks | Type check and build clean; `electron/llm` 6,187 of 6,216 pass, the 1 failure is the same on unchanged `293db92b`; intelligence, context-intelligence and services: the same 121 failures as unchanged `293db92b`, the 13 added tests pass. macOS only. No app run of the three together, nothing on Windows, no packaged build. |
+| Last judged scores (main `cdaedfad`, 13 October) | Technical Interview 9.11, Looking for work 9.31, General 9.16. **Today's main is not judged.** The 9.5 target is not met; with a résumé loaded both interview modes were at 9.5. |
+| Not landed | The layout `cand/e28b` (no judged gain; 211 judgments never made), the stack `cand/e41`, anything for own-history questions with no résumé loaded (closed for this generator, a product decision), E31a for Sales (never judged). |
+| Another session's uncommitted work | Its both-modes pass switch in the main checkout was replaced by the landed Technical-Interview-only version; the original is a patch in `~/natively-er-backup/final-1014/`. Its "make things up" filter edit (`userInstructionContract.ts` and test) is untouched and still uncommitted. |
+| Keys | Third AgentRouter key about USD 57 left; the first two empty. Nothing is running or scheduled. |
+| Worktrees | `er-e21` on `cand/final-1014-pass` (`cb0fadac`, built); `er-main` detached at `293db92b` (built). Local branches `cand/final-1014`, `cand/final-1014-pass` are records; no candidate branch was pushed. |
+
+**If this work is picked up again:** start from a fresh judged run of main `cb0fadac` on the three priority modes (210 judgments; about USD 20 on the first key's account, about USD 78 on the others), since no score exists for it. The largest stable loss is still a question about the user's own history with no résumé loaded, and it is a product decision, not a prompt.
+
+**The state on 13 October 2026, 03:00 UTC** (superseded by the block above where they differ).
 
 Evin, 12 October about 14:45 UTC: "continue with remaning with the agent router remianing credits at 7:30 ist". The judge window opened at 02:00:40 UTC on 13 October; calibration 38 of 38; no 402 and no 403 all day.
 
@@ -181,6 +200,8 @@ In order, dates in UTC. Quotes are his words, as typed. Plain "continue" message
 | 2026-10-09 | A long written brief for a new session ("final answer-quality optimization"): measure main with E19 first; map the remaining failures by first cause; arithmetic, facts from several documents, inventions the pass misses, correct inference, Technical Interview code, follow-ups; run the 12k / 24k / 48k threshold test; build a new high-difficulty set with an untouched validation part; Astra only; deterministic checks outrank the judge; nothing merged or pushed without his word. | The second session of 2026-10-09 (sections 1, 6 and 11, and the log from "Session of 2026-10-09, 10:00 UTC onward"). |
 | 2026-10-11 | "first priority should be techical interview and looking for wrok modes and optimization wth profiel intelligence, and general mode… all other modes come next"; "i want all the modes to be at 9.5 or above"; "use agentrouter for deepseek model also"; "im gonna sleep now, you are on autopilot, continue iterating" | Priority list rewritten; E30 to E41 run overnight (section 1). Generation through AgentRouter emptied its balance that night, so the judge had none at the window of 12 October. |
 | 2026-10-12 | "i have added one api key agenr router 2 , use that it has 174 usd creditts , key and 1 has 25 usd on each , , onllly use agent router for running iteration , strictly dont use deepseek api key" | The direct route was removed from the tools; the judge client knows the third key; price and speed of the route measured; E42 run; the judge window set for 02:00 UTC on 13 October. |
+| 2026-10-13 | "we are stopping this optimizationsince we are out of budget , do all things you can do to make the last inal push of imporvements to all the modes" | No further judge or generation call. The three changes with evidence behind them were put on current main in a side branch, type-checked and tested against unchanged main, and he was asked what lands. |
+| 2026-10-13 | Chose, when asked: "Land and push"; "Off in Technical Interview only"; "Include it" (the AgentRouter rung) | `293db92b..cb0fadac` fast-forwarded on main and pushed to GitHub: the profile read (E38), the AgentRouter rung (E42), the pass off in Technical Interview only. The layout, the stack and E31a were not landed. |
 
 Decisions he made that are easy to forget:
 
@@ -704,6 +725,8 @@ Section 13 prints the pass's instruction block as it is on main and the full tex
 ## 11. Open decisions and next steps
 
 **Open with Evin**
+
+00. **After the stop of 13 October (this replaces 0a and 0 below and the decisions listed under the blocks of section 1).** Decided and done: the profile read, the AgentRouter rung and the pass off in Technical Interview are on main `cb0fadac`. Still open: (i) main `cb0fadac` has no judged score; (ii) what the app does on a question about the user's own history when no résumé is loaded (an opening the app writes itself, a "load your résumé" note, or as it is): the largest stable loss, 5 of the 8 hard fails that recur; (iii) the pass still replaces answers in Looking for work and the six other modes; switching it off in Looking for work is one line and costs 0.14 and four hard fails by the judged comparison; (iv) another session's "make things up" filter edit is still uncommitted in the main checkout; (v) `AGENTROUTER_API_KEY_3` is not a valid AgentRouter key; (vi) items 2, 3, 5 below (PR #638, old branches, Windows and a packaged build).
 
 0a. **Decisions of 12 October, afternoon (these replace (a) and (b) of the next item).** (i) **Budget.** At about 19 cents an answer the new key buys about 850 answers; last night's judge-free work was about 9,000 calls. Either the iterations stay this small, or generation goes back to the direct key (USD 43 there), or more is added. (ii) **E42**: land the rung although one extraction in three stalled past 45 s, lengthen that limit for it, or leave it. (iii) **Landing** the layout, the profile read or both: still his word, after tomorrow's judgments; `cand/e43` shows they build and test on current main. (iv) **The pass in the interview modes**: tomorrow's draft-against-shown judgments are its A/B.
 

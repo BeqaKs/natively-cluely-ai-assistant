@@ -4640,3 +4640,54 @@ No candidate is built.
 | Generation on the third key (E38r 32 answers, E44 66 answers) | 6.19 |
 Judge USD 130.1 in all, generation USD 6.19. Third key: counter 31,739.71 (23,066.59 at the start of the day); about USD 57 left by Evin's figure (174 at 20,013.40). Nothing is running against
 any key. No 402 and no 403 today.
+
+## 13 October, 21:00 to 21:45 UTC: the optimisation is stopped; three changes landed on main and pushed
+
+Evin, 13 October about 21:00 UTC: "we are stopping this optimizationsince we are out of budget , do all things you
+can do to make the last inal push of imporvements to all the modes". No judge call and no generation call was made
+after it. He was then asked three things and answered each: land on main and push to GitHub (yes); the fix-up pass
+off in Technical Interview only (the option the judged comparison supports; not off in both interview modes); the
+AgentRouter rung included although its line X1 had failed.
+
+**What landed** (`293db92b..cb0fadac`, fast-forward, pushed to GitHub `main` at 21:43 UTC):
+
+| Commit | Change | What it rests on |
+|---|---|---|
+| `070f29c7` | E38, the profile read: in the two profile modes a typed question the classifier answers from general knowledge reads the résumé and the posting when they fit (`orchestrator.ts`, 13 tests) | Judge-free P1 to P5 hold. Its two target rows judged 5.5 → 10.0 and 4.2 → 9.8. Q1 and Q2 failed as declared on one row's hard fail; E38r (16 judged draws a side) put that row at 9.85 against 9.81 with no hard fail. Landed at Evin's word with that on record. |
+| `7307c836` | E42, an AgentRouter rung last in the structured-extraction ladder (`LLMHelper.ts`, 14 tests) | Main: 6 of 6 profile rows of an AgentRouter-only user read by the rule-based parser. Candidate: 23 of 25 by the model; the other 2 passed the caller's 45 s limit on a slow gateway and fell back to the parser, which is main's behaviour. **X1 (every row) failed; landed at Evin's word.** |
+| `cb0fadac` | The fix-up pass is off in Technical Interview and stays on in Looking for work (`claimVerifier.ts`, its test file) | K3 / E37, judged 13 October: Technical Interview 9.11 with the pass and 9.11 without, 8 hard fails either way; Looking for work 9.31 and 9.17, hard fails 2 and 6. `NATIVELY_CLAIM_VERIFIER_INTERVIEW=1` restores the Technical Interview pass. |
+
+**Not landed, on purpose:** the layout (`cand/e28b`; no judged gain, and the stacked build failed its no-harm line),
+anything for the own-history-without-résumé class (E44: closed for this generator; a product decision), E31a for
+Sales (holds its judge-free lines, never judged).
+
+**Checks before the fast-forward** (macOS, worktree `er-e21`, branch `cand/final-1014-pass` = `293db92b` + the three
+commits; baseline = unchanged `293db92b` built in `er-main`):
+
+- `npm run typecheck:electron`: clean. `npm run build:electron`: clean.
+- `electron/llm` and `electron/llm/codeVerification`: 6,216 tests, 6,187 pass, 1 fails, 28 skipped. The one failure
+  (`QuickActionTurnRequest2026_10_09`, "a legacy prompt still gets the mode template") fails the same way on
+  unchanged `293db92b` (26 of 27 in that file).
+- `electron/intelligence`, `electron/context-intelligence`, `electron/services`: 8,639 tests, 8,456 pass, 121 fail,
+  40 skipped; unchanged `293db92b`: 8,626 tests, 8,443 pass, 121 fail. The two lists of failing tests are the same
+  137 lines (all in `electron/services`, run here under plain `node --test` in a worktree); the 13 added tests pass.
+- Not done: no app run of the three together on today's main (each was run in the app on its own branch earlier:
+  E38 in `er13` / `er16`, E42 on 25 profiles, the pass switch by another session on 10 October in the both-modes
+  form). Nothing executed on Windows; no packaged build. All three are shared TypeScript with no platform branch.
+
+**The other session's uncommitted pass change.** The main checkout carried an uncommitted edit of 10 October that
+switched the pass off in BOTH interview modes (`claimVerifier.ts` and `ClaimVerifier2026_09_30.test.mjs`). The landed
+commit is that edit narrowed to Technical Interview at Evin's answer, so those two working copies were set to the
+landed version; the original edit is kept as a patch at
+`~/natively-er-backup/final-1014/pass-off-in-both-interview-modes.uncommitted-2026-10-10.patch`. That session's
+other uncommitted edit (the "make things up" instruction filter in `userInstructionContract.ts` and its test) was
+not touched and is still uncommitted.
+
+**Where the three priority modes stand, last judged (13 October, main `cdaedfad`, pass on):** Technical Interview
+9.11, Looking for work 9.31, General 9.16. Today's main is not judged. What the judged data says to expect of it:
+Technical Interview unchanged (the pass was worth nothing there), Looking for work and Technical Interview better on
+the few typed general-knowledge turns with a profile loaded (4 of 226 questions change path), General unchanged.
+The 9.5 target is not met; with a résumé loaded both interview modes were at 9.5 already.
+
+**Left on the keys:** the third AgentRouter key about USD 57 (counter 31,739.71 at 03:00 UTC, not read since; nothing
+has called it). The first two are empty.

@@ -28,6 +28,8 @@ const SUBJECTS = [
   "the rerank's confidence gate keeps the pre-E11 score", 'in a meeting only TYPED questions query the bundled embedder',
   'a turn that retrieves plans the whole profile and the whole pack', 'a résumé or job description handed over whole is not removed',
   'the claim pass does not list a statement of absence',
+  'a derived experience statement is evidence only when', 'a DeepSeek key can do structured extraction', 'a pack is read whole up to 24,000 tokens',
+  'a general-knowledge turn in the two profile modes reads', 'an AgentRouter key can do structured extraction', 'Technical Interview answers in one pass',
 ];
 const COMMITS = [];
 const log = git(['log', 'origin/main', '--since=2026-10-02', '--reverse', '--format=%h\t%ad\t%s', '--date=format:%Y-%m-%d']).trim().split('\n').map((l) => l.split('\t'));
@@ -39,7 +41,7 @@ for (const [h, d, s] of log) {
   for (const f of files) P(`  - \`${f}\``);
 }
 P('');
-P('All sixteen are on GitHub `main`. The last, `73b18d97` (E19), was landed and pushed on 2026-10-09. Appendix A prints each commit message and diff in full.');
+P(`All ${COMMITS.length} are on GitHub \`main\`. The last three (the profile read, the AgentRouter rung, the pass off in Technical Interview) were landed and pushed on 2026-10-13. Appendix A prints each commit message and diff in full.`);
 P('');
 
 // ---- 13. prompts ----
