@@ -4445,3 +4445,46 @@ flagged "a question left unanswered", 7 were edited by the fix-up pass and 3 hav
 generator wording for several-part questions has no target; the pass (E37) is again where those rows are.
 Two session reminders are set (02:03 and 03:37 UTC); they fire only while this session is open. The window script
 itself runs detached and does not need the session.
+
+## Judge window of 13 October: open (02:00:40 UTC), calibration 38 of 38 (02:09 UTC)
+The detached window script probed at 02:00:40 UTC: `gpt-6-astra` listed and returned, no mismatch. Calibration
+38 of 38 pairs right, exact model on every call (`calibration-astra-1791857343929.json`). The list
+(`window-sales.txt`, 637 judgments) started at 02:09 UTC as one stage, three streams.
+`AGENTROUTER_API_KEY_3` is unchanged (35 characters, not the AgentRouter shape); it was not sent anywhere and is
+not in the key lists.
+**What a judgment costs** (the first key's own usage counter, cents): 24,999.09 before the window → 25,501.20 after
+the probe and the 38 calibration pairs (USD 5.02, about 6.6 cents a judge call at two calls a pair) → 25,588.99
+after the first 12 row judgments (about 7 cents each). At that price the 637-judgment list is about USD 43, and
+the two older keys (Evin: about USD 25 each) roughly cover it; anything beyond that spills onto the third key,
+which is the generation balance. The stages the script would run after the list (older E26 rows, the E31a pairs,
+the holdout baseline, pack24) are not priorities at this price: the script is stopped at the end of the list.
+
+### E38 — judged lines read (2026-10-13 02:10 UTC): Q1 and Q2 fail on one hard fail (4 pairs)
+`report/e37-e38-judged.mjs e38 --rows`; the 4 readable touched rows, both arms judged.
+| | pairs | main | candidate | difference | hard fails |
+|---|---|---|---|---|---|
+| Q1 touched rows | 4 | 7.28 | 8.46 | +1.18 (95 % ±5.13) | 0 → 1 |
+| Q2 touched rows needing no document fact | 2 | 9.86 | 7.00 | −2.86 (±5.61) | 0 → 1 |
+- **Q1 (mean higher than main, hard fails not more): FAILS** on the hard-fail half; the mean is higher.
+- **Q2 (not more than 0.30 lower, hard fails at most main): FAILS.**
+Per row: the two rows the fix was written for moved as intended (`ER-D-LFW-022` 5.2 → 10.0, `ER-D2-LFW-030`
+4.2 → 9.8; main's flags on both were evidence not used, question unanswered, deferral, and the candidate has
+none). `ER-D2-TI-018` 10.0 → 10.0. `ER-D2-LFW-019` 9.7 → 4.0 with a hard fail (major factual error): "explain the
+outbox pattern", a general question. Both arms give the same correct explanation; the candidate's draft adds "Now
+the two are atomic" and its gist line says the pattern "makes DB write and event publish atomic", which the judge
+marks as wrong (only the data change and the outbox row share a transaction). Nothing from the résumé or the
+posting is in that answer.
+So the line fails as declared, on one row, and the open question is whether that sentence comes from the résumé
+being in the prompt or is the generator's own draw-to-draw variation on this question. That is measurable.
+
+### E38r — is the outbox slip the profile in the prompt, or the draw? (declared 2026-10-13 02:14 UTC, before any call)
+**Runs.** Generator replay on AgentRouter (`deepseek-v4-flash`, temperature 0.2, thinking off) of the two readable
+touched rows that need no document fact (`ER-D2-LFW-019`, `ER-D2-TI-018`): main's recorded prompt (`er13-dev2-main`,
+no profile) and the candidate's recorded prompt (`er13-dev2-e38`, profile in the prompt), 8 draws each: 32 answers,
+all 32 judged by `gpt-6-astra` in this window. Both arms are drafts, like with like.
+**Cost.** Prompts of about 6,500 and 9,500 tokens: about USD 4 of generation, about USD 2.20 of judging.
+**Lines.** R1. candidate-prompt mean not more than 0.30 below the main-prompt mean over the 16 draws a side;
+R2. candidate-prompt hard fails at most the main-prompt's + 1.
+Both hold → the hard fail in Q2 is read as draw variation and E38 stays a candidate with Q1/Q2 recorded as failed
+on 4 pairs and this as the follow-up. Either fails → reading the profile on a general-knowledge turn costs general
+answers, and E38 is not proposed in this form.
