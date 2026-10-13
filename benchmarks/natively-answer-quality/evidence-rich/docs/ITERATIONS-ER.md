@@ -4509,7 +4509,7 @@ Evin's word.
 Per key, from the judge files' own call records and each key's usage counter:
 | Key name | Judge calls | Prompt / completion tokens a call | Spent | A call |
 |---|---:|---|---:|---:|
-| `AGENTROUTER_API_KEY` | 201 rows + 76 calibration + 1 probe | 8,472 / 1,175 | USD 25.02, then empty | about 9 cents |
+| `AGENTROUTER_API_KEY` | 201 rows, the 38 calibration pairs and the probe | 8,472 / 1,175 | USD 25.02, then empty | about 9 to 10 cents |
 | `AGENTROUTER_API_KEY_1` | 65 | 7,848 / 1,289 | USD 24.52, then empty | about 38 cents |
 | `AGENTROUTER_API_KEY_2` | 179 | 8,363 / 1,222 | USD 64.8 | about 36 cents |
 Same model, same token counts, four times the charge: the first key's account is on a cheaper rate than the other
@@ -4520,7 +4520,7 @@ stopped at 02:33:10 UTC when the layout's rows began (5 of the layout's General 
 stopped too). **Not judged, and waiting:** the layout's own development rows (`er11-dev-e28b`, lines J1 to J3) and
 its unseen rows (J4), 211 judgments, about USD 78 at the third key's rate or about USD 19 at the first key's.
 No 402 and no 403 was returned today; the pool was still open when the script was stopped.
-Judge total today: 445 row judgments + 32 (E38r) + calibration, USD 114.3. Third key: counter 30,011.77, about
+Judge total to 02:34 UTC: 445 recorded judge calls (413 rows of the list, 32 of E38r) and the calibration, USD 114.3. Third key: counter 30,011.77, about
 USD 74 left by Evin's figure of 174 at 20,013.40.
 
 ### Where the three priority modes stand on current main (judged 13 October; runs of 12 October, `cdaedfad`)
@@ -4578,7 +4578,7 @@ tie order in code, `ER-D2-TI-034` a lock analysis). The judge's expected answer 
 an opening the candidate completes with their real facts, asserting neither the experience nor its absence. The
 few runs that scored 7.4 to 9.1 on those rows were all pass edits that had emptied the invented history.
 
-## E44 — a measurement: what is reachable on own-history questions with no résumé loaded (declared 2026-10-13 02:50 UTC, before any call)
+## E44 — a measurement: what is reachable on own-history questions with no résumé loaded (declared 2026-10-13 02:41 UTC, before any call)
 **Why.** Those five rows are the largest loss that does not move between draws (about 0.23 of Technical
 Interview's mean and 0.15 of Looking for work's). E24, E24b (notices with the posting in the prompt), E34 (a
 composer clause) and E36 (a pass clause) did not hold; E24b's closing note left one thing untried: not handing the
@@ -4604,3 +4604,39 @@ about USD 14.
 draws: the answer form is reachable, and the classifier is worth costing. M2. arm W against base on the A rows:
 whether withholding alone moves them. Below M1, the class is closed for this generator with a judged result, and
 what the app should show when no résumé is loaded is a product decision.
+
+### E44 — read (2026-10-13 02:58 UTC): M1 not reached; all eight rows fail in every base draw
+66 answers through AgentRouter 02:42 to 02:43 UTC (USD 3.88), no failed call; 38 judged by `gpt-6-astra`
+(USD 13.40, about 35 cents each on the third key), no failure, no mismatch.
+| Arm | Draw | Rows | Mean | Hard fails |
+|---|---|---:|---:|---:|
+| `e44-base` (recorded prompt) | 0 / 1 | 8 / 8 | 4.65 / 4.47 | 8 / 8 |
+| `e44-w` (posting withheld; A rows) | 0 | 6 | 5.45 | 5 |
+| `e44-f` (withheld, and an opening with blanks asked for) | 0 / 1 | 8 / 8 | 5.17 / 5.47 | 7 / 6 |
+Per row, base | W | F: `ER-D-LFW-023` 3.7, 3.8 | 5.0 | **9.0, 8.8**; `ER-D-TI-022` 3.7, 4.0 | 5.0 | 5.0, **8.4**;
+`ER-D2-TI-032` 5.0, 4.0 | 5.0 | 4.0, 4.0; `ER-PV1-LFW-009` 5.0, 4.0 | 5.0 | 5.0, 4.1; `ER-PV1-LFW-010` 4.8, 5.0 |
+**7.7** | 4.4, 4.4; `ER-PV1-TI-009` 5.0, 5.0 | 5.0 | 4.0, 4.0; `ER-D-LFW-028` 5.0, 5.0 | – | 5.0, 5.0;
+`ER-D-TI-029` 5.0, 5.0 | – | 5.0, 5.0. Every score below 7 is a hard fail.
+- **M1 not reached** (line: 8.5 with no hard fail; arm F 5.17 and 5.47 with 7 and 6 hard fails). Arm F's flags
+  over 16 judged answers: unsupported personal claim 13, fabricated story 4, question unanswered 4.
+- M2: withholding the posting alone moves the mean by about one point (4.53 → 5.45 on the A rows) and removes one
+  hard fail of six: the generator stops telling the posting and invents a generic history instead ("I own the
+  day-to-day work on my team's core projects", "I've worked with CRDTs mostly at the model level").
+- Arm F writes the blanks in 12 of 24 answers and still states an invented history in most of the others ("I've
+  built event pipelines around Kafka"). Where it does write the frame the judge gives 8.4 to 9.0.
+**Verdict.** This class is closed for this generator, now with a judged result: five wordings and one structural
+change (the posting withheld) do not make it stop asserting a history it was not given. The base arm's 16 of 16
+hard fails say the loss is not a matter of the draw. The frame itself scores about 9 when it is written, so an
+answer the app composes itself for this state (no model call deciding whether to invent) would hold; whether the
+app should do that, show a "load your résumé" note, or stay as it is, is a product decision and Evin's.
+No candidate is built.
+
+### Spend, 13 October (the keys' own counters)
+| | USD |
+|---|---:|
+| Judge on the first key (probe, calibration, 201 rows) | 25.02 (key empty) |
+| Judge on the second key (65 rows) | 24.52 (key empty) |
+| Judge on the third key (179 rows, then E44's 38) | 78.2 |
+| Generation on the third key (E38r 32 answers, E44 66 answers) | 6.19 |
+Third key: counter 31,739.71; about USD 57 left by Evin's figure (174 at 20,013.40). Nothing is running against
+any key. No 402 and no 403 today.
