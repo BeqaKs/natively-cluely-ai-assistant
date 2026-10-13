@@ -41,7 +41,29 @@ This file is generated: `node evidence-rich/report/build-handoff.mjs` (from `ben
 
 ## 1. State in one screen
 
-**Read this first: the state on 12 October 2026, 14:10 UTC** (later than the block under it; where the two differ, this one holds).
+**Read this first: the state on 13 October 2026, 03:00 UTC** (later than the blocks under it; where they differ, this one holds).
+
+Evin, 12 October about 14:45 UTC: "continue with remaning with the agent router remianing credits at 7:30 ist". The judge window opened at 02:00:40 UTC on 13 October; calibration 38 of 38; no 402 and no 403 all day.
+
+| Thing | State at 03:00 UTC on 13 October |
+|---|---|
+| The three priority modes on current main (`cdaedfad`, runs of 12 October, 70 rows a mode, all judged) | **Technical Interview 9.11** (8 hard fails), **Looking for work 9.31** (2), **General 9.16** (6). Before the hard-fail caps: 9.32, 9.34, 9.36. On 9 October: 8.83, 9.04, 8.98. |
+| By the profile loaded (the two interview modes) | Résumé and posting: Technical Interview **9.53**, Looking for work **9.50**. Résumé only: 9.48, 9.47. Posting only: 8.53, 8.59. Nothing loaded: 7.71, 8.93. With a résumé loaded both are at the 9.5 target; the shortfall is the turns without one. |
+| The fix-up pass, judged on and off (K3, E37) | Edited rows of the interview modes, 28 pairs: evidence missing 5.58 as drafted → 7.49 as shown, hard fails 7 → 3; evidence present 9.48 → 9.08. Mode means on / off: Technical Interview 9.11 / 9.11; Looking for work 9.31 / 9.17 (hard 2 / 6); General 9.16 / 9.17. **Off costs nothing judged in Technical Interview; in Looking for work it costs 0.14 and four hard fails.** |
+| The stacked build E41 (layout + profile read), K1 and K2 | 140 pairs: main 9.21 → E41 9.12 (−0.09, 95 % −0.32 to +0.15), hard fails 10 → 13. **K1 no-harm fails on hard fails; not a gain; not proposed.** K2 holds. The layout has no judged gain on record. |
+| The profile read E38, Q1 and Q2 | 4 pairs: main 7.28 → 8.46, hard fails 0 → 1: **both lines fail as declared** on one row. Its two target rows moved 5.5 → 10.0 and 4.2 → 9.8. Follow-up E38r (16 judged draws a side of the two general-knowledge rows): 9.85 against 9.81, hard fails 0 against 0, so the hard fail was the draw. E38 stays a candidate; landing is Evin's word. |
+| The hard fails that do not move between draws | 8 recur in both builds: 5 are a question about the candidate's own history with no résumé loaded; 3 are wrong technical content (a time-zone conversion, tie order in code, a lock analysis). |
+| E44, a measurement on those own-history rows (8 readable rows, 3 arms, 38 judged) | Recorded prompt 4.65 and 4.47, 16 of 16 hard fails. Posting withheld 5.45. Posting withheld and an opening with blanks asked for 5.17 and 5.47 (13 of 16 hard fails); where the generator does write the opening it scores 8.4 to 9.0. **Not reachable by prompt or by withholding the posting; closed for this generator.** What the app shows when no résumé is loaded is a product decision. |
+| What a judgment costs | **About 9 to 10 cents on `AGENTROUTER_API_KEY`, about 37 cents on `AGENTROUTER_API_KEY_1` and `AGENTROUTER_API_KEY_2`**: same model, same token counts, four times the charge. I let the judge run on to the third key before checking its rate; the list's tail was cut at 02:33 UTC when the reading showed it. |
+| Not judged, waiting | The layout's own development rows (J1 to J3) and its unseen rows (J4): 211 judgments, about USD 78 at the third key's rate, about USD 19 at the first key's. |
+| Spend on 13 October | Judge USD 130.1 (first key 25.02 and second key 24.52, both now empty; third key 80.5). Generation USD 6.19 (98 replayed answers). **Third key: about USD 57 left** (counter 31,739.71; Evin's 174 at 20,013.40). |
+| `AGENTROUTER_API_KEY_3` | Still 35 characters, not the AgentRouter shape. Not sent anywhere on 13 October; not in the key lists. |
+| Running | Nothing. The window script was stopped at 02:33:10 UTC. No app, no replay, no watcher. |
+| Not changed | Nothing landed on main, no candidate branch pushed, PR 638 not merged, no unread set printed. Only `bench/evidence-rich` is pushed. |
+
+**Evin's decisions after 13 October:** (1) land the profile read (E38, `eba3e7a3`) alone, or leave it; the stack and the layout are not proposed. (2) The pass: keep it on in Looking for work; switching it off in Technical Interview costs nothing judged and saves the second request (his other session's uncommitted change switches it off in both). (3) What the app does on a question about the user's own history when no résumé is loaded: an opening the app writes itself, a "load your résumé" note, or as it is. (4) Credits: money on the first key's account goes four times further than on the other two; the layout's 211 waiting judgments and any further iteration need it. (5) E42 and the fourth key, as on 12 October.
+
+**The state on 12 October 2026, 14:10 UTC** (superseded by the block above where they differ).
 
 Evin, 12 October 13:20 UTC: "i have added one api key agenr router 2 , use that it has 174 usd creditts , key and 1 has 25 usd on each , , onllly use agent router for running iteration , strictly dont use deepseek api key".
 

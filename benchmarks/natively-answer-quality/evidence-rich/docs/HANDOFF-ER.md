@@ -41,7 +41,29 @@ This file is generated: `node evidence-rich/report/build-handoff.mjs` (from `ben
 
 ## 1. State in one screen
 
-**Read this first: the state on 12 October 2026, 14:10 UTC** (later than the block under it; where the two differ, this one holds).
+**Read this first: the state on 13 October 2026, 03:00 UTC** (later than the blocks under it; where they differ, this one holds).
+
+Evin, 12 October about 14:45 UTC: "continue with remaning with the agent router remianing credits at 7:30 ist". The judge window opened at 02:00:40 UTC on 13 October; calibration 38 of 38; no 402 and no 403 all day.
+
+| Thing | State at 03:00 UTC on 13 October |
+|---|---|
+| The three priority modes on current main (`cdaedfad`, runs of 12 October, 70 rows a mode, all judged) | **Technical Interview 9.11** (8 hard fails), **Looking for work 9.31** (2), **General 9.16** (6). Before the hard-fail caps: 9.32, 9.34, 9.36. On 9 October: 8.83, 9.04, 8.98. |
+| By the profile loaded (the two interview modes) | Résumé and posting: Technical Interview **9.53**, Looking for work **9.50**. Résumé only: 9.48, 9.47. Posting only: 8.53, 8.59. Nothing loaded: 7.71, 8.93. With a résumé loaded both are at the 9.5 target; the shortfall is the turns without one. |
+| The fix-up pass, judged on and off (K3, E37) | Edited rows of the interview modes, 28 pairs: evidence missing 5.58 as drafted → 7.49 as shown, hard fails 7 → 3; evidence present 9.48 → 9.08. Mode means on / off: Technical Interview 9.11 / 9.11; Looking for work 9.31 / 9.17 (hard 2 / 6); General 9.16 / 9.17. **Off costs nothing judged in Technical Interview; in Looking for work it costs 0.14 and four hard fails.** |
+| The stacked build E41 (layout + profile read), K1 and K2 | 140 pairs: main 9.21 → E41 9.12 (−0.09, 95 % −0.32 to +0.15), hard fails 10 → 13. **K1 no-harm fails on hard fails; not a gain; not proposed.** K2 holds. The layout has no judged gain on record. |
+| The profile read E38, Q1 and Q2 | 4 pairs: main 7.28 → 8.46, hard fails 0 → 1: **both lines fail as declared** on one row. Its two target rows moved 5.5 → 10.0 and 4.2 → 9.8. Follow-up E38r (16 judged draws a side of the two general-knowledge rows): 9.85 against 9.81, hard fails 0 against 0, so the hard fail was the draw. E38 stays a candidate; landing is Evin's word. |
+| The hard fails that do not move between draws | 8 recur in both builds: 5 are a question about the candidate's own history with no résumé loaded; 3 are wrong technical content (a time-zone conversion, tie order in code, a lock analysis). |
+| E44, a measurement on those own-history rows (8 readable rows, 3 arms, 38 judged) | Recorded prompt 4.65 and 4.47, 16 of 16 hard fails. Posting withheld 5.45. Posting withheld and an opening with blanks asked for 5.17 and 5.47 (13 of 16 hard fails); where the generator does write the opening it scores 8.4 to 9.0. **Not reachable by prompt or by withholding the posting; closed for this generator.** What the app shows when no résumé is loaded is a product decision. |
+| What a judgment costs | **About 9 to 10 cents on `AGENTROUTER_API_KEY`, about 37 cents on `AGENTROUTER_API_KEY_1` and `AGENTROUTER_API_KEY_2`**: same model, same token counts, four times the charge. I let the judge run on to the third key before checking its rate; the list's tail was cut at 02:33 UTC when the reading showed it. |
+| Not judged, waiting | The layout's own development rows (J1 to J3) and its unseen rows (J4): 211 judgments, about USD 78 at the third key's rate, about USD 19 at the first key's. |
+| Spend on 13 October | Judge USD 130.1 (first key 25.02 and second key 24.52, both now empty; third key 80.5). Generation USD 6.19 (98 replayed answers). **Third key: about USD 57 left** (counter 31,739.71; Evin's 174 at 20,013.40). |
+| `AGENTROUTER_API_KEY_3` | Still 35 characters, not the AgentRouter shape. Not sent anywhere on 13 October; not in the key lists. |
+| Running | Nothing. The window script was stopped at 02:33:10 UTC. No app, no replay, no watcher. |
+| Not changed | Nothing landed on main, no candidate branch pushed, PR 638 not merged, no unread set printed. Only `bench/evidence-rich` is pushed. |
+
+**Evin's decisions after 13 October:** (1) land the profile read (E38, `eba3e7a3`) alone, or leave it; the stack and the layout are not proposed. (2) The pass: keep it on in Looking for work; switching it off in Technical Interview costs nothing judged and saves the second request (his other session's uncommitted change switches it off in both). (3) What the app does on a question about the user's own history when no résumé is loaded: an opening the app writes itself, a "load your résumé" note, or as it is. (4) Credits: money on the first key's account goes four times further than on the other two; the layout's 211 waiting judgments and any further iteration need it. (5) E42 and the fourth key, as on 12 October.
+
+**The state on 12 October 2026, 14:10 UTC** (superseded by the block above where they differ).
 
 Evin, 12 October 13:20 UTC: "i have added one api key agenr router 2 , use that it has 174 usd creditts , key and 1 has 25 usd on each , , onllly use agent router for running iteration , strictly dont use deepseek api key".
 
@@ -5036,6 +5058,20 @@ Entry headings with their line numbers in `docs/ITERATIONS-ER.md`, and every lin
 - L4399: The gateway's speed during these runs (measured 13:44 to 14:04 UTC)
 - L4412: E43 — the three candidates on current main, built and tested (14:07 UTC; no API call)
 - L4422: Spend on the new AgentRouter key, 12 October
+- L4427: A fourth key name, `AGENTROUTER_API_KEY_3`: not an AgentRouter key (checked 2026-10-12 14:28 UTC)
+- L4440: Evin, 12 October about 14:45 UTC: "continue with remaning with the agent router remianing credits at 7:30 ist"
+- L4449: Judge window of 13 October: open (02:00:40 UTC), calibration 38 of 38 (02:09 UTC)
+- L4462: E38 — judged lines read (2026-10-13 02:10 UTC): Q1 and Q2 fail on one hard fail (4 pairs)
+- L4480: E38r — is the outbox slip the profile in the prompt, or the draw? (declared 2026-10-13 02:14 UTC, before any call)
+- L4492: E38r — read (2026-10-13 02:21 UTC): R1 and R2 hold; the hard fail was the draw
+- L4508: The judge's price is four times higher on the second and third keys (measured 02:34 UTC); the list's tail was cut
+- L4526: Where the three priority modes stand on current main (judged 13 October; runs of 12 October, `cdaedfad`)
+- L4542: K3 on main, E37 read (2026-10-13 02:24 UTC): the pass helps where the asked thing is absent, costs where it is present
+- L4557: K1, K2, K3 on the stacked build, E41 (2026-10-13 02:35 UTC): no gain; the no-harm line fails on hard fails
+- L4581: E44 — a measurement: what is reachable on own-history questions with no résumé loaded (declared 2026-10-13 02:41 UTC, before any call)
+- L4608: E44 — read (2026-10-13 02:58 UTC): M1 not reached; all eight rows fail in every base draw
+  - L4627: **Verdict.** This class is closed for this generator, now with a judged result: five wordings and one structural
+- L4634: Spend, 13 October (the keys' own counters)
 
 ### B.1 The log
 
@@ -9464,6 +9500,223 @@ No benchmark run was made on `cand/e43`: the runs behind each candidate are on `
 Counter 20,013.40 cents when Evin gave the key (his figure: USD 174 left) → 23,066.59 at 14:05 UTC: USD 30.53
 spent (price measurements 11.01, E42's two runs 16.12, the 30-call speed replay 3.40). About USD 143 left by that
 arithmetic. Nothing is running against it. The two older keys were not used for generation.
+
+##### A fourth key name, `AGENTROUTER_API_KEY_3`: not an AgentRouter key (checked 2026-10-12 14:28 UTC)
+Evin: "i have added one more api key check its balcne". The value under that name is 125 characters with the
+`sk-cp-` prefix and is identical to `MINIMAX_API_KEY` in the same file (the AgentRouter keys are 51 characters).
+AgentRouter answers it HTTP 401 "invalid token" on the billing endpoints and on one 8-token call, so it has no
+balance to read there. Before its shape was looked at it was sent to agentrouter.org as a bearer token in six
+requests (four billing GETs, one usage GET variant, one tiny call); Evin is told, since that is a MiniMax
+credential shown to another service. It is not added to the judge's or the generator's key lists.
+The other three, same reading: usage counters 24,999.09, 67,968.12 and 23,066.59 cents, unchanged since 14:05 UTC.
+Checked again at 14:40 UTC on Evin's "check again": the value under that name was replaced (35 characters,
+`sk-` then lowercase letters, digits and dashes; equal to no other key in the file; not the DeepSeek format, not
+the 51-character AgentRouter format). Its shape was read first, then two billing GETs: HTTP 401 "invalid token"
+again. Not sent anywhere else; not added to the key lists.
+
+##### Evin, 12 October about 14:45 UTC: "continue with remaning with the agent router remianing credits at 7:30 ist"
+Taken as: at 02:00 UTC on 13 October the judge window runs its list, and what is left of the AgentRouter credits
+then goes on the next iteration the judged results point to, declared with its cost before any call. Nothing is
+spent before then. Checked before settling on that, at no cost (9 October judgments): of the 10 priority-mode rows
+flagged "a question left unanswered", 7 were edited by the fix-up pass and 3 have a several-part question, so a
+generator wording for several-part questions has no target; the pass (E37) is again where those rows are.
+Two session reminders are set (02:03 and 03:37 UTC); they fire only while this session is open. The window script
+itself runs detached and does not need the session.
+
+#### Judge window of 13 October: open (02:00:40 UTC), calibration 38 of 38 (02:09 UTC)
+The detached window script probed at 02:00:40 UTC: `gpt-6-astra` listed and returned, no mismatch. Calibration
+38 of 38 pairs right, exact model on every call (`calibration-astra-1791857343929.json`). The list
+(`window-sales.txt`, 637 judgments) started at 02:09 UTC as one stage, three streams.
+`AGENTROUTER_API_KEY_3` is unchanged (35 characters, not the AgentRouter shape); it was not sent anywhere and is
+not in the key lists.
+**What a judgment costs** (the first key's own usage counter, cents): 24,999.09 before the window → 25,501.20 after
+the probe and the 38 calibration pairs (USD 5.02, about 6.6 cents a judge call at two calls a pair) → 25,588.99
+after the first 12 row judgments (about 7 cents each). At that price the 637-judgment list is about USD 43, and
+the two older keys (Evin: about USD 25 each) roughly cover it; anything beyond that spills onto the third key,
+which is the generation balance. The stages the script would run after the list (older E26 rows, the E31a pairs,
+the holdout baseline, pack24) are not priorities at this price: the script is stopped at the end of the list.
+
+##### E38 — judged lines read (2026-10-13 02:10 UTC): Q1 and Q2 fail on one hard fail (4 pairs)
+`report/e37-e38-judged.mjs e38 --rows`; the 4 readable touched rows, both arms judged.
+| | pairs | main | candidate | difference | hard fails |
+|---|---|---|---|---|---|
+| Q1 touched rows | 4 | 7.28 | 8.46 | +1.18 (95 % ±5.13) | 0 → 1 |
+| Q2 touched rows needing no document fact | 2 | 9.86 | 7.00 | −2.86 (±5.61) | 0 → 1 |
+- **Q1 (mean higher than main, hard fails not more): FAILS** on the hard-fail half; the mean is higher.
+- **Q2 (not more than 0.30 lower, hard fails at most main): FAILS.**
+Per row: the two rows the fix was written for moved as intended (`ER-D-LFW-022` 5.2 → 10.0, `ER-D2-LFW-030`
+4.2 → 9.8; main's flags on both were evidence not used, question unanswered, deferral, and the candidate has
+none). `ER-D2-TI-018` 10.0 → 10.0. `ER-D2-LFW-019` 9.7 → 4.0 with a hard fail (major factual error): "explain the
+outbox pattern", a general question. Both arms give the same correct explanation; the candidate's draft adds "Now
+the two are atomic" and its gist line says the pattern "makes DB write and event publish atomic", which the judge
+marks as wrong (only the data change and the outbox row share a transaction). Nothing from the résumé or the
+posting is in that answer.
+So the line fails as declared, on one row, and the open question is whether that sentence comes from the résumé
+being in the prompt or is the generator's own draw-to-draw variation on this question. That is measurable.
+
+##### E38r — is the outbox slip the profile in the prompt, or the draw? (declared 2026-10-13 02:14 UTC, before any call)
+**Runs.** Generator replay on AgentRouter (`deepseek-v4-flash`, temperature 0.2, thinking off) of the two readable
+touched rows that need no document fact (`ER-D2-LFW-019`, `ER-D2-TI-018`): main's recorded prompt (`er13-dev2-main`,
+no profile) and the candidate's recorded prompt (`er13-dev2-e38`, profile in the prompt), 8 draws each: 32 answers,
+all 32 judged by `gpt-6-astra` in this window. Both arms are drafts, like with like.
+**Cost.** Prompts of about 6,500 and 9,500 tokens: about USD 4 of generation, about USD 2.20 of judging.
+**Lines.** R1. candidate-prompt mean not more than 0.30 below the main-prompt mean over the 16 draws a side;
+R2. candidate-prompt hard fails at most the main-prompt's + 1.
+Both hold → the hard fail in Q2 is read as draw variation and E38 stays a candidate with Q1/Q2 recorded as failed
+on 4 pairs and this as the follow-up. Either fails → reading the profile on a general-knowledge turn costs general
+answers, and E38 is not proposed in this form.
+
+##### E38r — read (2026-10-13 02:21 UTC): R1 and R2 hold; the hard fail was the draw
+32 answers through AgentRouter (USD 2.31 by the key's counter), all 32 judged by `gpt-6-astra` under the same
+access guard as the window.
+| | main's prompt (no profile) | candidate's prompt (profile read) |
+|---|---|---|
+| 16 draws, mean | 9.85 | 9.81 (−0.04) |
+| hard fails | 0 | 0 |
+| `ER-D2-LFW-019` (the outbox question), 8 draws | 9.72 | 9.65 |
+| `ER-D2-TI-018`, 8 draws | 9.97 | 9.96 |
+**R1 holds** (−0.04, line −0.30). **R2 holds** (0 against 0). With the profile in the prompt the answers are longer
+(574 against 365 characters on the outbox question) and say "atomic" in 6 of 8 draws against 0 of 8, once in the
+same loose form the app row was failed for; the judge scored that draw 9.5. So the app row's hard fail is not
+reproduced in 8 draws of the same prompt. E38 stays a candidate: Q1 and Q2 recorded as failed on 4 pairs, the two
+rows it was written for moved from 5.5 and 4.2 to 10.0 and 9.8, and this replay as the follow-up. Landing is
+Evin's word.
+
+##### The judge's price is four times higher on the second and third keys (measured 02:34 UTC); the list's tail was cut
+Per key, from the judge files' own call records and each key's usage counter:
+| Key name | Judge calls | Prompt / completion tokens a call | Spent | A call |
+|---|---:|---|---:|---:|
+| `AGENTROUTER_API_KEY` | 201 rows, the 38 calibration pairs and the probe | 8,472 / 1,175 | USD 25.02, then empty | about 9 to 10 cents |
+| `AGENTROUTER_API_KEY_1` | 65 | 7,848 / 1,289 | USD 24.52, then empty | about 38 cents |
+| `AGENTROUTER_API_KEY_2` | 179 | 8,363 / 1,222 | USD 67.1 | about 37 cents |
+Same model, same token counts, four times the charge: the first key's account is on a cheaper rate than the other
+two. My estimate at 02:10 UTC (about 7 cents) came from the first key alone, and I let the judge run on to the
+third key, the generation balance, without checking that key's rate; the reading at 02:33 UTC showed it. By then
+the main baseline (210), E37's and General's drafts, and E41's rows and drafts were judged. The window script was
+stopped at 02:33:10 UTC when the layout's rows began (5 of the layout's General rows had been judged; that job was
+stopped too). **Not judged, and waiting:** the layout's own development rows (`er11-dev-e28b`, lines J1 to J3) and
+its unseen rows (J4), 211 judgments, about USD 78 at the third key's rate or about USD 19 at the first key's.
+No 402 and no 403 was returned today; the pool was still open when the script was stopped.
+Judge total to 02:34 UTC: 445 recorded judge calls (413 rows of the list, 32 of E38r) and the calibration, USD 116.7. Third key: counter 30,011.77, about
+USD 74 left by Evin's figure of 174 at 20,013.40.
+
+##### Where the three priority modes stand on current main (judged 13 October; runs of 12 October, `cdaedfad`)
+`report/where-points-go.mjs er11-dev-main,er13-dev2-main,er14-dev2-main`, 70 rows a mode, all judged:
+| Mode | Scored | Before caps | Hard fails | Rows at 9.5 or more | 9 October (`er6`) |
+|---|---:|---:|---:|---:|---:|
+| Technical Interview | 9.11 | 9.32 | 8 | 51 | 8.83 |
+| Looking for work | 9.31 | 9.34 | 2 | 52 | 9.04 |
+| General | 9.16 | 9.36 | 6 | 51 | 8.98 |
+By the profile the benchmark loads (the two interview modes, `pi_state`):
+| Profile loaded | Technical Interview | Looking for work |
+|---|---|---|
+| Résumé and posting (39 / 40 rows) | 9.53, 1 hard | 9.50, 0 hard |
+| Résumé only (11 / 13) | 9.48, 1 hard | 9.47, 0 hard |
+| Posting only (9 / 9) | 8.53, 2 hard | 8.59, 1 hard |
+| Nothing (11 / 8) | 7.71, 4 hard | 8.93, 1 hard |
+With a résumé loaded both interview modes are at 9.5. The shortfall is the turns without one.
+
+##### K3 on main, E37 read (2026-10-13 02:24 UTC): the pass helps where the asked thing is absent, costs where it is present
+`report/e37-e38-judged.mjs e37 --rows`, `report/pass-judged.mjs`. 28 of the 30 planned draft pairs judged both ways.
+| Rows the pass edited | Pairs | Draft | Shown | Difference | Hard fails |
+|---|---:|---:|---:|---|---|
+| All (the two interview modes) | 28 | 8.22 | 8.57 | +0.35 (95 % ±0.69) | 7 → 3 |
+| Evidence missing | 9 | 5.58 | 7.49 | +1.91 (±1.56) | 7 → 3 |
+| Evidence present | 19 | 9.48 | 9.08 | −0.39 (±0.43) | 0 → 0 |
+Mode means with the pass on against off (edited rows take their draft's score): Technical Interview 9.11 against
+9.11 (hard 8 against 8); Looking for work 9.31 against 9.17 (hard 2 against 6); General 9.16 against 9.17 (6
+against 6). So switching the pass off in Technical Interview costs nothing judged; in Looking for work it costs
+0.14 and four hard fails. The judged pairs repeat the judge-free table of 12 October. Where it costs, the pass
+removes a statement the material holds (the weekend ledger project, the stated salary expectation, the start
+estimate) and, by its rule 4, puts "I'll confirm and come back" in its place; the notices the app already writes
+do not mark which rows those are (7 edited rows carried a notice: draft 9.56, shown 8.92, none raised).
+
+##### K1, K2, K3 on the stacked build, E41 (2026-10-13 02:35 UTC): no gain; the no-harm line fails on hard fails
+`report/window-read.mjs pair base:er11-dev-main,er13-dev2-main base:er16-dev-e41,er16-dev2-e41`, 140 pairs, all
+judged on both sides.
+| | Pairs | Main | E41 | Difference | Hard fails |
+|---|---:|---:|---:|---|---|
+| Both modes | 140 | 9.21 | 9.12 | −0.09 (95 % −0.32 to +0.15) | 10 → 13 |
+| Looking for work | 70 | 9.31 | 9.14 | −0.18 (−0.52 to +0.17) | 2 → 5 |
+| Technical Interview | 70 | 9.11 | 9.11 | 0.00 (−0.32 to +0.32) | 8 → 8 |
+- **K1 no harm: FAILS** (mean within 0.10, hard fails 13 against the line of 12). **Not a gain** (line +0.15).
+- **K2 holds** (no mode lower by more than 0.30 with an interval that excludes zero).
+- K3 on E41: Technical Interview pass on 9.11, off 9.03 (hard 8, 9); Looking for work on 9.14, off 9.15 (hard 5, 8).
+The two builds differ row by row as two draws do: 108 of 140 rows within 0.3, 8 hard fails in both builds, 2 only
+on main, 5 only on E41. The profile read's two rows are in E41 (5.5 → 10.0, 4.2 → 9.9); without them the other
+138 rows are 0.16 lower than main. The fixed checks had E41 ahead (204 right against 200); the judge does not see
+a gain. **The stack is not proposed.** The layout has no judged gain on record; the profile read (E38) has its
+two rows.
+**The eight hard fails that recur in both builds** (and in the judged runs back to 4 October): five are a question
+about the candidate's own history with no résumé loaded (`ER-D-LFW-023`, `ER-D-TI-022`, `ER-D2-TI-032`: the posting
+told as the candidate's work; `ER-D-LFW-028`, `ER-D-TI-029`: nothing loaded, an invented motive and "I don't have
+a pipeline of my own"); three are wrong technical content (`ER-D2-TI-025` a time-zone conversion, `ER-D2-TI-033`
+tie order in code, `ER-D2-TI-034` a lock analysis). The judge's expected answer on the five is the same each time:
+an opening the candidate completes with their real facts, asserting neither the experience nor its absence. The
+few runs that scored 7.4 to 9.1 on those rows were all pass edits that had emptied the invented history.
+
+#### E44 — a measurement: what is reachable on own-history questions with no résumé loaded (declared 2026-10-13 02:41 UTC, before any call)
+**Why.** Those five rows are the largest loss that does not move between draws (about 0.23 of Technical
+Interview's mean and 0.15 of Looking for work's). E24, E24b (notices with the posting in the prompt), E34 (a
+composer clause) and E36 (a pass clause) did not hold; E24b's closing note left one thing untried: not handing the
+posting over on a turn that asks only for the user's own record. Whether that is worth building depends on what
+the judge gives the answer the generator then writes, which has never been judged.
+**Not a candidate.** The app's own intent labels do not separate these turns from posting questions: with only
+the posting loaded, 10 readable turns are labelled personal with no job or document label, and 4 of them need a
+posting fact ("which languages does this team write in"). A build would need a better question classifier and
+controls on posting-fact rows; that is a later decision, and Evin's.
+**Rows (by rule, readable sets, the two interview modes, runs of 12 October):** (A) the only evidence is the
+posting, the story notice is in the prompt, the intent is personal with no job or document label and the oracle
+needs no posting string: `ER-D-LFW-023`, `ER-D-TI-022`, `ER-D2-TI-032`, `ER-PV1-LFW-009`, `ER-PV1-LFW-010`,
+`ER-PV1-TI-009`; (B) nothing loaded and the app's own-past guard is in the prompt, evidence missing:
+`ER-D-LFW-028`, `ER-D-TI-029`. Eight rows (`results/replay/e44-rows.json`).
+**Arms** (`replay-variants/e44-own-record-no-resume.mjs`, AgentRouter, `deepseek-v4-flash`, temperature 0.2,
+thinking off, 3 draws): `e44-base` the recorded prompt; `e44-w` on the A rows the posting, the date block and the
+story notice are replaced by the app's own no-source block and own-past guard, byte for byte from a recorded
+prompt in that state; `e44-f` the same, and the guard's last sentence asks for the opening of the user's own
+answer with what only they know left as bracketed blanks, asserting neither the experience nor its absence.
+**Cost.** 66 answers, about USD 5; 38 judgments (base and F draws 0 and 1, W draw 0) at the third key's rate,
+about USD 14.
+**Read as measured:** M1. arm F reaches a mean of 8.5 or more with no hard fail on the eight rows in both judged
+draws: the answer form is reachable, and the classifier is worth costing. M2. arm W against base on the A rows:
+whether withholding alone moves them. Below M1, the class is closed for this generator with a judged result, and
+what the app should show when no résumé is loaded is a product decision.
+
+##### E44 — read (2026-10-13 02:58 UTC): M1 not reached; all eight rows fail in every base draw
+66 answers through AgentRouter 02:42 to 02:43 UTC (USD 3.88), no failed call; 38 judged by `gpt-6-astra`
+(USD 13.40, about 35 cents each on the third key), no failure, no mismatch.
+| Arm | Draw | Rows | Mean | Hard fails |
+|---|---|---:|---:|---:|
+| `e44-base` (recorded prompt) | 0 / 1 | 8 / 8 | 4.65 / 4.47 | 8 / 8 |
+| `e44-w` (posting withheld; A rows) | 0 | 6 | 5.45 | 5 |
+| `e44-f` (withheld, and an opening with blanks asked for) | 0 / 1 | 8 / 8 | 5.17 / 5.47 | 7 / 6 |
+Per row, base | W | F: `ER-D-LFW-023` 3.7, 3.8 | 5.0 | **9.0, 8.8**; `ER-D-TI-022` 3.7, 4.0 | 5.0 | 5.0, **8.4**;
+`ER-D2-TI-032` 5.0, 4.0 | 5.0 | 4.0, 4.0; `ER-PV1-LFW-009` 5.0, 4.0 | 5.0 | 5.0, 4.1; `ER-PV1-LFW-010` 4.8, 5.0 |
+**7.7** | 4.4, 4.4; `ER-PV1-TI-009` 5.0, 5.0 | 5.0 | 4.0, 4.0; `ER-D-LFW-028` 5.0, 5.0 | – | 5.0, 5.0;
+`ER-D-TI-029` 5.0, 5.0 | – | 5.0, 5.0. Every score below 7 is a hard fail.
+- **M1 not reached** (line: 8.5 with no hard fail; arm F 5.17 and 5.47 with 7 and 6 hard fails). Arm F's flags
+  over 16 judged answers: unsupported personal claim 13, fabricated story 4, question unanswered 4.
+- M2: withholding the posting alone moves the mean by about one point (4.53 → 5.45 on the A rows) and removes one
+  hard fail of six: the generator stops telling the posting and invents a generic history instead ("I own the
+  day-to-day work on my team's core projects", "I've worked with CRDTs mostly at the model level").
+- Arm F writes the blanks in 12 of 24 answers and still states an invented history in most of the others ("I've
+  built event pipelines around Kafka"). Where it does write the frame the judge gives 8.4 to 9.0.
+**Verdict.** This class is closed for this generator, now with a judged result: five wordings and one structural
+change (the posting withheld) do not make it stop asserting a history it was not given. The base arm's 16 of 16
+hard fails say the loss is not a matter of the draw. The frame itself scores about 9 when it is written, so an
+answer the app composes itself for this state (no model call deciding whether to invent) would hold; whether the
+app should do that, show a "load your résumé" note, or stay as it is, is a product decision and Evin's.
+No candidate is built.
+
+##### Spend, 13 October (the keys' own counters)
+| | USD |
+|---|---:|
+| Judge on the first key (probe, calibration, 201 rows) | 25.02 (key empty) |
+| Judge on the second key (65 rows) | 24.52 (key empty) |
+| Judge on the third key (179 rows, then E44's 38) | 80.5 |
+| Generation on the third key (E38r 32 answers, E44 66 answers) | 6.19 |
+Judge USD 130.1 in all, generation USD 6.19. Third key: counter 31,739.71 (23,066.59 at the start of the day); about USD 57 left by Evin's figure (174 at 20,013.40). Nothing is running against
+any key. No 402 and no 403 today.
 
 ---
 

@@ -4511,7 +4511,7 @@ Per key, from the judge files' own call records and each key's usage counter:
 |---|---:|---|---:|---:|
 | `AGENTROUTER_API_KEY` | 201 rows, the 38 calibration pairs and the probe | 8,472 / 1,175 | USD 25.02, then empty | about 9 to 10 cents |
 | `AGENTROUTER_API_KEY_1` | 65 | 7,848 / 1,289 | USD 24.52, then empty | about 38 cents |
-| `AGENTROUTER_API_KEY_2` | 179 | 8,363 / 1,222 | USD 64.8 | about 36 cents |
+| `AGENTROUTER_API_KEY_2` | 179 | 8,363 / 1,222 | USD 67.1 | about 37 cents |
 Same model, same token counts, four times the charge: the first key's account is on a cheaper rate than the other
 two. My estimate at 02:10 UTC (about 7 cents) came from the first key alone, and I let the judge run on to the
 third key, the generation balance, without checking that key's rate; the reading at 02:33 UTC showed it. By then
@@ -4520,7 +4520,7 @@ stopped at 02:33:10 UTC when the layout's rows began (5 of the layout's General 
 stopped too). **Not judged, and waiting:** the layout's own development rows (`er11-dev-e28b`, lines J1 to J3) and
 its unseen rows (J4), 211 judgments, about USD 78 at the third key's rate or about USD 19 at the first key's.
 No 402 and no 403 was returned today; the pool was still open when the script was stopped.
-Judge total to 02:34 UTC: 445 recorded judge calls (413 rows of the list, 32 of E38r) and the calibration, USD 114.3. Third key: counter 30,011.77, about
+Judge total to 02:34 UTC: 445 recorded judge calls (413 rows of the list, 32 of E38r) and the calibration, USD 116.7. Third key: counter 30,011.77, about
 USD 74 left by Evin's figure of 174 at 20,013.40.
 
 ### Where the three priority modes stand on current main (judged 13 October; runs of 12 October, `cdaedfad`)
@@ -4636,7 +4636,7 @@ No candidate is built.
 |---|---:|
 | Judge on the first key (probe, calibration, 201 rows) | 25.02 (key empty) |
 | Judge on the second key (65 rows) | 24.52 (key empty) |
-| Judge on the third key (179 rows, then E44's 38) | 78.2 |
+| Judge on the third key (179 rows, then E44's 38) | 80.5 |
 | Generation on the third key (E38r 32 answers, E44 66 answers) | 6.19 |
-Third key: counter 31,739.71; about USD 57 left by Evin's figure (174 at 20,013.40). Nothing is running against
+Judge USD 130.1 in all, generation USD 6.19. Third key: counter 31,739.71 (23,066.59 at the start of the day); about USD 57 left by Evin's figure (174 at 20,013.40). Nothing is running against
 any key. No 402 and no 403 today.
