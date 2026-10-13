@@ -4696,3 +4696,29 @@ has called it). The first two are empty.
 "The app changes only" (already on local and GitHub main `cb0fadac`), then: "close the pr then". The draft PR is
 closed, not merged. The branch `bench/evidence-rich` is kept on GitHub and locally: it is the only home of the
 harness, the question sets and this log. The blind holdout's questions are not on main.
+
+**Branches and worktrees cleaned up (13 October, about 23:35 UTC; 14 October in India).** Evin, asked whether the session could be closed: "after
+confirming that there are no work from this ession or anyother agent session is on the branchs or worktree used by
+this session , if exists commit and push them , else delete". Checked first: no uncommitted or untracked file in
+any of the three worktrees, no process running in them, submodules clean, every candidate commit compared with
+GitHub main by content.
+
+- **Pushed, because they hold work that is on no other branch** (app code and tests only, nothing from the
+  benchmark): `cand/e21` `298b2b5b` (hidden calculation step on document turns), `cand/e28b` `7067ab3c` (layout,
+  E30), `exp/x1-whole-pack-threshold` `237bba1a` (X1, not for main), and the unbuilt E15 commit `524bcaa0` as
+  **`cand/e15-wip`** (a new name: the old `cand/e15` on GitHub was pre-purge history and replacing it would have
+  been a force-push).
+- **Deleted on GitHub:** the three old-history branches `cand/e15` (tip `dea38e99`), `cand/e16b` (`b5684a62`),
+  `fix/aq-astra` (`048981fe`). Compared with their rewritten twins they held only the files purged on 6 October;
+  E16b is on main, `fix/aq-astra` is inside `bench/evidence-rich`. None had an open PR.
+- **Deleted locally:** worktrees `er-e21` and `er-main` (clean; only builds, `node_modules`, models and test
+  userdata were in them) and the local branches `cand/e15`, `e16b`, `e16b-main`, `e19`, `e21`, `e23`, `e26`,
+  `e27`, `e28b`, `e38`, `e41`, `e42`, `e43`, `final-1014`, `final-1014-pass`, `exp/x1-whole-pack-threshold`,
+  `fix/aq-astra`, `fix/aq-astra-i5`. `cand/e41` and `cand/e43` were the layout commit plus commits already on
+  main, so nothing was lost with them.
+- **Kept:** `bench/evidence-rich` (GitHub and local) and its worktree `.claude/worktrees/aq-fix`. The worktree
+  holds about 600 ignored files that are in no commit: app answers, judge outputs and the judge cache, some from
+  the blind holdout. They cannot go to a public repo and a restart needs them, so the worktree stays.
+  `~/natively-er-backup/` is kept too.
+
+An app worktree for a future run has to be made again (section 4 of the handoff).

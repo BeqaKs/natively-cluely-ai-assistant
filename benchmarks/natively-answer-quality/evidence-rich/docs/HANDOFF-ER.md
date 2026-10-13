@@ -57,7 +57,7 @@ Evin, 13 October about 21:00 UTC: "we are stopping this optimizationsince we are
 | Another session's uncommitted work | Its both-modes pass switch in the main checkout was replaced by the landed Technical-Interview-only version; the original is a patch in `~/natively-er-backup/final-1014/`. Its "make things up" filter edit (`userInstructionContract.ts` and test) is untouched and still uncommitted. |
 | Keys | Third AgentRouter key about USD 57 left; the first two empty. Nothing is running or scheduled. |
 | PR #638 | **Closed, not merged**, at Evin's "close the pr then" (13 October, about 22:10 UTC). The branch `bench/evidence-rich` stays on GitHub and locally; the benchmark and the blind holdout's questions are not on main. |
-| Worktrees | `er-e21` on `cand/final-1014-pass` (`cb0fadac`, built); `er-main` detached at `293db92b` (built). Local branches `cand/final-1014`, `cand/final-1014-pass` are records; no candidate branch was pushed. |
+| Worktrees and branches | **Cleaned up on 13 October, about 23:35 UTC, at Evin's word.** Only `.claude/worktrees/aq-fix` (`bench/evidence-rich`) is left; it holds about 600 ignored result files (app answers, judge outputs, judge cache, some from the blind holdout) that are in no commit, so do not delete it. The app worktrees `er-e21` and `er-main` are gone and must be made again for a run (section 4). On GitHub from this work: `bench/evidence-rich`, and the unlanded candidates `cand/e21` `298b2b5b`, `cand/e28b` `7067ab3c`, `cand/e15-wip` `524bcaa0`, `exp/x1-whole-pack-threshold` `237bba1a`. The old-history branches `cand/e15`, `cand/e16b`, `fix/aq-astra` were deleted on GitHub. Every other local `cand/*` branch named in this file is deleted: its commits are on main, or (`cand/e41`, `cand/e43`) were the layout commit plus commits on main. |
 
 **If this work is picked up again:** start from a fresh judged run of main `cb0fadac` on the three priority modes (210 judgments; about USD 20 on the first key's account, about USD 78 on the others), since no score exists for it. The largest stable loss is still a question about the user's own history with no résumé loaded, and it is a product decision, not a prompt.
 
@@ -382,7 +382,7 @@ node evidence-rich/supervise-er.mjs --root <app worktree> --runs dev:<run-id>,de
 
 1. **`.claude/worktrees/` was deleted on 2026-10-06** by something other than this work. Every run folder, judgment file and judge cache before that date is gone. Their numbers survive in `ITERATIONS-ER.md`; they can be cited, not recomputed. Since then rows and Astra judgments are committed, and run folders are copied to `~/natively-er-backup/`.
 2. **History was rewritten on 2026-10-06** (`git filter-repo`, another session) to purge dev harness pages and `cluely-*` assets. Commit hashes in notes older than that date are pre-rewrite; find commits by message. A worktree's index kept the purged files, and the next commit there re-added them; before pushing any branch run `git diff --name-only main...<branch>` and check every path is intended.
-3. **Old-history branches still on GitHub**: `fix/aq-astra`, `cand/e16b`, `cand/e15` (this work) and many `backup/*`. They keep the purged files reachable. Deleting them is Evin's call.
+3. **Old-history branches still on GitHub**: many `backup/*`. They keep the purged files reachable. Deleting them is Evin's call. (The three from this work, `fix/aq-astra`, `cand/e16b`, `cand/e15`, were deleted on 13 October (23:30 UTC) at his word.)
 4. **The blind holdout**: read aggregates only. Never read its questions or answers to design a change.
 5. **Run-to-run variation is large.** Same build, same prompts: a set of 180 moves by about ±0.16, one mode of 20 to 30 by about ±0.7, and single answers by several points. One run per build cannot decide a small effect; use replays with repetitions (E16c is the model).
 6. **Two judges, never pooled.** Scores marked "Claude Code judge" or "Opus" are a different series from Astra's.
@@ -736,7 +736,7 @@ Section 13 prints the pass's instruction block as it is on main and the full tex
 
 1. **Land the 24,000 threshold?** `cand/e27` `0256eed4` is one commit on main, tested and confirmed (86.1 % right against 54.3 % on packs of about 20,700 tokens; spoken first word 0.77 s earlier, typed 0.49 s later; request 3.6 times the size on those turns). Not measured: models with a small context window, Windows, a packaged build. `git merge --ff-only cand/e27` in the main checkout, after rebasing if main has moved.
 2. **Merge or close draft PR #638.** Merging puts the blind holdout's questions on public main.
-3. **Delete the old-history branches on GitHub** (`fix/aq-astra`, `cand/e16b`, `cand/e15`)? They keep files purged on 2026-10-06 reachable.
+3. ~~Delete the old-history branches on GitHub (`fix/aq-astra`, `cand/e16b`, `cand/e15`)?~~ **Done on 13 October (23:30 UTC) at Evin's word.**
 4. **The judged baseline of main with E19: 8.873, 78 hard fails, all 630 rows** (2026-10-10; 7.7). Not different from main before E19 on the same questions (−0.062, interval −0.22 to +0.09). **The 24,000 candidate `cand/e27` now has a judged reading on the 48 new larger-pack questions: 6.34 → 8.18, +1.83 (+0.90 to +2.77)** (7.8); landing it is his word. The candidate sits on `67fb1b24`; main has moved two commits (`95490839`, another session), so it is rebased before any landing.
 5. **Windows and a packaged build.** Nothing in this work has been executed on Windows or in a packaged app.
 6. **The whole-pack threshold: see 1.** X1 (synthetic), X2 (realistic packs), arm C (cloud embeddings: 63.4 %) and the candidate's confirmation run are in the log. 48,000 is not safe.
@@ -11234,6 +11234,32 @@ has called it). The first two are empty.
 "The app changes only" (already on local and GitHub main `cb0fadac`), then: "close the pr then". The draft PR is
 closed, not merged. The branch `bench/evidence-rich` is kept on GitHub and locally: it is the only home of the
 harness, the question sets and this log. The blind holdout's questions are not on main.
+
+**Branches and worktrees cleaned up (13 October, about 23:35 UTC; 14 October in India).** Evin, asked whether the session could be closed: "after
+confirming that there are no work from this ession or anyother agent session is on the branchs or worktree used by
+this session , if exists commit and push them , else delete". Checked first: no uncommitted or untracked file in
+any of the three worktrees, no process running in them, submodules clean, every candidate commit compared with
+GitHub main by content.
+
+- **Pushed, because they hold work that is on no other branch** (app code and tests only, nothing from the
+  benchmark): `cand/e21` `298b2b5b` (hidden calculation step on document turns), `cand/e28b` `7067ab3c` (layout,
+  E30), `exp/x1-whole-pack-threshold` `237bba1a` (X1, not for main), and the unbuilt E15 commit `524bcaa0` as
+  **`cand/e15-wip`** (a new name: the old `cand/e15` on GitHub was pre-purge history and replacing it would have
+  been a force-push).
+- **Deleted on GitHub:** the three old-history branches `cand/e15` (tip `dea38e99`), `cand/e16b` (`b5684a62`),
+  `fix/aq-astra` (`048981fe`). Compared with their rewritten twins they held only the files purged on 6 October;
+  E16b is on main, `fix/aq-astra` is inside `bench/evidence-rich`. None had an open PR.
+- **Deleted locally:** worktrees `er-e21` and `er-main` (clean; only builds, `node_modules`, models and test
+  userdata were in them) and the local branches `cand/e15`, `e16b`, `e16b-main`, `e19`, `e21`, `e23`, `e26`,
+  `e27`, `e28b`, `e38`, `e41`, `e42`, `e43`, `final-1014`, `final-1014-pass`, `exp/x1-whole-pack-threshold`,
+  `fix/aq-astra`, `fix/aq-astra-i5`. `cand/e41` and `cand/e43` were the layout commit plus commits already on
+  main, so nothing was lost with them.
+- **Kept:** `bench/evidence-rich` (GitHub and local) and its worktree `.claude/worktrees/aq-fix`. The worktree
+  holds about 600 ignored files that are in no commit: app answers, judge outputs and the judge cache, some from
+  the blind holdout. They cannot go to a public repo and a restart needs them, so the worktree stays.
+  `~/natively-er-backup/` is kept too.
+
+An app worktree for a future run has to be made again (section 4 of the handoff).
 
 ---
 
