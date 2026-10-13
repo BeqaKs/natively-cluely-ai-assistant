@@ -1,0 +1,22 @@
+{
+ "A": {
+  "er11-dev-main": [
+   "ER-D-LFW-023",
+   "ER-D-TI-022"
+  ],
+  "er13-dev2-main": [
+   "ER-D2-TI-032"
+  ],
+  "er13-prov1-main": [
+   "ER-PV1-LFW-009",
+   "ER-PV1-LFW-010",
+   "ER-PV1-TI-009"
+  ]
+ },
+ "B": {
+  "er11-dev-main": [
+   "ER-D-LFW-028",
+   "ER-D-TI-029"
+  ]
+ }
+}
