@@ -88,3 +88,17 @@ export function slackDraftStatus(text: string): { length: number; max: number; o
     const length = text.trim().length;
     return { length, max: SLACK_DRAFT_MAX_CHARS, over: Math.max(0, length - SLACK_DRAFT_MAX_CHARS), empty: length === 0 };
 }
+
+// ── Share as link ─────────────────────────────────────────────────────────
+
+export interface ShareLinkLike { url: string; createdAt: number; includeTranscript: boolean }
+
+/**
+ * What the Share as link dialog shows: nothing until the meeting's link has
+ * been read (a Create button before that could make a second link), then
+ * either the offer to make one or the link that exists.
+ */
+export function shareLinkView(read: boolean, link: ShareLinkLike | null): { state: 'reading' | 'none' | 'shared' } {
+    if (!read) return { state: 'reading' };
+    return { state: link ? 'shared' : 'none' };
+}

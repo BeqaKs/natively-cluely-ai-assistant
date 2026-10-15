@@ -7,14 +7,15 @@
 // here runs in the background except the MCP server, which is off until the
 // user turns it on and listens on 127.0.0.1 only.
 
-import { app, BrowserWindow, dialog, safeStorage, shell } from 'electron';
+import { app, BrowserWindow, clipboard, dialog, safeStorage, shell } from 'electron';
 import * as fs from 'fs';
 import * as path from 'path';
 import type { AppState } from '../../main';
 import type {
-    ConnectionsStatus, CrmMatchPreview, CrmService, McpServerStatus, NotionParentInfo, OutputResult,
+    ConnectionsStatus, CrmMatchPreview, CrmService, McpServerStatus, NotionParentInfo, OutputResult, ShareLinkInfo,
 } from '../../../src/types/meetingOutputs';
 import { ConnectionsStore } from './connectionsStore';
+import { ShareLinkStore, createShareLink, publicShareInfo, revokeShareLink, sharePayload } from './shareLink';
 import { buildNotesDocument, type NotesDocument } from './notesDocument';
 import { buildNotesHtml } from './htmlExport';
 import { NOTES_EXPORT_FILTERS, defaultExportPath, notesFileStem, withExportExtension, type NotesExportFormat } from './exportFiles';
@@ -97,6 +98,39 @@ function loadDoc(meetingId: unknown): NotesDocument | null {
     const m = db().getMeetingDetails(meetingId);
     if (!m) return null;
     return buildNotesDocument(m, { selfName: selfIdentity().name, locale: app.getLocale?.() || 'en-US' });
+}
+
+// ── Share links ──────────────────────────────────────────────────────────
+
+const NATIVELY_API_BASE = (process.env.NATIVELY_API_URL || 'https://api.natively.software').replace(/\/+$/, '');
+
+let shareLinks: ShareLinkStore | null = null;
+function shareLinkStore(): ShareLinkStore {
+    if (!shareLinks) shareLinks = new ShareLinkStore(app.getPath('userData'));
+    return shareLinks;
+}
+
+function installIdForShare(): string | undefined {
+    try {
+        return require('../InstallPingManager').getOrCreateInstallId() || undefined;
+    } catch {
+        return undefined;
+    }
+}
+
+/**
+ * Turns a meeting's link off and forgets it. Also called when the meeting is
+ * deleted (ipcHandlers `delete-meeting`), so a deleted meeting is not still
+ * readable on the web. When the server cannot be reached the record stays, so
+ * Stop sharing can be tried again.
+ */
+export async function revokeShareForMeeting(meetingId: string): Promise<OutputResult> {
+    const store = shareLinkStore();
+    const rec = store.get(meetingId);
+    if (!rec) return { ok: true };
+    const res = await revokeShareLink(rec.id, rec.revokeToken, { apiBase: NATIVELY_API_BASE });
+    if (res.ok) store.remove(meetingId);
+    return res;
 }
 
 const fail = (kind: OutputResult['kind'], service: string): OutputResult => ({ ok: false, kind, message: describeConnectionError(kind, service) });
@@ -281,6 +315,44 @@ export function registerOutputsIpc(appState: AppState, safeHandle: SafeHandle): 
         const doc = loadDoc(meetingId);
         if (!doc) return NO_MEETING;
         return saveExport(appState, event, doc, 'html', buildNotesHtml(doc, { includeTranscript: opts?.includeTranscript === true }));
+    }));
+
+    // Share as link. The notes go to natively-api only when the user presses
+    // Create link; the record (link + the token that turns it off) stays here.
+    safeHandle('outputs:share-link-get', guard(FORBIDDEN, async (_e, meetingId: unknown): Promise<OutputResult & { link?: ShareLinkInfo }> => {
+        if (typeof meetingId !== 'string' || !meetingId) return NO_MEETING;
+        const rec = shareLinkStore().get(meetingId);
+        return rec ? { ok: true, link: publicShareInfo(rec) } : { ok: true };
+    }));
+    safeHandle('outputs:share-link-create', guard(FORBIDDEN, async (_e, meetingId: unknown, opts: any): Promise<OutputResult & { link?: ShareLinkInfo }> => {
+        const doc = loadDoc(meetingId);
+        if (!doc) return NO_MEETING;
+        const store = shareLinkStore();
+        const existing = store.get(doc.meetingId);
+        if (existing) {
+            clipboard.writeText(existing.url);
+            return { ok: true, link: publicShareInfo(existing) };
+        }
+        if (!hasNotes(doc)) return { ok: false, kind: 'invalid_input', message: 'This meeting has no notes to share yet.' };
+        const includeTranscript = opts?.includeTranscript === true;
+        const res = await createShareLink(sharePayload(doc, { includeTranscript }), { apiBase: NATIVELY_API_BASE, installId: installIdForShare() });
+        if (!res.ok || !res.id || !res.url || !res.revokeToken) return { ok: false, kind: res.kind, message: res.message };
+        const rec = { id: res.id, url: res.url, revokeToken: res.revokeToken, createdAt: Date.now(), includeTranscript };
+        try {
+            store.set(doc.meetingId, rec);
+        } catch (err: any) {
+            // The link exists but could not be remembered, so it could never be
+            // turned off from here. Turn it off now rather than leave it loose.
+            console.warn('[Outputs] share record not saved:', err?.message || 'unknown');
+            void revokeShareLink(rec.id, rec.revokeToken, { apiBase: NATIVELY_API_BASE });
+            return { ok: false, kind: 'storage_unavailable', message: 'The link was made but could not be saved on this computer, so it was turned off again. Try again.' };
+        }
+        clipboard.writeText(rec.url);
+        return { ok: true, link: publicShareInfo(rec) };
+    }));
+    safeHandle('outputs:share-link-revoke', guard(FORBIDDEN, async (_e, meetingId: unknown): Promise<OutputResult> => {
+        if (typeof meetingId !== 'string' || !meetingId) return NO_MEETING;
+        return revokeShareForMeeting(meetingId);
     }));
 
     // Connections

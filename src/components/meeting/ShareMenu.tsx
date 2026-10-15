@@ -9,19 +9,19 @@
 
 import React, { useEffect, useId, useRef, useState } from 'react';
 import * as DialogPrimitive from '@radix-ui/react-dialog';
-import { BookOpen, Check, Contact, ExternalLink, FileCode, FileDown, Hash, Loader2, Share } from 'lucide-react';
+import { BookOpen, Check, Contact, ExternalLink, FileCode, FileDown, Hash, Link2, Loader2, Share } from 'lucide-react';
 import { useT } from '../../i18n';
 import { useResolvedTheme } from '../../hooks/useResolvedTheme';
 import { SettingsSwitch } from '../settings/SettingsRow';
-import type { ConnectionsStatus, CrmMatchPreview, CrmService, MeetingOutputsApi } from '../../types/meetingOutputs';
-import { crmSendable, notionResultView, slackDraftStatus } from './outputsView';
+import type { ConnectionsStatus, CrmMatchPreview, CrmService, MeetingOutputsApi, ShareLinkInfo } from '../../types/meetingOutputs';
+import { crmSendable, notionResultView, shareLinkView, slackDraftStatus } from './outputsView';
 
 const api = (): MeetingOutputsApi | undefined => window.electronAPI?.meetingOutputs;
 const MENU_CLOSE_MS = 150;
 const DIALOG_LAYER = 400;
 const CRM_NAMES: Record<CrmService, string> = { hubspot: 'HubSpot', attio: 'Attio', affinity: 'Affinity' };
 
-type DialogKind = 'html' | 'slack' | 'notion' | 'crm' | 'message';
+type DialogKind = 'html' | 'link' | 'slack' | 'notion' | 'crm' | 'message';
 
 const BTN = 'px-3 py-1.5 rounded-md text-xs font-medium border border-border-subtle bg-bg-input hover:bg-bg-elevated text-text-primary transition-colors flex items-center gap-1.5 disabled:opacity-50';
 const FIELD_LABEL = 'text-xs font-medium text-text-secondary uppercase tracking-wide block';
@@ -123,6 +123,7 @@ export const ShareMenu: React.FC<{ meetingId: string; disabled?: boolean; hasTra
     const items: Array<{ key: string; label: string; icon: React.ReactNode; run: () => void }> = [
         { key: 'pdf', label: t('Export PDF'), icon: <FileDown size={14} />, run: () => void exportPdf() },
         { key: 'html', label: t('Share as file'), icon: <FileCode size={14} />, run: () => setDialog('html') },
+        { key: 'link', label: t('Share as link'), icon: <Link2 size={14} />, run: () => setDialog('link') },
         { key: 'slack', label: t('Send to Slack'), icon: <Hash size={14} />, run: () => setDialog('slack') },
         { key: 'notion', label: t('Send to Notion'), icon: <BookOpen size={14} />, run: () => setDialog('notion') },
         { key: 'crm', label: t('Send to CRM'), icon: <Contact size={14} />, run: () => setDialog('crm') },
@@ -257,6 +258,10 @@ const OutputDialog: React.FC<{
     const [done, setDone] = useState<string | null>(null);
     const [includeTranscript, setIncludeTranscript] = useState(false);
     const [includeActions, setIncludeActions] = useState(true);
+    // Share as link: the meeting's link, read when the dialog opens; null while it is being read.
+    const [link, setLink] = useState<ShareLinkInfo | null>(null);
+    const [linkRead, setLinkRead] = useState(false);
+    const [copied, setCopied] = useState(false);
     // Slack
     const [webhookId, setWebhookId] = useState('');
     const [draft, setDraft] = useState('');
@@ -277,8 +282,22 @@ const OutputDialog: React.FC<{
         if (!kind) return;
         setBusy(false); setError(null); setDone(null); setPreview(false); setPageUrl(undefined); setPartialPage(null); setMatches(null); setChosen(new Set());
         setIncludeTranscript(false); setIncludeActions(true);
+        setLink(null); setLinkRead(false); setCopied(false);
         if (kind === 'slack') setWebhookId(conn?.slack.webhooks[0]?.id || '');
         if (kind === 'crm') setCrm(crmConnected[0] || null);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [kind]);
+
+    // Share as link: whether this meeting already has one.
+    useEffect(() => {
+        if (kind !== 'link') return;
+        let live = true;
+        void api()?.getShareLink(meetingId).then((res) => {
+            if (!live) return;
+            setLinkRead(true);
+            if (res?.ok) setLink(res.link || null); else setError(res?.message || t('The link could not be read.'));
+        });
+        return () => { live = false; };
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [kind]);
 
@@ -347,6 +366,77 @@ const OutputDialog: React.FC<{
         return (
             <DialogShell open title={t('Could not finish')} onClose={onClose} footer={closeBtn(t('Close'))}>
                 <p className="text-xs leading-relaxed text-text-secondary">{message}</p>
+            </DialogShell>
+        );
+    }
+
+    if (kind === 'link') {
+        const view = shareLinkView(linkRead, link);
+        const copy = (text: string) => {
+            const p = navigator.clipboard?.writeText(text);
+            if (!p) return;
+            p.then(() => { setCopied(true); setError(null); }).catch(() => setError(t('The link could not be copied. Select it and copy it yourself.')));
+        };
+        const createLink = () => void run(async () => {
+            const res = await api()?.createShareLink(meetingId, { includeTranscript });
+            if (res?.ok && res.link) { setLink(res.link); setCopied(true); setDone(t('Link copied.')); }
+            else setError(res?.message || t('The link could not be made. Try again.'));
+        });
+        const stopSharing = () => void run(async () => {
+            const res = await api()?.revokeShareLink(meetingId);
+            if (res?.ok) { setLink(null); setCopied(false); setDone(t('The link is off. Anyone who opens it now sees that these notes are no longer shared.')); }
+            else setError(res?.message || t('The link could not be turned off. Try again.'));
+        });
+        return (
+            <DialogShell
+                open
+                title={t('Share as link')}
+                onClose={onClose}
+                busy={busy}
+                footer={view.state === 'shared'
+                    ? <>
+                        <button type="button" className={BTN} onClick={stopSharing} disabled={busy}>{t('Stop sharing')}</button>
+                        <button type="button" className={BTN} onClick={() => copy(link!.url)} disabled={busy}>{copied ? <Check size={12} className="text-emerald-500" /> : null}{copied ? t('Copied') : t('Copy link')}</button>
+                        {closeBtn(t('Done'))}
+                    </>
+                    : view.state === 'none'
+                        ? <>{closeBtn()}{primary(t('Create link'), createLink)}</>
+                        : closeBtn(done ? t('Done') : t('Cancel'))}
+            >
+                {view.state === 'shared' ? (
+                    <div className="space-y-3">
+                        <p className="text-xs leading-relaxed text-text-secondary">
+                            {link!.includeTranscript
+                                ? t('Anyone with this link can read the notes, action items and transcript.')
+                                : t('Anyone with this link can read the notes and action items.')}
+                        </p>
+                        <input
+                            readOnly
+                            value={link!.url}
+                            onFocus={(e) => e.currentTarget.select()}
+                            aria-label={t('Share link')}
+                            className="w-full rounded-lg border border-border-subtle bg-bg-input px-3 py-2 text-xs text-text-primary font-mono focus:outline-none"
+                        />
+                        <ErrorLine text={error} />
+                        <DoneLine text={done} />
+                    </div>
+                ) : view.state === 'none' ? (
+                    <div>
+                        <p className="text-xs leading-relaxed text-text-secondary">{t('A page on heynatively.com with the notes and action items. Anyone with the link can read it, until you stop sharing.')}</p>
+                        {hasTranscript && (
+                            <Row label={t('Include the transcript')}>
+                                <SettingsSwitch checked={includeTranscript} onChange={() => setIncludeTranscript((v) => !v)} label={t('Include the transcript')} disabled={busy} />
+                            </Row>
+                        )}
+                        <ErrorLine text={error} />
+                        <DoneLine text={done} />
+                    </div>
+                ) : (
+                    <div>
+                        <p className="text-xs leading-relaxed text-text-secondary">{error ? '' : t('One moment.')}</p>
+                        <ErrorLine text={error} />
+                    </div>
+                )}
             </DialogShell>
         );
     }
