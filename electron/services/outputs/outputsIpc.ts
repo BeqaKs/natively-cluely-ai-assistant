@@ -21,7 +21,7 @@ import { NOTES_EXPORT_FILTERS, defaultExportPath, notesFileStem, withExportExten
 import { describeConnectionError, errorKindOf } from './httpRequest';
 import { checkSlackDraft, composeSlackDraft, isSlackWebhookUrl, postSlackWebhook, slackDraftMessage, testSlackWebhook } from './slack';
 import { NotionPartialPages, appendNotionBatches, buildNotionBlocks, createNotionPage, looksLikeNotionToken, normaliseNotionId, notionPageTitle, searchNotion, testNotion } from './notion';
-import { CRM_LABELS, CrmSendSession, crmCandidates, crmSendSummary, matchAttendees, normaliseEmail, remainingRecords, sendCrmNote, testCrm, uniqueRecords, type CrmRecord } from './crm';
+import { CRM_LABELS, CrmSendSession, crmCandidates, crmSendSummary, matchAttendees, normaliseEmail, normaliseSalesforceInstanceUrl, remainingRecords, sendCrmNote, testCrm, uniqueRecords, type CrmRecord } from './crm';
 import { ENRICHMENT_LABEL, enrichmentFacts, lookupAttendees, testEnrichment } from './enrichment';
 import { mcpClientSnippets, newMcpToken, randomMcpPort, startMcpServer, type MeetingSource, type RunningMcpServer } from './mcpServer';
 import { WritingStyleService, type StyleModelCall } from './writingStyle';
@@ -32,10 +32,10 @@ import { nativePromptsBlocked } from '../stealthPromptGate';
 type SafeHandle = (channel: string, listener: (event: any, ...args: any[]) => Promise<any> | any) => void;
 
 const SERVICE_LABEL: Record<'slack' | 'notion' | CrmService | EnrichmentService, string> = { slack: 'Slack', notion: 'Notion', ...CRM_LABELS, clearbit: ENRICHMENT_LABEL };
-const TOKEN_SERVICES = ['notion', 'hubspot', 'attio', 'affinity', 'clearbit'] as const;
+const TOKEN_SERVICES = ['notion', 'hubspot', 'attio', 'affinity', 'salesforce', 'clearbit'] as const;
 type TokenService = typeof TOKEN_SERVICES[number];
 const isTokenService = (v: unknown): v is TokenService => typeof v === 'string' && (TOKEN_SERVICES as readonly string[]).includes(v);
-const isCrm = (v: unknown): v is CrmService => v === 'hubspot' || v === 'attio' || v === 'affinity';
+const isCrm = (v: unknown): v is CrmService => v === 'hubspot' || v === 'attio' || v === 'affinity' || v === 'salesforce';
 
 // ── Singletons ───────────────────────────────────────────────────────────
 
@@ -295,6 +295,7 @@ export function registerOutputsIpc(appState: AppState, safeHandle: SafeHandle): 
             hubspot: { connected: !!s.hubspot?.token },
             attio: { connected: !!s.attio?.token },
             affinity: { connected: !!s.affinity?.token },
+            salesforce: { connected: !!s.salesforce?.token, ...(s.salesforce?.instanceUrl ? { instanceUrl: s.salesforce.instanceUrl } : {}) },
             clearbit: { connected: !!s.clearbit?.token },
             mcp: mcpStatus(),
         };
@@ -332,18 +333,25 @@ export function registerOutputsIpc(appState: AppState, safeHandle: SafeHandle): 
         }
     }));
 
-    const testToken = async (service: TokenService, token: string): Promise<void> => {
+    const testToken = async (service: TokenService, token: string, instanceUrl?: string): Promise<void> => {
         if (service === 'notion') return testNotion({ token });
         if (service === 'clearbit') return testEnrichment({ token });
-        return testCrm(service, { token });
+        return testCrm(service, { token, ...(instanceUrl ? { instanceUrl } : {}) });
     };
-    safeHandle('outputs:save-token', guard(FORBIDDEN, async (_e, service: unknown, token: unknown) => {
+    safeHandle('outputs:save-token', guard(FORBIDDEN, async (_e, service: unknown, token: unknown, instanceUrl: unknown) => {
         if (!isTokenService(service)) return { ok: false, kind: 'invalid_input', message: 'Unknown service.' };
         const t = typeof token === 'string' ? token.trim() : '';
         const label = SERVICE_LABEL[service];
         if (!t || t.length > 512 || /\s/.test(t)) return { ok: false, kind: 'invalid_input', message: `Paste the ${label} token on its own, with no spaces.` };
         if (service === 'notion' && !looksLikeNotionToken(t)) {
             return { ok: false, kind: 'invalid_input', message: 'A Notion integration token starts with ntn_ or secret_. Copy it from your integration\'s settings in Notion.' };
+        }
+        if (service === 'salesforce') {
+            const url = normaliseSalesforceInstanceUrl(instanceUrl);
+            if (!url) return { ok: false, kind: 'invalid_input', message: 'Paste your Salesforce instance URL too, like https://yourorg.my.salesforce.com.' };
+            try { await testToken(service, t, url); } catch (err) { return fail(errorKindOf(err), label); }
+            const ok = getConnectionsStore().setSalesforce(t, url);
+            return { ok: true, ...(ok ? {} : { message: describeConnectionError('storage_unavailable', label) }) };
         }
         try { await testToken(service, t); } catch (err) { return fail(errorKindOf(err), label); }
         const persisted = getConnectionsStore().setToken(service, t);
@@ -354,7 +362,8 @@ export function registerOutputsIpc(appState: AppState, safeHandle: SafeHandle): 
         const token = getConnectionsStore().token(service);
         const label = SERVICE_LABEL[service];
         if (!token) return fail('not_connected', label);
-        try { await testToken(service, token); return { ok: true, message: `${label} is connected.` }; } catch (err) { return fail(errorKindOf(err), label); }
+        const instanceUrl = service === 'salesforce' ? getConnectionsStore().salesforceInstanceUrl() ?? undefined : undefined;
+        try { await testToken(service, token, instanceUrl); return { ok: true, message: `${label} is connected.` }; } catch (err) { return fail(errorKindOf(err), label); }
     }));
     safeHandle('outputs:disconnect', guard(FORBIDDEN, async (_e, service: unknown) => {
         if (!isTokenService(service)) return { ok: false, kind: 'invalid_input', message: 'Unknown service.' };
@@ -487,10 +496,18 @@ export function registerOutputsIpc(appState: AppState, safeHandle: SafeHandle): 
 
     // CRM
     const crmCandidatesFor = (doc: NotesDocument) => crmCandidates(doc.attendees, [selfIdentity().email || '']);
+    // Salesforce calls also need the org host; the other CRMs just need the token.
+    const crmOpts = (service: CrmService, token: string): { token: string; instanceUrl?: string } | null => {
+        if (service !== 'salesforce') return { token };
+        const instanceUrl = getConnectionsStore().salesforceInstanceUrl();
+        return instanceUrl ? { token, instanceUrl } : null;
+    };
     safeHandle('outputs:crm-preview', guard({ ok: false, kind: 'forbidden', service: 'hubspot', attendees: [] } as CrmMatchPreview, async (_e, meetingId: unknown, service: unknown): Promise<CrmMatchPreview> => {
         if (!isCrm(service)) return { ok: false, kind: 'invalid_input', message: 'Unknown CRM.', service: 'hubspot', attendees: [] };
         const token = getConnectionsStore().token(service);
         if (!token) return { ...fail('not_connected', CRM_LABELS[service]), service, attendees: [] };
+        const opts = crmOpts(service, token);
+        if (!opts) return { ...fail('not_connected', CRM_LABELS[service]), service, attendees: [] };
         const doc = loadDoc(meetingId);
         if (!doc) return { ...NO_MEETING, service, attendees: [] };
         const candidates = crmCandidatesFor(doc);
@@ -498,7 +515,7 @@ export function registerOutputsIpc(appState: AppState, safeHandle: SafeHandle): 
             return { ok: false, kind: 'invalid_input', service, attendees: [], message: 'This meeting has no attendee emails to look up. Link it to its calendar event first.' };
         }
         try {
-            const matches = await matchAttendees(service, candidates, { token });
+            const matches = await matchAttendees(service, candidates, opts);
             return { ok: true, service, attendees: matches.map((m) => ({ email: m.email, ...(m.name ? { name: m.name } : {}), matched: !!m.record, ...(m.record?.name ? { recordName: m.record.name } : {}) })) };
         } catch (err) {
             return { ...fail(errorKindOf(err), CRM_LABELS[service]), service, attendees: [] };
@@ -508,6 +525,8 @@ export function registerOutputsIpc(appState: AppState, safeHandle: SafeHandle): 
         if (!isCrm(service)) return { ok: false, kind: 'invalid_input', message: 'Unknown CRM.' };
         const token = getConnectionsStore().token(service);
         if (!token) return fail('not_connected', CRM_LABELS[service]);
+        const opts = crmOpts(service, token);
+        if (!opts) return fail('not_connected', CRM_LABELS[service]);
         const doc = loadDoc(meetingId);
         if (!doc) return NO_MEETING;
         if (!hasNotes(doc)) return NO_NOTES;
@@ -518,7 +537,7 @@ export function registerOutputsIpc(appState: AppState, safeHandle: SafeHandle): 
         const mid = meetingId as string;
         let records: CrmRecord[];
         try {
-            const matches = await matchAttendees(service, candidates, { token });
+            const matches = await matchAttendees(service, candidates, opts);
             // One person, one note: two emails of the same person collapse to one record.
             records = uniqueRecords(matches.map((m) => m.record).filter((r): r is CrmRecord => !!r));
         } catch (err) {
@@ -528,7 +547,7 @@ export function registerOutputsIpc(appState: AppState, safeHandle: SafeHandle): 
         // A retry after a partial failure writes only the notes not yet written.
         const todo = remainingRecords(records, crmSession.sentFor(mid, service));
         if (!todo.length) return { ok: true, notesCreated: 0, message: `The note is already on everyone you picked in ${CRM_LABELS[service]}.` };
-        const outcome = await sendCrmNote(service, doc, todo, { token });
+        const outcome = await sendCrmNote(service, doc, todo, opts);
         crmSession.markSent(mid, service, outcome.sentIds);
         const summary = crmSendSummary(service, outcome, todo.length, describeConnectionError);
         return { ok: summary.ok, ...(summary.kind ? { kind: summary.kind } : {}), ...(summary.message ? { message: summary.message } : {}), notesCreated: summary.notesCreated, remaining: summary.remaining };
