@@ -1982,6 +1982,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
   // In-app recovery: resets the active local-Whisper model + per-channel
   // overrides back to the safe fallback. See electron/ipcHandlers.ts handler.
   localWhisperResetToDefault: () => ipcRenderer.invoke('local-whisper-reset-to-default'),
+  roomSpeakersGet: () => ipcRenderer.invoke('room-speakers-get'),
+  roomSpeakersSet: (enabled: boolean) => ipcRenderer.invoke('room-speakers-set', enabled),
   localWhisperGetChannelConfig: () => ipcRenderer.invoke('local-whisper-get-channel-config'),
   localWhisperSetChannelConfig: (cfg: {
     enabled?: boolean;
@@ -2305,6 +2307,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
     resumeNotion: (meetingId) => ipcRenderer.invoke('outputs:notion-resume', meetingId),
     previewCrm: (meetingId, service) => ipcRenderer.invoke('outputs:crm-preview', meetingId, service),
     sendCrm: (meetingId, service, emails) => ipcRenderer.invoke('outputs:crm-send', meetingId, service, emails),
+    enrichAttendees: (meetingId) => ipcRenderer.invoke('outputs:enrich-attendees', meetingId),
     setMcpEnabled: (enabled) => ipcRenderer.invoke('outputs:mcp-set-enabled', enabled),
     resetMcpToken: () => ipcRenderer.invoke('outputs:mcp-reset-token'),
     getWritingStyle: () => ipcRenderer.invoke('outputs:style-get'),
