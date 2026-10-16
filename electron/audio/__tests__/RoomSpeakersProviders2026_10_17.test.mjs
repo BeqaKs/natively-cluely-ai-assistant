@@ -130,10 +130,11 @@ describe('which providers can label voices', () => {
         deepgram: 'electron/audio/DeepgramStreamingSTT.ts',
         soniox: 'electron/audio/SonioxStreamingSTT.ts',
         google: 'electron/audio/GoogleSTT.ts',
+        natively: 'electron/audio/NativelyProSTT.ts',
     };
     const CANNOT = [
         'electron/audio/ElevenLabsStreamingSTT.ts', 'electron/audio/OpenAIStreamingSTT.ts', 'electron/audio/RestSTT.ts',
-        'electron/audio/NvidiaNimStreamingSTT.ts', 'electron/audio/NativelyProSTT.ts', 'electron/audio/AppleSpeechSTT.ts',
+        'electron/audio/NvidiaNimStreamingSTT.ts', 'electron/audio/AppleSpeechSTT.ts',
         'electron/audio/LocalWhisperSTT.ts',
     ];
 
@@ -168,6 +169,17 @@ describe('which providers can label voices', () => {
         const fatalAt = err.indexOf('const isPermanent');
         assert.ok(dropAt > 0 && fatalAt > dropAt, 'labels are dropped before an INVALID_ARGUMENT can be fatal');
         assert.match(err, /grpcCode === 3 && this\.diarizing && \/diariz\|speaker\/i/);
+    });
+
+    test('Natively: the flag rides in the auth frame; labels and both connection counts come back', () => {
+        const src = read(SOURCES.natively);
+        assert.match(src, /\.\.\.\(this\.diarize \? \{ speaker_labels: true \} : \{\}\)/);
+        assert.match(src, /new WebSocket\(connectUrl[^\n]*\n\s*this\.wsEpoch\+\+;/, 'each socket counted');
+        assert.match(src, /const speakerId = voiceIdFromLabel\(msg\.speaker\)/);
+        assert.match(src, /voiceEpoch: this\.wsEpoch \* 1000 \+ upstream/);
+        // The relay frame (regional relays, dormant) does not carry it.
+        const relayFrame = src.slice(src.indexOf('private buildAuthFrame('), src.indexOf('private contextTermsField('));
+        assert.doesNotMatch(relayFrame, /speaker_labels/);
     });
 
     test('main.ts asks any capable provider, before start, and tags only mic ids', () => {

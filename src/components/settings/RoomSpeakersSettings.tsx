@@ -13,7 +13,7 @@ import { SettingsRow, SettingsSwitch } from './SettingsRow';
 // The speech providers whose live stream labels voices. A copy of
 // DIARIZING_STT_PROVIDERS (electron/audio/sttDiarization.ts), which the
 // renderer cannot import; RoomSpeakersProviders2026_10_17.test.mjs pins the two equal.
-export const ROOM_SPEAKERS_PROVIDERS: ReadonlySet<string> = new Set(['deepgram', 'soniox', 'google']);
+export const ROOM_SPEAKERS_PROVIDERS: ReadonlySet<string> = new Set(['natively', 'deepgram', 'soniox', 'google']);
 
 export const RoomSpeakersSettings: React.FC<{ sttProvider: string }> = ({ sttProvider }) => {
     const t = useT();
@@ -34,7 +34,7 @@ export const RoomSpeakersSettings: React.FC<{ sttProvider: string }> = ({ sttPro
     };
 
     const description = !supported
-        ? t('Works with Deepgram, Soniox or Google transcription. Your current provider does not tell voices apart.')
+        ? t('Works with Natively, Deepgram, Soniox or Google transcription. Your current provider does not tell voices apart.')
         : enabled
             ? t('On from your next meeting. Voices on your microphone are told apart when the meeting is saved; the one that speaks most is you.')
             : t('Off. Everything heard on your microphone is written down as you.');

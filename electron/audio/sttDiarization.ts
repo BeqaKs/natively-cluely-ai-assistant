@@ -16,6 +16,9 @@
  *   deepgram  `diarize=true`, a `speaker` index per word
  *   soniox    `enable_speaker_diarization`, a `speaker` label per token
  *   google    v1 `diarizationConfig`, a `speakerLabel` per word
+ *   natively  the relay (natively-api) asks Soniox when the auth frame says
+ *             `speaker_labels: true`, and sends `speaker` + `speaker_epoch`;
+ *             a session it fails over to another provider has no labels
  * and which cannot: OpenAI realtime (labels only on whole-file transcription),
  * Groq (Whisper), ElevenLabs realtime (labels only on batch Scribe), Azure and
  * IBM over REST (each short clip is its own request, so labels do not carry
@@ -31,7 +34,7 @@
  * electron/); RoomSpeakersProviders2026_10_17.test.mjs pins the two equal and
  * pins that each provider here has `setDiarization`.
  */
-export const DIARIZING_STT_PROVIDERS: ReadonlySet<string> = new Set(['deepgram', 'soniox', 'google']);
+export const DIARIZING_STT_PROVIDERS: ReadonlySet<string> = new Set(['natively', 'deepgram', 'soniox', 'google']);
 
 /** A provider that can be asked to label voices. */
 export interface DiarizingSTT {
