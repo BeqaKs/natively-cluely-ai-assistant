@@ -93,12 +93,16 @@ export function slackDraftStatus(text: string): { length: number; max: number; o
 
 export interface ShareLinkLike { url: string; createdAt: number; includeTranscript: boolean }
 
+export type ShareLinkReadState = 'reading' | 'read' | 'failed';
+
 /**
  * What the Share as link dialog shows: nothing until the meeting's link has
  * been read (a Create button before that could make a second link), then
- * either the offer to make one or the link that exists.
+ * either the offer to make one or the link that exists. When the read failed,
+ * whether a link exists is unknown, so only the error and Try again.
  */
-export function shareLinkView(read: boolean, link: ShareLinkLike | null): { state: 'reading' | 'none' | 'shared' } {
-    if (!read) return { state: 'reading' };
+export function shareLinkView(read: ShareLinkReadState, link: ShareLinkLike | null): { state: 'reading' | 'failed' | 'none' | 'shared' } {
+    if (read === 'reading') return { state: 'reading' };
+    if (read === 'failed') return { state: 'failed' };
     return { state: link ? 'shared' : 'none' };
 }

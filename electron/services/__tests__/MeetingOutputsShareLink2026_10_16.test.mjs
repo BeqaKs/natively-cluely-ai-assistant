@@ -110,10 +110,13 @@ describe('ShareLinkStore', () => {
         assert.equal(new share.ShareLinkStore(d).get('m1'), null);
         s.remove('m1');
     });
-    test('a file that is not JSON, or holds records of the wrong shape, reads as nothing shared', () => {
+    test('a damaged file is set aside under another name, never overwritten; bad records read as nothing shared', () => {
         const d = dir();
         fs.writeFileSync(path.join(d, share.SHARE_LINKS_FILE), '{not json');
         assert.equal(new share.ShareLinkStore(d).get('m1'), null);
+        const aside = fs.readdirSync(d).filter((f) => f.startsWith(`${share.SHARE_LINKS_FILE}.unreadable-`));
+        assert.equal(aside.length, 1);
+        assert.equal(fs.readFileSync(path.join(d, aside[0]), 'utf8'), '{not json', 'kept as it was, for recovery');
         fs.writeFileSync(path.join(d, share.SHARE_LINKS_FILE), JSON.stringify({
             m1: { id: 'bad id!', url: REC.url, revokeToken: 't' },
             m2: { id: REC.id, url: 'http://not-https.example/s/x', revokeToken: 't' },
@@ -188,12 +191,19 @@ describe('revokeShareLink', () => {
     });
 });
 
-// ── PR #657 review (Greptile, 2026-10-16): the app never loses the token of a
-// link that may still be public. A fake server that can go offline.
+
+// ── Reviews of #657 (Greptile, then /code-review, 2026-10-16). The rule: the
+// app never loses the token of a link that may still be public.
+const atomic = dist('atomicFile.js');
+const observersMod = require(path.join(REPO, 'dist-electron/electron/db/meetingDeleteObservers.js'));
+const apiBaseMod = require(path.join(REPO, 'dist-electron/electron/services/nativelyApiBase.js'));
+
+// A fake server that can go offline and can be held mid-request.
 function fakeServer() {
-    const state = { online: true, created: 0, revoked: new Set(), calls: [] };
+    const state = { online: true, created: 0, revoked: new Set(), calls: [], hold: null };
     const fetchImpl = async (url, init) => {
         state.calls.push(`${init.method} ${url.replace('https://api.example.test', '')}`);
+        if (state.hold) await state.hold;
         if (!state.online) throw new TypeError('fetch failed');
         if (init.method === 'POST') {
             const id = `Link${String(++state.created).padStart(8, '0')}`;
@@ -207,8 +217,68 @@ function fakeServer() {
 const tmp = () => fs.mkdtempSync(path.join(os.tmpdir(), 'natively-shares-'));
 const unwritable = () => { const d = tmp(); fs.writeFileSync(path.join(d, 'file'), 'x'); return path.join(d, 'file', 'inside'); };
 const PAYLOAD = () => share.sharePayload(doc(), { includeTranscript: false });
+const locked = (code = 'EBUSY') => Object.assign(new Error(`${code}: resource busy or locked`), { code });
+const noWait = () => {};
+// A delete as DatabaseManager runs it: observers told, then settled by whether rows went.
+const deleteMeeting = (target, rowsDeleted) => observersMod.runObservedMeetingDelete(target, () => ({ changes: rowsDeleted }), (r) => r.changes > 0);
+const waitFor = async (cond) => { for (let i = 0; i < 200 && !cond(); i++) await new Promise((r) => setImmediate(r)); };
 
-describe('ShareLinks (review fixes)', () => {
+describe('item 3: big meetings are trimmed to the server limits, never refused', () => {
+    test('people, labels, headings, paragraphs, bullets and action items fit the caps', () => {
+        const L = share.SHARE_LIMITS;
+        const big = doc({
+            title: 'T'.repeat(400),
+            calendarEvent: { attendees: Array.from({ length: 60 }, (_, i) => ({ email: `p${i}@x.com`, name: `Person ${i} ${'n'.repeat(130)}` })) },
+            detailedSummary: {
+                schemaVersion: 3,
+                tldr: Array.from({ length: 250 }, (_, i) => `point ${i} ${'b'.repeat(2100)}`),
+                sectionsV3: Array.from({ length: 50 }, (_, i) => ({ id: `s${i}`, title: `H${i} ${'h'.repeat(250)}`, order: i, bullets: [{ text: 'x' }] })),
+                actionItemsV3: Array.from({ length: 220 }, (_, i) => ({ text: `do ${i}`, owner: 'o'.repeat(150), status: 'open' })),
+            },
+        });
+        const p = share.sharePayload(big, { includeTranscript: false });
+        assert.equal(p.title.length, L.title);
+        assert.ok(p.title.endsWith('…'));
+        assert.equal(p.people.length, L.people);
+        assert.ok(p.people.every((n) => n.length <= L.label));
+        assert.equal(p.sections.length, L.sections);
+        assert.ok(p.sections.every((s) => s.heading.length <= L.heading && s.bullets.length <= L.bullets && s.bullets.every((b) => b.length <= L.text)));
+        assert.equal(p.actionItems.length, L.actionItems);
+        assert.ok(p.actionItems.every((a) => a.owner.length <= L.label));
+        const legacy = doc({ detailedSummary: { overview: 'o'.repeat(9000) } });
+        const lp = share.sharePayload(legacy, { includeTranscript: false });
+        assert.equal(lp.sections[0].paragraph.length, L.paragraph);
+    });
+    test('a long transcript line is split at spaces, not refused and not cut; the speaker and time carry over', () => {
+        const words = Array.from({ length: 900 }, (_, i) => `word${i}`).join(' ');
+        const d = doc({ transcript: [{ speaker: 'speaker_2', text: words, timestamp: T0 + 5000 }] });
+        const p = share.sharePayload(d, { includeTranscript: true });
+        assert.ok(p.transcript.length > 1);
+        assert.ok(p.transcript.every((l) => l.text.length <= share.SHARE_LIMITS.text && l.speaker === 'Priya'));
+        assert.equal(p.transcript.map((l) => l.text).join(' '), words, 'nothing lost');
+        assert.deepEqual(share.splitLine('x'.repeat(4500), 2000).map((s) => s.length), [2000, 2000, 500], 'no space: hard cut');
+        assert.equal(share.clip('ab😀cd', 3), 'ab…', 'never half an emoji');
+    });
+    test('"too long" names the transcript only when one was sent', async () => {
+        const with413 = () => OPTS(fakeFetch([{ status: 413, body: { ok: false, error: 'too_long' } }]).fetchImpl);
+        const withT = await share.createShareLink(share.sharePayload(doc(), { includeTranscript: true }), with413());
+        assert.match(withT.message, /Leave out the transcript/);
+        const without = await share.createShareLink(share.sharePayload(doc(), { includeTranscript: false }), with413());
+        assert.doesNotMatch(without.message, /transcript/);
+        assert.match(without.message, /Share them as a file/);
+    });
+});
+
+describe('ShareLinks', () => {
+    test('create saves the link and offers it; a second create hands back the same one without the network', async () => {
+        const srv = fakeServer();
+        const links = new share.ShareLinks(new share.ShareLinkStore(tmp()), srv.api, () => 42);
+        const res = await links.create('m1', PAYLOAD(), true);
+        assert.deepEqual(res, { ok: true, link: { url: 'https://heynatively.com/s/Link00000001', createdAt: 42, includeTranscript: true } });
+        assert.deepEqual(links.info('m1'), res.link);
+        assert.deepEqual((await links.create('m1', PAYLOAD(), false)).link, res.link);
+        assert.equal(srv.state.created, 1);
+    });
     test('a store with more than 5,000 links keeps every one after a restart', () => {
         const d = tmp();
         const many = {};
@@ -218,126 +288,54 @@ describe('ShareLinks (review fixes)', () => {
         assert.equal(s.entries().length, 5003);
         assert.equal(s.get('m5002').revokeToken, 't5002');
     });
-
-    test('create saves the link and offers it; a second create hands back the same one without the network', async () => {
-        const srv = fakeServer();
-        const links = new share.ShareLinks(new share.ShareLinkStore(tmp()), srv.api, () => 42);
-        const res = await links.create('m1', PAYLOAD(), true);
-        assert.deepEqual(res, { ok: true, link: { url: 'https://heynatively.com/s/Link00000001', createdAt: 42, includeTranscript: true } });
-        assert.deepEqual(links.info('m1'), res.link);
-        const again = await links.create('m1', PAYLOAD(), false);
-        assert.deepEqual(again.link, res.link);
-        assert.equal(srv.state.created, 1);
-    });
-
-    test('deleting a meeting while offline keeps its link as pending on disk, and the next retry online turns it off', async () => {
-        const d = tmp();
-        const srv = fakeServer();
-        const links = new share.ShareLinks(new share.ShareLinkStore(d), srv.api);
-        await links.create('m1', PAYLOAD(), false);
-        srv.state.online = false;
-        const left = await links.forgetMeeting('m1');
-        assert.equal(left, 1);
-        assert.equal(links.info('m1'), null, 'a link being turned off is not offered');
-        const reopened = new share.ShareLinkStore(d);
-        assert.equal(reopened.get('m1').pendingRevoke, true, 'the token survives a restart');
-        assert.equal(reopened.get('m1').revokeToken, 'tok-Link00000001');
-
-        srv.state.online = true;
-        const afterRestart = new share.ShareLinks(reopened, srv.api);
-        assert.equal(await afterRestart.retryPending(), 0);
-        assert.ok(srv.state.revoked.has('Link00000001'));
-        assert.equal(new share.ShareLinkStore(d).get('m1'), null);
-    });
-
-    test('forgetMeeting marks the link pending before it returns, so the delete never waits on the network', () => {
-        const d = tmp();
-        const s = new share.ShareLinkStore(d);
-        s.set('m1', { id: 'AbCdEfGhIjKl', url: 'https://heynatively.com/s/AbCdEfGhIjKl', revokeToken: 'tok', createdAt: 1, includeTranscript: false });
-        const srv = fakeServer();
-        srv.state.online = false;
-        const p = new share.ShareLinks(s, srv.api).forgetMeeting('m1');
-        assert.equal(new share.ShareLinkStore(d).get('m1').pendingRevoke, true, 'on disk synchronously');
-        return p;
-    });
-
-    test('a link that could not be saved is turned off before the user is told so', async () => {
-        const srv = fakeServer();
-        const links = new share.ShareLinks(new share.ShareLinkStore(unwritable()), srv.api);
-        const res = await links.create('m1', PAYLOAD(), false);
-        assert.equal(res.ok, false);
-        assert.equal(res.kind, 'storage_unavailable');
-        assert.match(res.message, /turned off again/);
-        assert.deepEqual(srv.state.calls, ['POST /v1/share', 'DELETE /v1/share/Link00000001'], 'the turn-off was awaited, not fired and forgotten');
-        assert.ok(srv.state.revoked.has('Link00000001'));
-        assert.equal(links.info('m1'), null);
-    });
-
-    test('when that turn-off fails too, the user is told the link is still on and it is retried this session', async () => {
-        const srv = fakeServer();
-        const store = new share.ShareLinkStore(unwritable());
-        const links = new share.ShareLinks(store, srv.api);
-        // Online for the create, offline for the clean-up.
-        const api = srv.api();
-        const realFetch = api.fetchImpl;
-        let n = 0;
-        const flaky = async (url, init) => { if (++n === 2) throw new TypeError('fetch failed'); return realFetch(url, init); };
-        const links2 = new share.ShareLinks(store, () => ({ ...api, fetchImpl: flaky }));
-        const res = await links2.create('m1', PAYLOAD(), false);
-        assert.equal(res.ok, false);
-        assert.match(res.message, /could not be turned off yet/);
-        assert.equal(store.get('m1').pendingRevoke, true);
-        assert.equal(links2.info('m1'), null);
-        assert.equal(await links.retryPending(), 0);
-        assert.ok(srv.state.revoked.has('Link00000001'));
-        assert.equal(store.get('m1'), null);
-    });
-
     test('Stop sharing that fails leaves the link on and offered; one that works forgets it', async () => {
         const srv = fakeServer();
         const links = new share.ShareLinks(new share.ShareLinkStore(tmp()), srv.api);
         await links.create('m1', PAYLOAD(), false);
         srv.state.online = false;
-        const failed = await links.revoke('m1');
-        assert.equal(failed.ok, false);
-        assert.ok(links.info('m1'), 'still shared, Stop sharing still offered');
+        assert.equal((await links.revoke('m1')).ok, false);
+        assert.ok(links.info('m1'));
         srv.state.online = true;
         assert.deepEqual(await links.revoke('m1'), { ok: true });
         assert.equal(links.info('m1'), null);
     });
-
+    test('a link that could not be saved is turned off (awaited) before the user is told so', async () => {
+        const srv = fakeServer();
+        const links = new share.ShareLinks(new share.ShareLinkStore(unwritable(), { sleepSync: noWait }), srv.api);
+        const res = await links.create('m1', PAYLOAD(), false);
+        assert.equal(res.kind, 'storage_unavailable');
+        assert.match(res.message, /turned off again/);
+        assert.deepEqual(srv.state.calls, ['POST /v1/share', 'DELETE /v1/share/Link00000001']);
+    });
+    test('when that turn-off fails too, the user is told the link is still on and it is retried this session', async () => {
+        const srv = fakeServer();
+        const store = new share.ShareLinkStore(unwritable(), { sleepSync: noWait });
+        const api = srv.api();
+        let n = 0;
+        const flaky = async (url, init) => { if (++n === 2) throw new TypeError('fetch failed'); return api.fetchImpl(url, init); };
+        const links = new share.ShareLinks(store, () => ({ ...api, fetchImpl: flaky }));
+        const res = await links.create('m1', PAYLOAD(), false);
+        assert.match(res.message, /could not be turned off yet/);
+        assert.equal(links.info('m1'), null, 'a link being turned off is not offered');
+        assert.equal(await links.retryPending(), 0);
+        assert.ok(srv.state.revoked.has('Link00000001'));
+    });
     test('a meeting whose old link is still pending gets that one off before a new one is made', async () => {
         const srv = fakeServer();
-        const links = new share.ShareLinks(new share.ShareLinkStore(tmp()), srv.api);
+        const store = new share.ShareLinkStore(tmp());
+        const links = new share.ShareLinks(store, srv.api);
         await links.create('m1', PAYLOAD(), false);
+        store.markPending('m1');
         srv.state.online = false;
-        await links.forgetMeeting('m1');
         let res = await links.create('m1', PAYLOAD(), false);
-        assert.equal(res.ok, false);
         assert.match(res.message, /still being turned off/);
         assert.equal(srv.state.created, 1, 'no second link while the first is still public');
         srv.state.online = true;
         res = await links.create('m1', PAYLOAD(), false);
-        assert.equal(res.ok, true);
-        assert.ok(srv.state.revoked.has('Link00000001'));
         assert.equal(res.link.url, 'https://heynatively.com/s/Link00000002');
+        assert.ok(srv.state.revoked.has('Link00000001'));
     });
-
-    test('clearing all data marks every link and turns off what it can; the rest stay pending', async () => {
-        const d = tmp();
-        const srv = fakeServer();
-        const links = new share.ShareLinks(new share.ShareLinkStore(d), srv.api);
-        await links.create('m1', PAYLOAD(), false);
-        await links.create('m2', PAYLOAD(), false);
-        srv.state.online = false;
-        assert.equal(await links.revokeAll(), 2);
-        assert.equal(new share.ShareLinkStore(d).entries().filter(([, r]) => r.pendingRevoke).length, 2);
-        srv.state.online = true;
-        assert.equal(await links.revokeAll(), 0);
-        assert.equal(new share.ShareLinkStore(d).entries().length, 0);
-    });
-
-    test('a link marked pending during a retry run is picked up by a queued second run, not left for the timer', async () => {
+    test('a link marked pending during a retry run is picked up by a queued second run', async () => {
         const srv = fakeServer();
         const store = new share.ShareLinkStore(tmp());
         const links = new share.ShareLinks(store, srv.api);
@@ -345,11 +343,187 @@ describe('ShareLinks (review fixes)', () => {
         await links.create('m2', PAYLOAD(), false);
         store.markPending('m1');
         const first = links.retryPending();
-        const second = links.forgetMeeting('m2');
-        assert.equal(await first, 1, 'the first run only saw m1; m2 was marked after it began');
+        store.markPending('m2');
+        const second = links.retryPending();
+        assert.equal(await first, 1);
         assert.equal(await second, 0);
-        assert.ok(srv.state.revoked.has('Link00000001'));
-        assert.ok(srv.state.revoked.has('Link00000002'));
         assert.equal(store.entries().length, 0);
+    });
+});
+
+describe('items 4, 7, 9: deletes, through meetingDeleteObservers', () => {
+    function wired(dir = tmp()) {
+        const srv = fakeServer();
+        const store = new share.ShareLinkStore(dir);
+        const links = new share.ShareLinks(store, srv.api);
+        const stop = observersMod.observeMeetingDeletes((target) => links.beginForget(target));
+        return { srv, store, links, dir, stop };
+    }
+    test('deleting a shared meeting while offline keeps its link pending on disk; the next retry online turns it off', async () => {
+        const w = wired();
+        try {
+            await w.links.create('m1', PAYLOAD(), false);
+            w.srv.state.online = false;
+            deleteMeeting({ ids: ['m1'] }, 1);
+            assert.equal(new share.ShareLinkStore(w.dir).get('m1').pendingRevoke, true, 'on disk before the delete returned');
+            await waitFor(() => w.srv.state.calls.includes('DELETE /v1/share/Link00000001'));
+            w.srv.state.online = true;
+            const after = new share.ShareLinks(new share.ShareLinkStore(w.dir), w.srv.api);
+            assert.equal(await after.retryPending(), 0, 'a restart picks it up');
+            assert.ok(w.srv.state.revoked.has('Link00000001'));
+        } finally { w.stop(); }
+    });
+    test('item 7: a delete that fails (or finds nothing) leaves the link on and not pending', async () => {
+        const w = wired();
+        try {
+            await w.links.create('m1', PAYLOAD(), false);
+            deleteMeeting({ ids: ['m1'] }, 0);
+            assert.throws(() => observersMod.runObservedMeetingDelete({ ids: ['m1'] }, () => { throw new Error('SQLITE_BUSY'); }, () => true), /SQLITE_BUSY/);
+            await new Promise((r) => setImmediate(r));
+            assert.ok(w.links.info('m1'), 'still shared');
+            assert.equal(w.store.get('m1').pendingRevoke, undefined);
+            assert.equal(new share.ShareLinkStore(w.dir).get('m1').pendingRevoke, undefined, 'unmarked on disk too');
+            assert.equal(w.srv.state.revoked.size, 0);
+        } finally { w.stop(); }
+    });
+    test('Clear all data turns off every link once the wipe held; a failed wipe leaves them all on', async () => {
+        const w = wired();
+        try {
+            await w.links.create('m1', PAYLOAD(), false);
+            await w.links.create('m2', PAYLOAD(), false);
+            assert.throws(() => observersMod.runObservedMeetingDelete('all', () => { throw new Error('disk full'); }, () => true));
+            assert.equal(w.store.entries().filter(([, r]) => r.pendingRevoke).length, 0);
+            observersMod.runObservedMeetingDelete('all', () => true, () => true);
+            await waitFor(() => w.store.entries().length === 0);
+            assert.equal(w.srv.state.revoked.size, 2);
+            assert.equal(w.store.entries().length, 0);
+        } finally { w.stop(); }
+    });
+    test('item 4: a meeting deleted while its link is being created does not leave that link public', async () => {
+        const w = wired();
+        try {
+            let release;
+            w.srv.state.hold = new Promise((r) => { release = r; });
+            const creating = w.links.create('m1', PAYLOAD(), false);
+            await waitFor(() => w.srv.state.calls.length === 1);
+            deleteMeeting({ ids: ['m1'] }, 1);
+            w.srv.state.hold = null;
+            release();
+            const res = await creating;
+            assert.equal(res.ok, false);
+            assert.match(res.message, /deleted while its link was being made/);
+            await waitFor(() => w.srv.state.revoked.has('Link00000001'));
+            assert.ok(w.srv.state.revoked.has('Link00000001'));
+            assert.equal(w.store.get('m1'), null);
+        } finally { w.stop(); }
+    });
+    test('item 4: two creates at once make one link, and both get it', async () => {
+        const w = wired();
+        try {
+            const [a, b] = await Promise.all([w.links.create('m1', PAYLOAD(), false), w.links.create('m1', PAYLOAD(), false)]);
+            assert.equal(w.srv.state.created, 1);
+            assert.deepEqual(a, b);
+        } finally { w.stop(); }
+    });
+    test('item 9: an observer that throws is skipped and never stops the delete', () => {
+        const stop = observersMod.observeMeetingDeletes(() => { throw new Error('observer broke'); });
+        try {
+            const r = observersMod.runObservedMeetingDelete({ ids: ['x'] }, () => ({ changes: 1 }), (x) => x.changes > 0);
+            assert.equal(r.changes, 1);
+        } finally { stop(); }
+    });
+    test('item 9: every meetings delete in the app goes through runObservedMeetingDelete', () => {
+        const src = (p) => fs.readFileSync(path.join(REPO, p), 'utf8');
+        const dbm = src('electron/db/DatabaseManager.ts');
+        const rag = src('electron/rag/RAGManager.ts');
+        for (const [name, text] of [['DatabaseManager', dbm], ['RAGManager', rag]]) {
+            const deletes = text.split('\n').filter((l) => /DELETE FROM meetings\b/.test(l));
+            assert.ok(deletes.length > 0, name);
+            for (const l of deletes) {
+                const i = text.indexOf(l);
+                // The delete is built as a transaction just above or inside the call that runs it.
+                const before = text.slice(Math.max(0, i - 3000), i + 1500);
+                assert.match(before, /runObservedMeetingDelete\(/, `${name}: ${l.trim()}`);
+            }
+        }
+        const ipc = src('electron/ipcHandlers.ts');
+        assert.doesNotMatch(ipc, /revokeShareForMeeting|turnOffShareForDeletedMeeting|revokeAllShares/, 'no share special case left at a caller');
+    });
+});
+
+describe('items 5 and 6: the links file on a busy or broken disk', () => {
+    const REC = { id: 'AbCdEfGhIjKl', url: 'https://heynatively.com/s/AbCdEfGhIjKl', revokeToken: 'tok', createdAt: 1, includeTranscript: false };
+    test('item 5: a file that cannot be read is never overwritten, and is read again once it can be', async () => {
+        const d = tmp();
+        fs.writeFileSync(path.join(d, share.SHARE_LINKS_FILE), JSON.stringify({ old: REC }));
+        let busy = true;
+        const store = new share.ShareLinkStore(d, { sleepSync: noWait, readText: (f) => { if (busy) throw locked('EBUSY'); return fs.readFileSync(f, 'utf8'); } });
+        assert.throws(() => store.get('old'), (e) => e instanceof share.ShareStoreUnreadable);
+        const srv = fakeServer();
+        const links = new share.ShareLinks(store, srv.api);
+        const res = await links.create('new', PAYLOAD(), false);
+        assert.equal(res.ok, false);
+        assert.equal(res.message, share.STORE_UNREADABLE);
+        assert.equal(srv.state.created, 0, 'no link made while its token could not be kept');
+        assert.equal((await links.revoke('old')).message, share.STORE_UNREADABLE);
+        assert.deepEqual(JSON.parse(fs.readFileSync(path.join(d, share.SHARE_LINKS_FILE), 'utf8')), { old: REC }, 'untouched');
+        busy = false;
+        assert.deepEqual(store.get('old'), REC);
+    });
+    test('item 5: a delete while the file cannot be read is owed, and applied once it can be', async () => {
+        const d = tmp();
+        fs.writeFileSync(path.join(d, share.SHARE_LINKS_FILE), JSON.stringify({ m1: REC }));
+        let busy = true;
+        const store = new share.ShareLinkStore(d, { sleepSync: noWait, readText: (f) => { if (busy) throw locked('EPERM'); return fs.readFileSync(f, 'utf8'); } });
+        const srv = fakeServer();
+        const links = new share.ShareLinks(store, srv.api);
+        const stop = observersMod.observeMeetingDeletes((t) => links.beginForget(t));
+        try {
+            deleteMeeting({ ids: ['m1'] }, 1);
+            assert.equal(await links.retryPending(), 1, 'still owed');
+            busy = false;
+            assert.equal(await links.retryPending(), 0);
+            assert.ok(srv.state.revoked.has('AbCdEfGhIjKl'));
+        } finally { stop(); }
+    });
+    test('item 6: a rename blocked by a brief Windows lock is retried; a lasting one fails with no temp file left', () => {
+        const d = tmp();
+        const file = path.join(d, 'f.json');
+        let blocks = 2;
+        const waits = [];
+        atomic.writeFileAtomicSync(file, '{"a":1}', { sleepSync: (ms) => waits.push(ms), rename: (a, b) => { if (blocks-- > 0) throw locked('EPERM'); fs.renameSync(a, b); } });
+        assert.equal(fs.readFileSync(file, 'utf8'), '{"a":1}');
+        assert.deepEqual(waits, atomic.LOCK_RETRY_WAITS_MS.slice(0, 2));
+        assert.throws(() => atomic.writeFileAtomicSync(file, '{"a":2}', { sleepSync: noWait, rename: () => { throw locked('EBUSY'); } }), /EBUSY/);
+        assert.equal(fs.readFileSync(file, 'utf8'), '{"a":1}', 'the old file stands');
+        assert.deepEqual(fs.readdirSync(d), ['f.json'], 'no temp file left behind');
+        assert.throws(() => atomic.writeFileAtomicSync(file, 'x', { sleepSync: noWait, rename: () => { throw locked('ENOSPC'); } }), /ENOSPC/, 'other errors are not retried');
+    });
+    test('item 6: a read blocked by a brief lock is retried; a missing file is "missing", not an error', () => {
+        const d = tmp();
+        const file = path.join(d, 'f.json');
+        assert.deepEqual(atomic.readTextFileSync(file), { state: 'missing' });
+        fs.writeFileSync(file, 'hi');
+        let blocks = 1;
+        assert.deepEqual(atomic.readTextFileSync(file, { sleepSync: noWait, readText: (f) => { if (blocks-- > 0) throw locked('EBUSY'); return fs.readFileSync(f, 'utf8'); } }), { state: 'read', text: 'hi' });
+    });
+});
+
+describe('item 10: one API address for the whole app', () => {
+    test('NATIVELY_API_URL wins, trailing slashes go, production otherwise', () => {
+        assert.equal(apiBaseMod.nativelyApiBase({}), 'https://api.natively.software');
+        assert.equal(apiBaseMod.nativelyApiBase({ NATIVELY_API_URL: 'http://localhost:3000//' }), 'http://localhost:3000');
+    });
+    test('no module keeps its own copy of the lookup', () => {
+        const hits = [];
+        const walk = (dir) => {
+            for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
+                const p = path.join(dir, e.name);
+                if (e.isDirectory()) { if (e.name !== '__tests__' && e.name !== 'node_modules') walk(p); }
+                else if (p.endsWith('.ts') && /process\.env\.NATIVELY_API_URL\s*\|\|/.test(fs.readFileSync(p, 'utf8'))) hits.push(path.relative(REPO, p));
+            }
+        };
+        walk(path.join(REPO, 'electron'));
+        assert.deepEqual(hits, [], 'only services/nativelyApiBase.ts reads NATIVELY_API_URL');
     });
 });

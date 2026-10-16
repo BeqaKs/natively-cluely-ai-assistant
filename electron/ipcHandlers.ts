@@ -48,7 +48,7 @@ import { resolveCodingPromptSignals } from './llm/codingPromptSignals';
 import { resolveDiagramTurn, v3DiagramTurn, withDiagramContract, withDiagramTurnBlock, withMeetingSpeechForDiagramTurn, liveQuestionWantsADrawing, spokenRouteCarriesContract, undecidedTurnAnsweredInWords, turnStartsAFreshDesign, DIAGRAM_SPEECH_WINDOW_SECONDS, type DiagramTurn } from './llm/diagramPromptSignals';
 import { registerDiagramIpc, broadcastDiagramsEnabled } from './services/diagram/diagramIpc';
 import { registerAssistIpc } from './services/assist/assistIpc';
-import { registerOutputsIpc, revokeAllShares, turnOffShareForDeletedMeeting } from './services/outputs/outputsIpc';
+import { registerOutputsIpc } from './services/outputs/outputsIpc';
 import { registerOrganiseIpc, reindexOrganisePeople, organiseFolderMeetingIds, organiseScopeMeetingIds } from './services/organise/organiseIpc';
 import { isBareCodeRequest, looksLikeCodingAnswer, buildPriorCodingContextBlock as buildPriorCodingBlockForV3 } from './llm/codingFollowup';
 import { planAnswer, formatAnswerPlanForPrompt, isCodingAnswerType, validateAnswerStructure, validateProfileOutput, validateProfileEvidence, buildProfileRepairInstruction, raceStreamWithDeadline, firstUsefulDeadlineMs, totalHardTimeoutMs, repairDeadlineMs, LIVE_LOCAL_FIRST_USEFUL_TIMEOUT_MS, CODING_REGEN_ABORT_CHARS, isStealthEvasionQuestion, stripProfileTokensFromCoding, isBareFollowUp, isRefinementFollowUp, buildContextFreeClarification, sanitizeCandidateAnswer, acceptRepairedAnswer, CANDIDATE_VOICE_ANSWER_TYPES, detectAssistantVoiceMisfire, ASSISTANT_VOICE_ANSWER_TYPES, piTelemetry, classifyProviderError, detectExplicitCodingContract, isCodingContinuation, buildPriorCodingContextBlock, buildCodingContractPrompt, explicitContractProducesCode, CODING_VERIFICATION_INSTRUCTION, humanizeDirectiveFor, detectCorporateFiller, humanizeForAnswerType, applySpeakabilityBudget, compressTechnicalConcept, checkCodeCompleteness, varySpokenOpening, type ExplicitCodingContract, type AnswerType } from './llm';
@@ -196,6 +196,7 @@ import {
   type DirectAssistRequestInput,
   type DirectAssistStreamEvent,
 } from './direct-assist';
+import { nativelyApiBase } from './services/nativelyApiBase';
 
 type DirectAssistSource = 'typed' | 'stt' | 'screenshot';
 
@@ -7252,12 +7253,8 @@ export function initializeIpcHandlers(appState: AppState): void {
   });
 
   safeHandle('delete-meeting', async (_, id: string) => {
-    // A deleted meeting must not stay readable on the web. Its share link is
-    // marked "to turn off" on disk now and turned off in the background,
-    // retried until the server confirms (outputsIpc / shareLink.ts ShareLinks).
-    if (typeof id === 'string' && id) {
-      try { turnOffShareForDeletedMeeting(id); } catch (err: any) { console.warn('[Meetings] share link not marked on delete:', err?.message || 'unknown'); }
-    }
+    // A shared meeting's link goes off with it: DatabaseManager.deleteMeeting
+    // tells meetingDeleteObservers, which share links observe (outputsIpc).
     return DatabaseManager.getInstance().deleteMeeting(id);
   });
 
@@ -11874,7 +11871,7 @@ export function initializeIpcHandlers(appState: AppState): void {
   // of the app that could not be pointed at a local server. That is exactly the
   // surface where "does the UI show what the server enforces?" needs answering
   // before a release, not after.
-  const NATIVELY_API_BASE = (process.env.NATIVELY_API_URL || 'https://api.natively.software').replace(/\/+$/, '');
+  const NATIVELY_API_BASE = nativelyApiBase();
   // The plan catalog. Unauthenticated and identical for every user, so it is
   // cached per PROCESS rather than per key, and for far longer than usage —
   // allowances change on a deploy, not on a request.
@@ -15456,9 +15453,6 @@ export function initializeIpcHandlers(appState: AppState): void {
   });
 
   safeHandle('flush-database', async () => {
-    // Every meeting goes, so every share link goes off too. Marked on disk
-    // first and retried in the background; the wipe does not wait on the network.
-    try { void revokeAllShares(); } catch (err: any) { console.warn('[Meetings] share links not marked on clear:', err?.message || 'unknown'); }
     const result = DatabaseManager.getInstance().clearAllData();
     return { success: result };
   });

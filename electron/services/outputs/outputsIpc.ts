@@ -15,7 +15,9 @@ import type {
     ConnectionsStatus, CrmMatchPreview, CrmService, McpServerStatus, NotionParentInfo, OutputResult, ShareLinkInfo,
 } from '../../../src/types/meetingOutputs';
 import { ConnectionsStore } from './connectionsStore';
-import { ShareLinkStore, ShareLinks, sharePayload } from './shareLink';
+import { STORE_UNREADABLE, ShareLinkStore, ShareLinks, ShareStoreUnreadable, sharePayload } from './shareLink';
+import { nativelyApiBase } from '../nativelyApiBase';
+import { observeMeetingDeletes } from '../../db/meetingDeleteObservers';
 import { buildNotesDocument, type NotesDocument } from './notesDocument';
 import { buildNotesHtml } from './htmlExport';
 import { NOTES_EXPORT_FILTERS, defaultExportPath, notesFileStem, withExportExtension, type NotesExportFormat } from './exportFiles';
@@ -102,8 +104,6 @@ function loadDoc(meetingId: unknown): NotesDocument | null {
 
 // ── Share links ──────────────────────────────────────────────────────────
 
-const NATIVELY_API_BASE = (process.env.NATIVELY_API_URL || 'https://api.natively.software').replace(/\/+$/, '');
-
 /** Pending turn-offs are retried this often while the app runs, and once soon after launch. */
 const SHARE_RETRY_MS = 10 * 60 * 1000;
 const SHARE_FIRST_RETRY_MS = 20 * 1000;
@@ -124,46 +124,27 @@ function shareLinks(): ShareLinks {
     if (!shareLinksInstance) {
         shareLinksInstance = new ShareLinks(
             new ShareLinkStore(app.getPath('userData')),
-            () => ({ apiBase: NATIVELY_API_BASE, installId: installIdForShare() }),
+            () => ({ apiBase: nativelyApiBase(), installId: installIdForShare() }),
         );
     }
     return shareLinksInstance;
 }
 
 let shareRetryTimer: ReturnType<typeof setInterval> | null = null;
-function startShareRetries(): void {
+/**
+ * Wires share links into the app's life: every meeting delete (one meeting,
+ * Clear all data, the search index's live row) goes through
+ * meetingDeleteObservers, so a deleted meeting's link is turned off wherever
+ * the delete came from, and only once the delete has happened. Pending
+ * turn-offs are retried soon after launch and every ten minutes.
+ */
+function startShareLinks(): void {
     if (shareRetryTimer) return;
+    observeMeetingDeletes((target) => shareLinks().beginForget(target));
     const run = () => { void shareLinks().retryPending().catch((err) => console.warn('[Outputs] share turn-off retry failed:', err?.message || 'unknown')); };
     setTimeout(run, SHARE_FIRST_RETRY_MS).unref?.();
     shareRetryTimer = setInterval(run, SHARE_RETRY_MS);
     shareRetryTimer.unref?.();
-}
-
-/** Stop sharing, from the dialog. */
-export async function revokeShareForMeeting(meetingId: string): Promise<OutputResult> {
-    return shareLinks().revoke(meetingId);
-}
-
-/**
- * ipcHandlers `delete-meeting`: a deleted meeting must not stay readable on
- * the web. The link is marked pending on disk at once (the delete does not
- * wait on the network) and turned off in the background, retried at launch
- * and every ten minutes until the server confirms.
- */
-export function turnOffShareForDeletedMeeting(meetingId: string): void {
-    void shareLinks().forgetMeeting(meetingId).catch((err) => console.warn('[Outputs] share turn-off on delete failed:', err?.message || 'unknown'));
-}
-
-/** "Clear all data": every link goes off; any the server cannot confirm now stay pending and are retried. */
-export async function revokeAllShares(): Promise<void> {
-    try {
-        // revokeAll marks every link pending before its first await, so the
-        // marks are on disk before the caller goes on to wipe the meetings.
-        const left = await shareLinks().revokeAll();
-        if (left > 0) console.warn(`[Outputs] ${left} share link(s) still to turn off; retrying in the background`);
-    } catch (err: any) {
-        console.warn('[Outputs] turning share links off on clear failed:', err?.message || 'unknown');
-    }
 }
 
 const fail = (kind: OutputResult['kind'], service: string): OutputResult => ({ ok: false, kind, message: describeConnectionError(kind, service) });
@@ -352,30 +333,46 @@ export function registerOutputsIpc(appState: AppState, safeHandle: SafeHandle): 
 
     // Share as link. The notes go to natively-api only when the user presses
     // Create link; the record (link + the token that turns it off) stays here.
-    startShareRetries();
+    startShareLinks();
+    const SHARE_FAILED: OutputResult = { ok: false, kind: 'unknown', message: 'Something went wrong with the share link. Try again.' };
+    const shareStoreFailed = (err: unknown): OutputResult => (err instanceof ShareStoreUnreadable
+        ? { ok: false, kind: 'storage_unavailable', message: STORE_UNREADABLE }
+        : SHARE_FAILED);
     safeHandle('outputs:share-link-get', guard(FORBIDDEN, async (_e, meetingId: unknown): Promise<OutputResult & { link?: ShareLinkInfo }> => {
         if (typeof meetingId !== 'string' || !meetingId) return NO_MEETING;
-        const link = shareLinks().info(meetingId);
-        return link ? { ok: true, link } : { ok: true };
+        try {
+            const link = shareLinks().info(meetingId);
+            return link ? { ok: true, link } : { ok: true };
+        } catch (err) {
+            return shareStoreFailed(err);
+        }
     }));
     safeHandle('outputs:share-link-create', guard(FORBIDDEN, async (_e, meetingId: unknown, opts: any): Promise<OutputResult & { link?: ShareLinkInfo }> => {
-        const doc = loadDoc(meetingId);
-        if (!doc) return NO_MEETING;
-        const live = shareLinks().info(doc.meetingId);
-        if (live) {
-            clipboard.writeText(live.url);
-            return { ok: true, link: live };
+        try {
+            const doc = loadDoc(meetingId);
+            if (!doc) return NO_MEETING;
+            const live = shareLinks().info(doc.meetingId);
+            if (live) {
+                clipboard.writeText(live.url);
+                return { ok: true, link: live };
+            }
+            if (!hasNotes(doc)) return { ok: false, kind: 'invalid_input', message: 'This meeting has no notes to share yet.' };
+            const includeTranscript = opts?.includeTranscript === true;
+            const res = await shareLinks().create(doc.meetingId, sharePayload(doc, { includeTranscript }), includeTranscript);
+            if (res.ok && res.link) clipboard.writeText(res.link.url);
+            else if (res.kind === 'storage_unavailable') console.warn('[Outputs] share record not saved on this computer');
+            return res;
+        } catch (err) {
+            return shareStoreFailed(err);
         }
-        if (!hasNotes(doc)) return { ok: false, kind: 'invalid_input', message: 'This meeting has no notes to share yet.' };
-        const includeTranscript = opts?.includeTranscript === true;
-        const res = await shareLinks().create(doc.meetingId, sharePayload(doc, { includeTranscript }), includeTranscript);
-        if (res.ok && res.link) clipboard.writeText(res.link.url);
-        else if (res.kind === 'storage_unavailable') console.warn('[Outputs] share record not saved on this computer');
-        return res;
     }));
     safeHandle('outputs:share-link-revoke', guard(FORBIDDEN, async (_e, meetingId: unknown): Promise<OutputResult> => {
         if (typeof meetingId !== 'string' || !meetingId) return NO_MEETING;
-        return revokeShareForMeeting(meetingId);
+        try {
+            return await shareLinks().revoke(meetingId);
+        } catch (err) {
+            return shareStoreFailed(err);
+        }
     }));
 
     // Connections

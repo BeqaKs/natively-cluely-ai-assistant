@@ -14,7 +14,7 @@ import { useT } from '../../i18n';
 import { useResolvedTheme } from '../../hooks/useResolvedTheme';
 import { SettingsSwitch } from '../settings/SettingsRow';
 import type { ConnectionsStatus, CrmMatchPreview, CrmService, MeetingOutputsApi, ShareLinkInfo } from '../../types/meetingOutputs';
-import { crmSendable, notionResultView, shareLinkView, slackDraftStatus } from './outputsView';
+import { crmSendable, notionResultView, shareLinkView, slackDraftStatus, type ShareLinkReadState } from './outputsView';
 
 const api = (): MeetingOutputsApi | undefined => window.electronAPI?.meetingOutputs;
 const MENU_CLOSE_MS = 150;
@@ -258,9 +258,10 @@ const OutputDialog: React.FC<{
     const [done, setDone] = useState<string | null>(null);
     const [includeTranscript, setIncludeTranscript] = useState(false);
     const [includeActions, setIncludeActions] = useState(true);
-    // Share as link: the meeting's link, read when the dialog opens; null while it is being read.
+    // Share as link: the meeting's link, read when the dialog opens.
     const [link, setLink] = useState<ShareLinkInfo | null>(null);
-    const [linkRead, setLinkRead] = useState(false);
+    const [linkRead, setLinkRead] = useState<ShareLinkReadState>('reading');
+    const [linkReadTry, setLinkReadTry] = useState(0);
     const [copied, setCopied] = useState(false);
     // Slack
     const [webhookId, setWebhookId] = useState('');
@@ -282,24 +283,37 @@ const OutputDialog: React.FC<{
         if (!kind) return;
         setBusy(false); setError(null); setDone(null); setPreview(false); setPageUrl(undefined); setPartialPage(null); setMatches(null); setChosen(new Set());
         setIncludeTranscript(false); setIncludeActions(true);
-        setLink(null); setLinkRead(false); setCopied(false);
+        setLink(null); setLinkRead('reading'); setCopied(false);
         if (kind === 'slack') setWebhookId(conn?.slack.webhooks[0]?.id || '');
         if (kind === 'crm') setCrm(crmConnected[0] || null);
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [kind]);
 
-    // Share as link: whether this meeting already has one.
+    // Share as link: whether this meeting already has one. Every way the read
+    // can end (an answer, a refusal, an error, no bridge) ends the wait.
     useEffect(() => {
         if (kind !== 'link') return;
         let live = true;
-        void api()?.getShareLink(meetingId).then((res) => {
+        const failedRead = (message?: string) => {
             if (!live) return;
-            setLinkRead(true);
-            if (res?.ok) setLink(res.link || null); else setError(res?.message || t('The link could not be read.'));
-        });
+            setLinkRead('failed');
+            setError(message || t('Natively could not check whether this meeting is shared. Try again.'));
+        };
+        const pending = api()?.getShareLink(meetingId);
+        if (!pending) {
+            failedRead(t('Share links are not available in this window.'));
+            return () => { live = false; };
+        }
+        pending.then((res) => {
+            if (!live) return;
+            if (!res?.ok) { failedRead(res?.message); return; }
+            setError(null);
+            setLink(res.link || null);
+            setLinkRead('read');
+        }).catch(() => failedRead());
         return () => { live = false; };
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [kind]);
+    }, [kind, linkReadTry]);
 
     // Connections can arrive after the dialog opened (read fresh on open): pick the
     // first channel / CRM then, unless the user already chose one that still exists.
@@ -401,7 +415,10 @@ const OutputDialog: React.FC<{
                     </>
                     : view.state === 'none'
                         ? <>{closeBtn()}{primary(t('Create link'), createLink)}</>
-                        : closeBtn(done ? t('Done') : t('Cancel'))}
+                        : view.state === 'failed'
+                            // Whether a link exists is unknown, so no Create link: a second public link must not be made by accident.
+                            ? <>{closeBtn(t('Close'))}{primary(t('Try again'), () => { setError(null); setLinkRead('reading'); setLinkReadTry((n) => n + 1); })}</>
+                            : closeBtn(done ? t('Done') : t('Cancel'))}
             >
                 {view.state === 'shared' ? (
                     <div className="space-y-3">
@@ -431,11 +448,10 @@ const OutputDialog: React.FC<{
                         <ErrorLine text={error} />
                         <DoneLine text={done} />
                     </div>
+                ) : view.state === 'failed' ? (
+                    <ErrorLine text={error} />
                 ) : (
-                    <div>
-                        <p className="text-xs leading-relaxed text-text-secondary">{error ? '' : t('One moment.')}</p>
-                        <ErrorLine text={error} />
-                    </div>
+                    <p className="text-xs leading-relaxed text-text-secondary">{t('One moment.')}</p>
                 )}
             </DialogShell>
         );
