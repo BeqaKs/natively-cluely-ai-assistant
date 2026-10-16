@@ -187,3 +187,169 @@ describe('revokeShareLink', () => {
         assert.equal(r.ok, false); assert.equal(r.kind, 'network');
     });
 });
+
+// ── PR #657 review (Greptile, 2026-10-16): the app never loses the token of a
+// link that may still be public. A fake server that can go offline.
+function fakeServer() {
+    const state = { online: true, created: 0, revoked: new Set(), calls: [] };
+    const fetchImpl = async (url, init) => {
+        state.calls.push(`${init.method} ${url.replace('https://api.example.test', '')}`);
+        if (!state.online) throw new TypeError('fetch failed');
+        if (init.method === 'POST') {
+            const id = `Link${String(++state.created).padStart(8, '0')}`;
+            return { ok: true, status: 200, headers: { get: () => null }, text: async () => JSON.stringify({ ok: true, id, url: `https://heynatively.com/s/${id}`, revokeToken: `tok-${id}` }) };
+        }
+        state.revoked.add(url.split('/').pop());
+        return { ok: true, status: 200, headers: { get: () => null }, text: async () => '{"ok":true}' };
+    };
+    return { state, api: () => ({ apiBase: 'https://api.example.test', fetchImpl, timeoutMs: 1000 }) };
+}
+const tmp = () => fs.mkdtempSync(path.join(os.tmpdir(), 'natively-shares-'));
+const unwritable = () => { const d = tmp(); fs.writeFileSync(path.join(d, 'file'), 'x'); return path.join(d, 'file', 'inside'); };
+const PAYLOAD = () => share.sharePayload(doc(), { includeTranscript: false });
+
+describe('ShareLinks (review fixes)', () => {
+    test('a store with more than 5,000 links keeps every one after a restart', () => {
+        const d = tmp();
+        const many = {};
+        for (let i = 0; i < 5003; i++) many[`m${i}`] = { id: `Abc${String(i).padStart(9, '0')}`, url: `https://heynatively.com/s/x${i}`, revokeToken: `t${i}` };
+        fs.writeFileSync(path.join(d, share.SHARE_LINKS_FILE), JSON.stringify(many));
+        const s = new share.ShareLinkStore(d);
+        assert.equal(s.entries().length, 5003);
+        assert.equal(s.get('m5002').revokeToken, 't5002');
+    });
+
+    test('create saves the link and offers it; a second create hands back the same one without the network', async () => {
+        const srv = fakeServer();
+        const links = new share.ShareLinks(new share.ShareLinkStore(tmp()), srv.api, () => 42);
+        const res = await links.create('m1', PAYLOAD(), true);
+        assert.deepEqual(res, { ok: true, link: { url: 'https://heynatively.com/s/Link00000001', createdAt: 42, includeTranscript: true } });
+        assert.deepEqual(links.info('m1'), res.link);
+        const again = await links.create('m1', PAYLOAD(), false);
+        assert.deepEqual(again.link, res.link);
+        assert.equal(srv.state.created, 1);
+    });
+
+    test('deleting a meeting while offline keeps its link as pending on disk, and the next retry online turns it off', async () => {
+        const d = tmp();
+        const srv = fakeServer();
+        const links = new share.ShareLinks(new share.ShareLinkStore(d), srv.api);
+        await links.create('m1', PAYLOAD(), false);
+        srv.state.online = false;
+        const left = await links.forgetMeeting('m1');
+        assert.equal(left, 1);
+        assert.equal(links.info('m1'), null, 'a link being turned off is not offered');
+        const reopened = new share.ShareLinkStore(d);
+        assert.equal(reopened.get('m1').pendingRevoke, true, 'the token survives a restart');
+        assert.equal(reopened.get('m1').revokeToken, 'tok-Link00000001');
+
+        srv.state.online = true;
+        const afterRestart = new share.ShareLinks(reopened, srv.api);
+        assert.equal(await afterRestart.retryPending(), 0);
+        assert.ok(srv.state.revoked.has('Link00000001'));
+        assert.equal(new share.ShareLinkStore(d).get('m1'), null);
+    });
+
+    test('forgetMeeting marks the link pending before it returns, so the delete never waits on the network', () => {
+        const d = tmp();
+        const s = new share.ShareLinkStore(d);
+        s.set('m1', { id: 'AbCdEfGhIjKl', url: 'https://heynatively.com/s/AbCdEfGhIjKl', revokeToken: 'tok', createdAt: 1, includeTranscript: false });
+        const srv = fakeServer();
+        srv.state.online = false;
+        const p = new share.ShareLinks(s, srv.api).forgetMeeting('m1');
+        assert.equal(new share.ShareLinkStore(d).get('m1').pendingRevoke, true, 'on disk synchronously');
+        return p;
+    });
+
+    test('a link that could not be saved is turned off before the user is told so', async () => {
+        const srv = fakeServer();
+        const links = new share.ShareLinks(new share.ShareLinkStore(unwritable()), srv.api);
+        const res = await links.create('m1', PAYLOAD(), false);
+        assert.equal(res.ok, false);
+        assert.equal(res.kind, 'storage_unavailable');
+        assert.match(res.message, /turned off again/);
+        assert.deepEqual(srv.state.calls, ['POST /v1/share', 'DELETE /v1/share/Link00000001'], 'the turn-off was awaited, not fired and forgotten');
+        assert.ok(srv.state.revoked.has('Link00000001'));
+        assert.equal(links.info('m1'), null);
+    });
+
+    test('when that turn-off fails too, the user is told the link is still on and it is retried this session', async () => {
+        const srv = fakeServer();
+        const store = new share.ShareLinkStore(unwritable());
+        const links = new share.ShareLinks(store, srv.api);
+        // Online for the create, offline for the clean-up.
+        const api = srv.api();
+        const realFetch = api.fetchImpl;
+        let n = 0;
+        const flaky = async (url, init) => { if (++n === 2) throw new TypeError('fetch failed'); return realFetch(url, init); };
+        const links2 = new share.ShareLinks(store, () => ({ ...api, fetchImpl: flaky }));
+        const res = await links2.create('m1', PAYLOAD(), false);
+        assert.equal(res.ok, false);
+        assert.match(res.message, /could not be turned off yet/);
+        assert.equal(store.get('m1').pendingRevoke, true);
+        assert.equal(links2.info('m1'), null);
+        assert.equal(await links.retryPending(), 0);
+        assert.ok(srv.state.revoked.has('Link00000001'));
+        assert.equal(store.get('m1'), null);
+    });
+
+    test('Stop sharing that fails leaves the link on and offered; one that works forgets it', async () => {
+        const srv = fakeServer();
+        const links = new share.ShareLinks(new share.ShareLinkStore(tmp()), srv.api);
+        await links.create('m1', PAYLOAD(), false);
+        srv.state.online = false;
+        const failed = await links.revoke('m1');
+        assert.equal(failed.ok, false);
+        assert.ok(links.info('m1'), 'still shared, Stop sharing still offered');
+        srv.state.online = true;
+        assert.deepEqual(await links.revoke('m1'), { ok: true });
+        assert.equal(links.info('m1'), null);
+    });
+
+    test('a meeting whose old link is still pending gets that one off before a new one is made', async () => {
+        const srv = fakeServer();
+        const links = new share.ShareLinks(new share.ShareLinkStore(tmp()), srv.api);
+        await links.create('m1', PAYLOAD(), false);
+        srv.state.online = false;
+        await links.forgetMeeting('m1');
+        let res = await links.create('m1', PAYLOAD(), false);
+        assert.equal(res.ok, false);
+        assert.match(res.message, /still being turned off/);
+        assert.equal(srv.state.created, 1, 'no second link while the first is still public');
+        srv.state.online = true;
+        res = await links.create('m1', PAYLOAD(), false);
+        assert.equal(res.ok, true);
+        assert.ok(srv.state.revoked.has('Link00000001'));
+        assert.equal(res.link.url, 'https://heynatively.com/s/Link00000002');
+    });
+
+    test('clearing all data marks every link and turns off what it can; the rest stay pending', async () => {
+        const d = tmp();
+        const srv = fakeServer();
+        const links = new share.ShareLinks(new share.ShareLinkStore(d), srv.api);
+        await links.create('m1', PAYLOAD(), false);
+        await links.create('m2', PAYLOAD(), false);
+        srv.state.online = false;
+        assert.equal(await links.revokeAll(), 2);
+        assert.equal(new share.ShareLinkStore(d).entries().filter(([, r]) => r.pendingRevoke).length, 2);
+        srv.state.online = true;
+        assert.equal(await links.revokeAll(), 0);
+        assert.equal(new share.ShareLinkStore(d).entries().length, 0);
+    });
+
+    test('a link marked pending during a retry run is picked up by a queued second run, not left for the timer', async () => {
+        const srv = fakeServer();
+        const store = new share.ShareLinkStore(tmp());
+        const links = new share.ShareLinks(store, srv.api);
+        await links.create('m1', PAYLOAD(), false);
+        await links.create('m2', PAYLOAD(), false);
+        store.markPending('m1');
+        const first = links.retryPending();
+        const second = links.forgetMeeting('m2');
+        assert.equal(await first, 1, 'the first run only saw m1; m2 was marked after it began');
+        assert.equal(await second, 0);
+        assert.ok(srv.state.revoked.has('Link00000001'));
+        assert.ok(srv.state.revoked.has('Link00000002'));
+        assert.equal(store.entries().length, 0);
+    });
+});
