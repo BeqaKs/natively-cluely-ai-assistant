@@ -23,7 +23,7 @@ import { RECOGNITION_LANGUAGES } from '../config/languages';
 import { streamingStttWsOptions } from './dnsHelpers';
 import { shouldReviveExhaustedReconnect, DEFAULT_REVIVE_COOLDOWN_MS } from './sttReconnectPolicy.mjs';
 import { RealtimeSilenceTail } from './realtimeSilenceTail';
-import { runsByVoice } from './sttDiarization';
+import { nextVoiceEpoch, runsByVoice } from './sttDiarization';
 
 const SONIOX_WEBSOCKET_URL = 'wss://stt-rt.soniox.com/transcribe-websocket';
 const RECONNECT_BASE_DELAY_MS = 1000;
@@ -68,10 +68,8 @@ export class SonioxStreamingSTT extends EventEmitter {
     private numChannels = 1;
 
     // Opt-in voice labels (sttDiarization.ts). A connect param, so a change
-    // while live restarts the stream. `voiceEpoch` counts connections: Soniox
-    // numbers voices afresh on each one.
+    // while live restarts the stream.
     private diarize = false;
-    private voiceEpoch = 0;
 
     private reconnectAttempts = 0;
     private reconnectTimer: NodeJS.Timeout | null = null;
@@ -386,7 +384,9 @@ export class SonioxStreamingSTT extends EventEmitter {
         console.log(`[SonioxStreaming] Connecting (rate=${this.sampleRate}, ch=${this.numChannels})...`);
 
         this.configSent = false;
-        this.voiceEpoch++;
+        // Soniox numbers voices afresh on every connection: this one's lines
+        // carry its own window number, even ones that arrive after it closes.
+        const voiceEpoch = nextVoiceEpoch();
         // streamingStttWsOptions: forces IPv4-only DNS lookup (sidesteps Node's
         // macOS dual-stack ENOTFOUND on IPv4-only CNAME chains) and caps the
         // TLS+upgrade handshake at 15s. See dnsHelpers.ts.
@@ -505,7 +505,7 @@ export class SonioxStreamingSTT extends EventEmitter {
                                 text: run.text,
                                 isFinal: true,
                                 confidence: 1.0,
-                                ...(run.speakerId ? { speakerId: run.speakerId, voiceEpoch: this.voiceEpoch } : {}),
+                                ...(run.speakerId ? { speakerId: run.speakerId, voiceEpoch } : {}),
                             });
                         }
                     } else {

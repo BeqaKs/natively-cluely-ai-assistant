@@ -1,9 +1,11 @@
 // People sharing the microphone, on every provider whose live stream labels
-// voices (2026-10-17): Deepgram, Soniox and Google. Covers the shared label
-// helpers (sttDiarization.ts), the save-time split across provider
-// connections (roomSpeakers.ts: voice numbers restart on a reconnect), the
-// Settings list pinned to the backend's, and the wiring in each provider and
-// main.ts (from source: the providers open real sockets).
+// voices reliably (2026-10-17): Natively (its relay), Deepgram and Soniox.
+// Covers the shared label helpers (sttDiarization.ts), the save-time split
+// across provider connections (roomSpeakers.ts: voice numbers restart on a
+// reconnect, so only the largest window is split), the Settings list pinned to
+// the backend's, and the wiring in each provider and main.ts (from source: the
+// providers open real sockets). Google was tried and left out: its stream
+// restarts every 4.5 minutes, so every meeting is short windows.
 //
 // Run (after `npm run build:electron`):
 //   node scripts/run-with-env.mjs --default-tmpdir NATIVELY_TEST_USERDATA=natively-test-userdata \
@@ -49,17 +51,9 @@ describe('voice label helpers', () => {
         assert.deepEqual(dia.runsByVoice([{ text: '  ' }], (t) => t.text, (t) => t.speaker), [], 'blank runs dropped');
     });
 
-    test('Google: only the tail of the resent word list counts', () => {
-        const words = [
-            ...Array.from({ length: 10 }, () => ({ speakerLabel: '1' })), // earlier results
-            { speakerLabel: '2' }, { speakerLabel: '2' }, { speakerLabel: '1' },  // this result
-        ];
-        assert.equal(dia.dominantVoiceOfTail(words, 3), 'speaker_2');
-        assert.equal(dia.dominantVoiceOfTail(words, 13), 'speaker_1');
-        assert.equal(dia.dominantVoiceOfTail([{ speakerTag: 4 }], 1), 'speaker_4', 'older speakerTag still read');
-        assert.equal(dia.dominantVoiceOfTail([], 2), undefined);
-        assert.equal(dia.dominantVoiceOfTail(undefined, 2), undefined);
-        assert.equal(dia.dominantVoiceOfTail([{}], 1), undefined);
+    test('window numbers are unique across the app, never reused by a rebuilt provider', () => {
+        const a = dia.nextVoiceEpoch(), b = dia.nextVoiceEpoch(), c = dia.nextVoiceEpoch();
+        assert.ok(a < b && b < c, 'strictly increasing');
     });
 
     test('labels are asked for only where opted in', () => {
@@ -82,20 +76,30 @@ describe('voice label helpers', () => {
 });
 
 describe('the split across provider connections', () => {
-    test('labels swapped by a reconnect still give one "Me" and one Speaker', () => {
-        // Window 1: speaker_1 is the user. Window 2 (after a reconnect): the
-        // provider happened to call the colleague speaker_1.
+    test('only the largest window is split; a later window where the colleague talks most is never named as you', () => {
+        // Window 1 (most of the meeting): speaker_1 is the user. Window 2,
+        // after a reconnect: the colleague talks most, under speaker_1.
         const lines = [
             mic('speaker_1@1', many(30)), mic('speaker_2@1', many(8, 'c')), mic('speaker_1@1', many(20)),
             mic('speaker_2@1', many(6, 'c')), mic('speaker_2@1', many(5, 'c')),
-            mic('speaker_2@2', many(40)), mic('speaker_1@2', many(9, 'c')), mic('speaker_2@2', many(25)),
-            mic('speaker_1@2', many(7, 'c')),
+            mic('speaker_1@2', many(25, 'c')), mic('speaker_2@2', many(4)), mic('speaker_1@2', many(9, 'c')),
         ];
         const split = room.splitRoomSpeakers(lines);
-        assert.equal(split.voices, 1, 'one other person, not two');
-        const names = split.transcript.map((l) => l.speaker);
-        assert.deepEqual(names, ['user', 'Speaker 2', 'user', 'Speaker 2', 'Speaker 2', 'user', 'Speaker 2', 'user', 'Speaker 2']);
+        assert.equal(split.voices, 1);
+        assert.deepEqual(split.transcript.map((l) => l.speaker),
+            ['user', 'Speaker 2', 'user', 'Speaker 2', 'Speaker 2', 'user', 'user', 'user'],
+            'window 2 stays as before the setting: nobody named, the user never renamed');
         assert.ok(split.transcript.every((l) => !('speakerId' in l)), 'provider voice ids are not kept');
+    });
+
+    test('when the later window is the larger one, it is the one split, by its own counts', () => {
+        const lines = [
+            mic('speaker_1@1', many(10)), mic('speaker_2@1', many(10, 'c')),
+            mic('speaker_2@2', many(60)), mic('speaker_1@2', many(12, 'c')), mic('speaker_1@2', many(12, 'c')), mic('speaker_1@2', many(12, 'c')),
+        ];
+        const split = room.splitRoomSpeakers(lines);
+        assert.equal(split.voices, 1);
+        assert.deepEqual(split.transcript.map((l) => l.speaker), ['user', 'user', 'user', 'Speaker 2', 'Speaker 2', 'Speaker 2']);
     });
 
     test('the user alone, renumbered by reconnects, is never split', () => {
@@ -120,8 +124,7 @@ describe('the split across provider connections', () => {
         ];
         const split = room.splitRoomSpeakers(lines, { usedIds: ['speaker_2'] });
         assert.equal(split.voices, 2);
-        assert.deepEqual(new Set(split.transcript.filter((l) => l.speaker !== 'user').map((l) => l.speaker)), new Set(['Speaker 3', 'Speaker 4']),
-            'numbered past the call\'s named people');
+        assert.deepEqual(new Set(split.transcript.filter((l) => l.speaker !== 'user').map((l) => l.speaker)), new Set(['Speaker 3', 'Speaker 4']));
     });
 });
 
@@ -129,17 +132,16 @@ describe('which providers can label voices', () => {
     const SOURCES = {
         deepgram: 'electron/audio/DeepgramStreamingSTT.ts',
         soniox: 'electron/audio/SonioxStreamingSTT.ts',
-        google: 'electron/audio/GoogleSTT.ts',
         natively: 'electron/audio/NativelyProSTT.ts',
     };
     const CANNOT = [
         'electron/audio/ElevenLabsStreamingSTT.ts', 'electron/audio/OpenAIStreamingSTT.ts', 'electron/audio/RestSTT.ts',
         'electron/audio/NvidiaNimStreamingSTT.ts', 'electron/audio/AppleSpeechSTT.ts',
-        'electron/audio/LocalWhisperSTT.ts',
+        'electron/audio/LocalWhisperSTT.ts', 'electron/audio/GoogleSTT.ts',
     ];
 
     test('the Settings list is the backend\'s list', () => {
-        const ui = read('src/components/settings/RoomSpeakersSettings.tsx');
+        const ui = read('src/components/settings/roomSpeakersProviders.ts');
         const m = /ROOM_SPEAKERS_PROVIDERS[^=]*=\s*new Set\(\[([^\]]*)\]\)/.exec(ui);
         assert.ok(m, 'ROOM_SPEAKERS_PROVIDERS found');
         const uiSet = new Set([...m[1].matchAll(/'([^']+)'/g)].map((x) => x[1]));
@@ -156,27 +158,23 @@ describe('which providers can label voices', () => {
         const src = read(SOURCES.soniox);
         assert.match(src, /if \(this\.diarize\) config\.enable_speaker_diarization = true;/);
         assert.match(src, /const runs = this\.diarize \? runsByVoice\(finalTokens, .*\) : \[\];/);
-        assert.match(src, /speakerId: run\.speakerId, voiceEpoch: this\.voiceEpoch/);
-        assert.match(src, /this\.configSent = false;\s*this\.voiceEpoch\+\+;/, 'each connection counted');
+        assert.match(src, /speakerId: run\.speakerId, voiceEpoch \}/, 'the connection\'s own window, not a field read later');
+        assert.match(src, /const voiceEpoch = nextVoiceEpoch\(\);/);
     });
 
-    test('Google: labels in the request, the result\'s own words, and a refusal never costs the transcript', () => {
-        const src = read(SOURCES.google);
-        assert.match(src, /\.\.\.\(this\.diarizing\s*\?\s*\{ diarizationConfig: \{ enableSpeakerDiarization: true/);
-        assert.match(src, /dominantVoiceOfTail\(alt\.words, \(String\(transcript\)\.match\(\/\\S\+\/g\) \?\? \[\]\)\.length\)/);
-        const err = src.slice(src.indexOf(".on('error'"), src.indexOf(".on('data'"));
-        const dropAt = err.lastIndexOf('this.dropDiarization(');
-        const fatalAt = err.indexOf('const isPermanent');
-        assert.ok(dropAt > 0 && fatalAt > dropAt, 'labels are dropped before an INVALID_ARGUMENT can be fatal');
-        assert.match(err, /grpcCode === 3 && this\.diarizing && \/diariz\|speaker\/i/);
+    test('Deepgram: each connection keeps its own window number', () => {
+        const src = read(SOURCES.deepgram);
+        assert.match(src, /const voiceEpoch = nextVoiceEpoch\(\);/);
+        assert.match(src, /\.\.\.\(speakerId \? \{ speakerId, voiceEpoch \} : \{\}\)/);
+        assert.doesNotMatch(src, /this\.voiceEpoch/);
     });
 
     test('Natively: the flag rides in the auth frame; labels and both connection counts come back', () => {
         const src = read(SOURCES.natively);
         assert.match(src, /\.\.\.\(this\.diarize \? \{ speaker_labels: true \} : \{\}\)/);
-        assert.match(src, /new WebSocket\(connectUrl[^\n]*\n\s*this\.wsEpoch\+\+;/, 'each socket counted');
+        assert.match(src, /const socketEpoch = nextVoiceEpoch\(\);/, 'each socket its own window');
         assert.match(src, /const speakerId = voiceIdFromLabel\(msg\.speaker\)/);
-        assert.match(src, /voiceEpoch: this\.wsEpoch \* 1000 \+ upstream/);
+        assert.match(src, /voiceEpoch: socketEpoch \* 1000 \+ upstream/);
         // The relay frame (regional relays, dormant) does not carry it.
         const relayFrame = src.slice(src.indexOf('private buildAuthFrame('), src.indexOf('private contextTermsField('));
         assert.doesNotMatch(relayFrame, /speaker_labels/);

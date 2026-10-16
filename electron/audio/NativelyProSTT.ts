@@ -5,7 +5,7 @@ import { RECOGNITION_LANGUAGES, EnglishVariant } from '../config/languages';
 import { TRIAL_SENTINEL_KEY } from '../config/constants';
 import { streamingStttWsOptions } from './dnsHelpers';
 import { RealtimeSilenceTail } from './realtimeSilenceTail';
-import { voiceIdFromLabel } from './sttDiarization';
+import { nextVoiceEpoch, voiceIdFromLabel } from './sttDiarization';
 
 /**
  * Real-time silence guaranteed after the local VAD says speech ended.
@@ -102,11 +102,8 @@ export class NativelyProSTT extends EventEmitter {
     private ws: WebSocket | null = null;
     // Voice labels (sttDiarization.ts): `speaker_labels: true` in the legacy
     // auth frame; natively-api then asks Soniox for them and sends `speaker`
-    // and `speaker_epoch` on each final. `wsEpoch` counts this client's
-    // sockets: voice numbers restart on a new one, as on the relay's own
-    // upstream reconnects (`speaker_epoch`).
+    // and `speaker_epoch` (its upstream connection count) on each final.
     private diarize = false;
-    private wsEpoch = 0;
     private isActive           = false;
     private isConnected        = false;
     private isConnecting       = false;
@@ -599,7 +596,9 @@ export class NativelyProSTT extends EventEmitter {
         // IPv4-only CNAME chains and caps the TLS+upgrade handshake at 15s.
         // See dnsHelpers.ts for the full why.
         const ws = new WebSocket(connectUrl, streamingStttWsOptions() as any);
-        this.wsEpoch++;
+        // Voice numbers restart on a new socket, as on the relay's own upstream
+        // reconnects: this socket's lines carry its own window number.
+        const socketEpoch = nextVoiceEpoch();
         this.ws = ws;
 
         // CRITICAL: every handler below captures `ws` locally and gates on
@@ -770,7 +769,7 @@ export class NativelyProSTT extends EventEmitter {
                         text:       msg.text,
                         isFinal:    msg.is_final    ?? false,
                         confidence: msg.confidence  ?? 1.0,
-                        ...(speakerId ? { speakerId, voiceEpoch: this.wsEpoch * 1000 + upstream } : {}),
+                        ...(speakerId ? { speakerId, voiceEpoch: socketEpoch * 1000 + upstream } : {}),
                     });
                 }
             } catch (err) {

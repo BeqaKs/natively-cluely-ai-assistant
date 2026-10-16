@@ -3901,7 +3901,7 @@ export class AppState {
     // when the user turned on "People sharing your microphone" (Settings ›
     // Audio; split at save by meeting/roomSpeakers.ts). Any provider that can
     // label voices on a live stream takes it: Natively (through its relay),
-    // Deepgram, Soniox, Google. Never for every
+    // Deepgram, Soniox. Never for every
     // meeting: labelling changes the live path and its cost. Before start(),
     // so no provider reconnects to apply it.
     try {

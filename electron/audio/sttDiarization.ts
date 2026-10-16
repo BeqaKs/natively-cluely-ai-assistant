@@ -15,11 +15,13 @@
  * 2026-10-17):
  *   deepgram  `diarize=true`, a `speaker` index per word
  *   soniox    `enable_speaker_diarization`, a `speaker` label per token
- *   google    v1 `diarizationConfig`, a `speakerLabel` per word
  *   natively  the relay (natively-api) asks Soniox when the auth frame says
  *             `speaker_labels: true`, and sends `speaker` + `speaker_epoch`;
  *             a session it fails over to another provider has no labels
- * and which cannot: OpenAI realtime (labels only on whole-file transcription),
+ * and which cannot, or not reliably: Google (v1 streaming labels voices, but
+ * the stream must restart every 4.5 minutes and numbers voices afresh each
+ * time, so every meeting is a run of short windows that cannot be matched to
+ * each other; see roomSpeakers.ts), OpenAI realtime (labels only on whole-file transcription),
  * Groq (Whisper), ElevenLabs realtime (labels only on batch Scribe), Azure and
  * IBM over REST (each short clip is its own request, so labels do not carry
  * from one clip to the next), NVIDIA's hosted NIM (streaming labels are a beta
@@ -30,11 +32,11 @@
 
 /**
  * Providers whose live stream can label voices. The renderer keeps its own
- * copy (RoomSpeakersSettings.ROOM_SPEAKERS_PROVIDERS, it cannot import from
+ * copy (src/components/settings/roomSpeakersProviders.ts, it cannot import from
  * electron/); RoomSpeakersProviders2026_10_17.test.mjs pins the two equal and
  * pins that each provider here has `setDiarization`.
  */
-export const DIARIZING_STT_PROVIDERS: ReadonlySet<string> = new Set(['natively', 'deepgram', 'soniox', 'google']);
+export const DIARIZING_STT_PROVIDERS: ReadonlySet<string> = new Set(['natively', 'deepgram', 'soniox']);
 
 /** A provider that can be asked to label voices. */
 export interface DiarizingSTT {
@@ -97,33 +99,26 @@ export function runsByVoice<T>(
 }
 
 /**
- * The voice that said most of the last `count` words. Google, with labels on,
- * resends every word since the stream opened in each response; the result in
- * hand is the tail of that list.
+ * Voice numbers restart on every new provider connection (a reconnect), so
+ * "speaker_1" before and after one may be different people. Mic voice ids
+ * therefore carry the connection they came from, `speaker_2@3`;
+ * roomSpeakers.ts reads each connection as its own window. The provider voice
+ * ids never reach disk (MeetingPersistence strips them).
  */
-export function dominantVoiceOfTail(
-    words: ReadonlyArray<{ speakerLabel?: unknown; speakerTag?: unknown }> | null | undefined,
-    count: number,
-): string | undefined {
-    if (!Array.isArray(words) || words.length === 0 || count <= 0) return undefined;
-    const tally = new Map<string, number>();
-    for (const w of words.slice(-count)) {
-        const id = voiceIdFromLabel(w?.speakerLabel) ?? voiceIdFromLabel(w?.speakerTag);
-        if (id) tally.set(id, (tally.get(id) ?? 0) + 1);
-    }
-    let best: string | undefined;
-    let bestCount = 0;
-    for (const [id, c] of tally) if (c > bestCount) { best = id; bestCount = c; }
-    return best;
-}
+let lastVoiceEpoch = 0;
 
 /**
- * Voice numbers restart on every new provider connection (a reconnect, or
- * Google's 4.5-minute stream restart), so "speaker_1" before and after one may
- * be different people. Mic voice ids therefore carry the connection they came
- * from, `speaker_2@3`; roomSpeakers.ts reads each connection as its own window.
- * The provider voice ids never reach disk (MeetingPersistence strips them).
+ * A window number for a new provider connection, unique in this process: a
+ * provider object rebuilt mid-meeting (a provider switch) must not reuse an
+ * earlier object's numbers. Taken once per connection and kept by that
+ * connection's handlers, so a final that arrives after it closed still carries
+ * its own window.
  */
+export function nextVoiceEpoch(): number {
+    lastVoiceEpoch += 1;
+    return lastVoiceEpoch;
+}
+
 export function withVoiceEpoch(speakerId: string, epoch: number | undefined): string {
     return typeof epoch === 'number' && Number.isInteger(epoch) && epoch >= 0 ? `${speakerId}@${epoch}` : speakerId;
 }

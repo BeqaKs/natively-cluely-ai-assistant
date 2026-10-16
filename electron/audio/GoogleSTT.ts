@@ -5,7 +5,6 @@ import * as fs from 'fs';
 import * as os from 'os';
 import { RECOGNITION_LANGUAGES, EnglishVariant } from '../config/languages';
 import { getSttContextTerms, googleSpeechContexts } from './sttContextTerms';
-import { dominantVoiceOfTail } from './sttDiarization';
 
 /**
  * GoogleSTT
@@ -67,14 +66,6 @@ export class GoogleSTT extends EventEmitter {
     // or one that arrives while we are already on `default`, is genuinely
     // permanent and falls through to the fatal path.
     private modelDowngraded = false;
-    // Opt-in voice labels (sttDiarization.ts), v1 `diarizationConfig`. Not
-    // every model takes them: a refusal drops them for the session, once, and
-    // the lazy reconnect reopens without, so labels can never cost the user
-    // their transcript. `voiceEpoch` counts streams: Google numbers voices
-    // afresh on each, and restarts every 4.5 minutes (see startStream).
-    private diarize = false;
-    private diarizationDropped = false;
-    private voiceEpoch = 0;
     private label = 'default';
     private writeCount = 0;
 
@@ -199,27 +190,6 @@ export class GoogleSTT extends EventEmitter {
      * This method exists for interface consistency with RestSTT so that
      * main.ts can call notifySpeechEnded() without type-casting to `any`.
      */
-    /** Label voices on this stream (sttDiarization.ts). Restarts it if live. */
-    public setDiarization(enabled: boolean): void {
-        if (this.diarize === enabled) return;
-        this.diarize = enabled;
-        console.log(`[GoogleSTT/${this.label}] Diarization ${enabled ? 'enabled' : 'disabled'}`);
-        if (this.isStreaming || this.isActive) {
-            this.stop();
-            this.start();
-        }
-    }
-
-    private get diarizing(): boolean {
-        return this.diarize && !this.diarizationDropped;
-    }
-
-    /** Google refused the labels: carry on without them for this session. */
-    private dropDiarization(reason: string): void {
-        this.diarizationDropped = true;
-        console.warn(`[GoogleSTT/${this.label}] Speaker labels refused (${reason}); continuing without them for this session.`);
-    }
-
     public notifySpeechEnded(): void {
         // Intentionally empty. Google STT detects speech boundaries server-side.
     }
@@ -624,7 +594,6 @@ export class GoogleSTT extends EventEmitter {
         this.lastConnectAttempt = Date.now();
         this.isStreaming = true;
         this.isConnecting = true;
-        this.voiceEpoch++;
 
         console.log(`[GoogleSTT/${this.label}] Creating gRPC stream (rate=${this.sampleRateHertz}Hz, ch=${this.audioChannelCount}, lang=${this.languageCode})...`);
 
@@ -652,10 +621,6 @@ export class GoogleSTT extends EventEmitter {
                     alternativeLanguageCodes: this.alternativeLanguageCodes,
                     // The user's name and dictionary as phrase hints (sttContextTerms.ts).
                     speechContexts: googleSpeechContexts(getSttContextTerms()),
-                    // Each word then carries a speakerLabel.
-                    ...(this.diarizing
-                        ? { diarizationConfig: { enableSpeakerDiarization: true, minSpeakerCount: 1, maxSpeakerCount: 6 } }
-                        : {}),
                 },
                 interimResults: true,
             })
@@ -683,12 +648,6 @@ export class GoogleSTT extends EventEmitter {
                     return;
                 }
 
-                // A refusal that names the labels: drop them, keep transcribing.
-                if (grpcCode === 3 && this.diarizing && /diariz|speaker/i.test(err.message || '')) {
-                    this.dropDiarization(err.message || 'INVALID_ARGUMENT');
-                    return;
-                }
-
                 // INVALID_ARGUMENT on a `latest_long` stream is far more likely the
                 // model than the credentials: v1 supports latest_long for only some
                 // locales and rejects the pair outright. Answer the FIRST one by
@@ -706,13 +665,6 @@ export class GoogleSTT extends EventEmitter {
                         `Add '${this.languageCode}' to LANGUAGES_WITHOUT_LATEST_LONG to skip this ` +
                         `round-trip. Google said: ${err.message}`
                     );
-                    return;
-                }
-
-                // Still refused with labels on, after any model fallback: the
-                // labels go before the transcript does.
-                if (grpcCode === 3 && this.diarizing) {
-                    this.dropDiarization(err.message || 'INVALID_ARGUMENT');
                     return;
                 }
 
@@ -786,16 +738,10 @@ export class GoogleSTT extends EventEmitter {
 
                     if (transcript) {
                         console.log(`[GoogleSTT/${this.label}] Transcript received`, { final: isFinal, length: transcript.length });
-                        // With labels on, `words` holds every word since the stream
-                        // opened; this result is its tail.
-                        const speakerId = isFinal && this.diarizing
-                            ? dominantVoiceOfTail(alt.words, (String(transcript).match(/\S+/g) ?? []).length)
-                            : undefined;
                         this.emit('transcript', {
                             text: transcript,
                             isFinal,
-                            confidence: alt.confidence,
-                            ...(speakerId ? { speakerId, voiceEpoch: this.voiceEpoch } : {}),
+                            confidence: alt.confidence
                         });
                     }
                 }
