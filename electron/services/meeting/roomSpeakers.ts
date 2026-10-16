@@ -6,8 +6,8 @@
  * holds for a headset, not for a room: everyone around the laptop lands on
  * the mic channel and the notes credit all of it to "Me". With the room
  * setting on, the mic channel is transcribed with provider diarization
- * (Deepgram today), so each mic line carries a provider voice id. This turns
- * those ids into speakers:
+ * (Deepgram, Soniox or Google: audio/sttDiarization.ts), so each mic line
+ * carries a provider voice id. This turns those ids into speakers:
  *
  *   - the voice with the most words on the mic channel is the user and stays
  *     "Me" (the user is the one who started the recording and usually talks
@@ -19,10 +19,20 @@
  *   - a voice under those thresholds is diarization flicker, not a person, and
  *     folds back into "Me"; so does every line without a voice id.
  *
+ * Providers number voices afresh on every connection (a reconnect, Google's
+ * 4.5-minute stream restart), so an id may carry the connection it came from,
+ * `speaker_2@3`. Each connection is then its own window: in each, the voice
+ * with the most words is the user and the rest rank 1, 2, … by words, and a
+ * rank is read as the same person in every window. That is exact for two
+ * people in a room, the usual case, and an estimate past that. With a single
+ * window it is exactly the per-voice rule above.
+ *
  * Pure and deterministic: no model call, no audio, no platform branches. The
  * live transcript is untouched (this runs at save), so there is no latency
  * cost; only the saved transcript and the notes see the split.
  */
+
+import { parseVoiceId } from '../../audio/sttDiarization';
 
 export interface RoomLineLike {
     speaker: string;
@@ -79,21 +89,44 @@ export function splitRoomSpeakers<T extends RoomLineLike>(lines: T[], opts: Room
     });
     if (perVoice.size < 2 || total === 0) return unchanged();
 
-    const dominant = [...perVoice.entries()].sort((a, b) => b[1].words - a[1].words || a[0].localeCompare(b[0]))[0][0];
+    // Rank each voice within its connection window: 0 is the user there.
+    const byWords = (a: [string, { words: number }], b: [string, { words: number }]) => b[1].words - a[1].words || a[0].localeCompare(b[0]);
+    const windows = new Map<string, Array<[string, { words: number; lines: number }]>>();
+    for (const entry of perVoice) {
+        const { epoch } = parseVoiceId(entry[0]);
+        windows.set(epoch, [...(windows.get(epoch) ?? []), entry]);
+    }
+    const rankOf = new Map<string, number>();
+    for (const voices of windows.values()) voices.sort(byWords).forEach(([id], i) => rankOf.set(id, i));
+
+    // A rank is one person across windows; rank 0 is the user.
+    const perRank = new Map<number, { words: number; lines: number }>();
+    for (const [id, v] of perVoice) {
+        const r = rankOf.get(id) ?? 0;
+        const agg = perRank.get(r) ?? { words: 0, lines: 0 };
+        agg.words += v.words; agg.lines += v.lines;
+        perRank.set(r, agg);
+    }
+    if (perRank.size < 2) return unchanged();
 
     // Ids in use: the caller's, plus any speaker_N already on a line.
     const used = new Set<string>(opts.usedIds ?? []);
     for (const l of lines) if (l.speakerId && /^speaker_\d+$/.test(l.speakerId) && !MIC.test(l.speaker)) used.add(l.speakerId);
 
-    const nameFor = new Map<string, string>();
-    for (const [id, v] of [...perVoice.entries()].sort((a, b) => b[1].words - a[1].words || a[0].localeCompare(b[0]))) {
-        if (id === dominant) continue;
+    const nameForRank = new Map<number, string>();
+    for (const [r, v] of [...perRank.entries()].sort((a, b) => b[1].words - a[1].words || a[0] - b[0])) {
+        if (r === 0) continue;
         if (v.words / total < minShare || v.lines < minLines) continue;
         const n = nextSpeakerNumber(used);
         used.add(`speaker_${n}`);
-        nameFor.set(id, `Speaker ${n}`);
+        nameForRank.set(r, `Speaker ${n}`);
     }
-    if (nameFor.size === 0) return unchanged();
+    if (nameForRank.size === 0) return unchanged();
+    const nameFor = new Map<string, string>();
+    for (const [id, r] of rankOf) {
+        const name = nameForRank.get(r);
+        if (name) nameFor.set(id, name);
+    }
 
     const transcript = lines.map((l, i) => {
         if (!MIC.test(l.speaker)) return l;
@@ -104,5 +137,5 @@ export function splitRoomSpeakers<T extends RoomLineLike>(lines: T[], opts: Room
         renamed.set(i, name);
         return { ...rest, speaker: name } as T;
     });
-    return { transcript, renamed, voices: nameFor.size };
+    return { transcript, renamed, voices: nameForRank.size };
 }

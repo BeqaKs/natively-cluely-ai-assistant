@@ -54,6 +54,9 @@ export class DeepgramStreamingSTT extends EventEmitter {
     // remote speakers can be distinguished. Default OFF — must never destabilize the
     // realtime path for users who don't enable it.
     private diarize = false;
+    // Counts connections: Deepgram numbers voices afresh on each one, so mic
+    // voice ids carry it (sttDiarization.withVoiceEpoch).
+    private voiceEpoch = 0;
     private readonly silenceTail = new RealtimeSilenceTail({
         tailMs: DEEPGRAM_SILENCE_TAIL_MS,
         format: () => ({ sampleRate: this.sampleRate, channels: this.numChannels }),
@@ -207,6 +210,7 @@ export class DeepgramStreamingSTT extends EventEmitter {
     private connect(): void {
         if (this.isConnecting) return;
         this.isConnecting = true;
+        this.voiceEpoch++;
 
         console.log(`[DeepgramStreaming] Connecting (rate=${this.sampleRate}, ch=${this.numChannels}, lang=${this.languageCode})...`);
 
@@ -293,7 +297,7 @@ export class DeepgramStreamingSTT extends EventEmitter {
                             text: transcript,
                             isFinal,
                             confidence: alt?.confidence ?? 1.0,
-                            ...(speakerId ? { speakerId } : {}),
+                            ...(speakerId ? { speakerId, voiceEpoch: this.voiceEpoch } : {}),
                         });
                         // Auto Answer V3 endpoint normalization (additive): Deepgram
                         // distinguishes is_final (segment) from speech_final (utterance).

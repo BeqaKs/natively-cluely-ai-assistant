@@ -23,6 +23,7 @@ import { RECOGNITION_LANGUAGES } from '../config/languages';
 import { streamingStttWsOptions } from './dnsHelpers';
 import { shouldReviveExhaustedReconnect, DEFAULT_REVIVE_COOLDOWN_MS } from './sttReconnectPolicy.mjs';
 import { RealtimeSilenceTail } from './realtimeSilenceTail';
+import { runsByVoice } from './sttDiarization';
 
 const SONIOX_WEBSOCKET_URL = 'wss://stt-rt.soniox.com/transcribe-websocket';
 const RECONNECT_BASE_DELAY_MS = 1000;
@@ -65,6 +66,12 @@ export class SonioxStreamingSTT extends EventEmitter {
 
     private sampleRate = 16000;
     private numChannels = 1;
+
+    // Opt-in voice labels (sttDiarization.ts). A connect param, so a change
+    // while live restarts the stream. `voiceEpoch` counts connections: Soniox
+    // numbers voices afresh on each one.
+    private diarize = false;
+    private voiceEpoch = 0;
 
     private reconnectAttempts = 0;
     private reconnectTimer: NodeJS.Timeout | null = null;
@@ -120,6 +127,14 @@ export class SonioxStreamingSTT extends EventEmitter {
     public setAudioChannelCount(count: number): void {
         this.numChannels = count;
         console.log(`[SonioxStreaming] Channel count set to ${count}`);
+    }
+
+    /** Label voices on this stream (sttDiarization.ts). Restarts it if live. */
+    public setDiarization(enabled: boolean): void {
+        if (this.diarize === enabled) return;
+        this.diarize = enabled;
+        console.log(`[SonioxStreaming] Diarization ${enabled ? 'enabled' : 'disabled'}`);
+        if (this.isActive) this.scheduleRestart();
     }
 
     private languageCode?: string;
@@ -196,6 +211,9 @@ export class SonioxStreamingSTT extends EventEmitter {
             enable_endpoint_detection: true,
             ...SONIOX_ENDPOINT_TUNING,
         };
+
+        // Each token then carries a `speaker` label.
+        if (this.diarize) config.enable_speaker_diarization = true;
 
         // The user's name, so STT stops spelling it a new way each time (sttContextTerms.ts).
         const terms = getSttContextTerms();
@@ -368,6 +386,7 @@ export class SonioxStreamingSTT extends EventEmitter {
         console.log(`[SonioxStreaming] Connecting (rate=${this.sampleRate}, ch=${this.numChannels})...`);
 
         this.configSent = false;
+        this.voiceEpoch++;
         // streamingStttWsOptions: forces IPv4-only DNS lookup (sidesteps Node's
         // macOS dual-stack ENOTFOUND on IPv4-only CNAME chains) and caps the
         // TLS+upgrade handshake at 15s. See dnsHelpers.ts.
@@ -445,6 +464,7 @@ export class SonioxStreamingSTT extends EventEmitter {
                 let currentFinalText = '';
                 let nonFinalText = '';
                 let endpointSeen = false;
+                const finalTokens: Array<{ text: string; speaker?: unknown }> = [];
 
                 for (const token of tokens) {
                     if (!token.text) continue;
@@ -468,18 +488,33 @@ export class SonioxStreamingSTT extends EventEmitter {
 
                     if (token.is_final) {
                         currentFinalText += token.text;
+                        finalTokens.push(token);
                     } else {
                         nonFinalText += token.text;
                     }
                 }
 
-                // 1. Emit final tokens immediately
+                // 1. Emit final tokens immediately. With voice labels on, one
+                //    final per run of one voice, so two people in one message
+                //    stay two lines; without them, exactly the old single final.
                 if (currentFinalText) {
-                    this.emit('transcript', {
-                        text: currentFinalText,
-                        isFinal: true,
-                        confidence: 1.0,
-                    });
+                    const runs = this.diarize ? runsByVoice(finalTokens, (t) => t.text, (t) => t.speaker) : [];
+                    if (runs.length > 0) {
+                        for (const run of runs) {
+                            this.emit('transcript', {
+                                text: run.text,
+                                isFinal: true,
+                                confidence: 1.0,
+                                ...(run.speakerId ? { speakerId: run.speakerId, voiceEpoch: this.voiceEpoch } : {}),
+                            });
+                        }
+                    } else {
+                        this.emit('transcript', {
+                            text: currentFinalText,
+                            isFinal: true,
+                            confidence: 1.0,
+                        });
+                    }
                 }
 
                 // 2. Emit non-final tokens as interim (live preview)

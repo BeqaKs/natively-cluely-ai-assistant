@@ -1233,6 +1233,7 @@ import { GoogleSTT } from "./audio/GoogleSTT"
 import { RestSTT } from "./audio/RestSTT"
 import { DeepgramStreamingSTT } from "./audio/DeepgramStreamingSTT"
 import { isIntelligenceFlagEnabled } from "./intelligence/intelligenceFlags"
+import { canDiarize, shouldDiarize, withVoiceEpoch } from "./audio/sttDiarization"
 import { buildJudgePrompt } from "./intelligence/autoAnswer/AutoAnswerJudge"
 import { SimpleAutoAnswerEngine } from "./intelligence/autoAnswer/SimpleAutoAnswer"
 import { AutoAnswerUsageTelemetry } from "./intelligence/autoAnswer/AutoAnswerUsageTelemetry"
@@ -3765,21 +3766,9 @@ export class AppState {
       const apiKey = CredentialsManager.getInstance().getDeepgramApiKey();
       if (apiKey) {
         console.log(`[Main] Using DeepgramStreamingSTT for ${speaker}`);
-        const dg = new DeepgramStreamingSTT(apiKey, CredentialsManager.getInstance().getSttModel('deepgram'));
-        // Opt-in diarization (#3): on the remote/system channel ('interviewer'), where
-        // multiple people may speak, behind the flag. On the mic channel only when the
-        // user turned on "people sharing your microphone" (Settings, Audio): a room's
-        // voices then carry provider ids and are split at save (meeting/roomSpeakers.ts).
-        // Otherwise the mic stays undiarized: it is one person, and diarizing it would
-        // add cost with no benefit. Both default OFF.
-        try {
-          if (speaker === 'interviewer' && isIntelligenceFlagEnabled('speakerDiarizationV1')) {
-            dg.setDiarization(true);
-          } else if (speaker === 'user' && SettingsManager.getInstance().get('roomSpeakersEnabled') === true) {
-            dg.setDiarization(true);
-          }
-        } catch { /* flag / setting read non-fatal */ }
-        stt = dg;
+        // Voice labels, when asked for, are switched on below for every
+        // provider that can label voices (sttDiarization.ts).
+        stt = new DeepgramStreamingSTT(apiKey, CredentialsManager.getInstance().getSttModel('deepgram'));
       } else {
         console.warn(`[Main] No API key for Deepgram STT, falling back to GoogleSTT`);
         stt = new GoogleSTT(speaker);
@@ -3907,13 +3896,21 @@ export class AppState {
       try { (stt as any).setContext(currentWhisperGlossaryPrompt()); } catch { /* a hint, never a blocker */ }
     }
 
-    // Speaker labels for Auto Answer's judge come from the provider's own
-    // diarization where it is on: Deepgram with the speakerDiarizationV1 flag
-    // (set where the Deepgram instance is built, above), and the Natively relay
-    // when it sends a speaker. A blanket `setDiarize(true)` used to sit here; no
-    // provider has that method (Deepgram's is setDiarization), so it never ran,
-    // and switching diarization on for every Deepgram meeting would change the
-    // live path and its cost without the flag's opt-in. Removed 2026-10-15.
+    // Voice labels (sttDiarization.ts), opt-in on both channels: the meeting
+    // audio behind the speakerDiarizationV1 flag (Auto Answer's judge), the mic
+    // when the user turned on "People sharing your microphone" (Settings ›
+    // Audio; split at save by meeting/roomSpeakers.ts). Any provider that can
+    // label voices on a live stream takes it: Deepgram, Soniox, Google. The
+    // Natively relay labels on its own when it sends a speaker. Never for every
+    // meeting: labelling changes the live path and its cost. Before start(),
+    // so no provider reconnects to apply it.
+    try {
+      const wantLabels = shouldDiarize(speaker, {
+        roomSpeakers: SettingsManager.getInstance().get('roomSpeakersEnabled') === true,
+        remoteFlag: isIntelligenceFlagEnabled('speakerDiarizationV1'),
+      });
+      if (wantLabels && canDiarize(stt)) stt.setDiarization(true);
+    } catch { /* flag / setting read non-fatal */ }
 
     // Auto Answer V3 provider endpoints (Deepgram speech_final / UtteranceEnd,
     // Soniox <end>, OpenAI server VAD). Interviewer channel only; additive
@@ -3928,7 +3925,7 @@ export class AppState {
 
     // Wire Transcript Events. One handler for the provider's segments and,
     // while it is down, its stand-in's (sttFailover.ts; `sttId` says whose).
-    const onSegment = (segment: { text: string, isFinal: boolean, confidence: number, speakerId?: string }, sttId: string = effectiveSttId) => {
+    const onSegment = (segment: { text: string, isFinal: boolean, confidence: number, speakerId?: string, voiceEpoch?: number }, sttId: string = effectiveSttId) => {
       // Accept transcripts while a meeting is active OR while we're draining
       // trailing finals after Stop. `_isDraining` covers the ~250 ms grace
       // window between Stop click and STT socket close so the user's last
@@ -3937,13 +3934,20 @@ export class AppState {
         return;
       }
 
+      // Mic voice ids carry the provider connection they came from: voice
+      // numbers restart on a reconnect (sttDiarization.withVoiceEpoch). The
+      // meeting-audio channel keeps the plain id its consumers read.
+      const speakerId = segment.speakerId && speaker === 'user'
+        ? withVoiceEpoch(segment.speakerId, segment.voiceEpoch)
+        : segment.speakerId;
+
       if (this.isMeetingActive) this.meetingAutoStop.noteTranscript(speaker, segment.text, segment.isFinal);
       // Any text proves the connection works: closes an open outage (sttGapRecovery.ts).
       this.sttGap.onTranscript(gapSource, segment.text, segment.isFinal);
 
       this.intelligenceManager.handleTranscript({
         speaker: speaker,
-        ...(segment.speakerId ? { speakerId: segment.speakerId } : {}),
+        ...(speakerId ? { speakerId } : {}),
         text: segment.text,
         timestamp: Date.now(),
         final: segment.isFinal,
@@ -3992,7 +3996,7 @@ export class AppState {
 
       const payload = {
         speaker: speaker,
-        ...(segment.speakerId ? { speakerId: segment.speakerId } : {}),
+        ...(speakerId ? { speakerId } : {}),
         text: segment.text,
         timestamp: Date.now(),
         final: segment.isFinal,
@@ -4077,7 +4081,7 @@ export class AppState {
       failover.stop();
       return rawStop();
     };
-    stt.on('transcript', (segment: { text: string, isFinal: boolean, confidence: number, speakerId?: string }) => {
+    stt.on('transcript', (segment: { text: string, isFinal: boolean, confidence: number, speakerId?: string, voiceEpoch?: number }) => {
       // While a stand-in leads, the primary's partials wait; its first final
       // means it is back (and is dropped when the stand-in already said it).
       if (!failover.acceptPrimary(segment)) return;
