@@ -202,7 +202,7 @@ describe('which providers can label voices', () => {
         assert.doesNotMatch(relayFrame, /speaker_labels/);
     });
 
-    test('main.ts: labels follow the setting at every meeting start, both ways, before the streams open', () => {
+    test('main.ts: labels follow the setting at every meeting start, both ways, before any stream opens', () => {
         const main = read('electron/main.ts');
         assert.doesNotMatch(main, /dg\.setDiarization/, 'no Deepgram-only switch-on left');
         assert.doesNotMatch(main, /setDiarization\(true\)/, 'never switched on unconditionally');
@@ -216,8 +216,14 @@ describe('which providers can label voices', () => {
         // Every meeting start, before the channels (and their streams) start.
         const userAt = main.indexOf("this.applyVoiceLabels(this.googleSTT_User, 'user');");
         const sysAt = main.indexOf("this.applyVoiceLabels(this.googleSTT, 'interviewer');");
+        const reconfigureAt = main.indexOf('await this.reconfigureAudio(followedInput');
         const startAt = main.indexOf("this.startCaptureChannels('startMeeting')");
-        assert.ok(userAt > 0 && sysAt > 0 && startAt > userAt && startAt > sysAt, 'applied before the meeting\'s streams start');
+        assert.ok(userAt > 0 && sysAt > 0, 'applied at meeting start');
+        // reconfigureAudio() starts the channels itself once the meeting is
+        // active, so the setting must land before it, not just before
+        // startCaptureChannels: a change on a live stream restarts it.
+        assert.ok(reconfigureAt > userAt && reconfigureAt > sysAt && startAt > reconfigureAt, 'applied before the first stream can start');
+        assert.equal(main.split("this.applyVoiceLabels(this.googleSTT_User, 'user');").length - 1, 1, 'once per meeting start, never on a live stream');
         assert.match(main, /const speakerId = segment\.speakerId && speaker === 'user'\s*\? withVoiceEpoch\(segment\.speakerId, segment\.voiceEpoch\)\s*: segment\.speakerId;/);
     });
 });

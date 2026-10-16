@@ -7162,6 +7162,16 @@ export class AppState {
           console.warn('[Main] Meeting starting WITHOUT audio capture — Ambient AI Chat is ON (Settings > General). Transcript, summary and usage will be empty for this meeting.');
         }
         if (!this._ambientChatEnabled) {
+          // Voice labels follow Settings › Audio as it is NOW, not as it was
+          // when these (reused) providers were built (applyVoiceLabels). FIRST,
+          // before anything below can start a stream: the meeting is already
+          // active, so reconfigureAudio() starts the channels itself, and a
+          // label change on a live stream restarts it and can lose the
+          // meeting's opening words. A provider that does not exist yet gets
+          // the setting when it is built.
+          this.applyVoiceLabels(this.googleSTT, 'interviewer');
+          this.applyVoiceLabels(this.googleSTT_User, 'user');
+
           // Check for audio configuration preference
           if (metadata?.audio) {
             // Follow the meeting app's microphone when the setting is on and no device is pinned (no-op otherwise).
@@ -7189,11 +7199,6 @@ export class AppState {
           systemSttOwnedByInit = this.googleSTT;
           userSttOwnedByInit = this.googleSTT_User;
           ragManagerOwnedByInit = this.ragManager;
-
-          // Voice labels follow Settings › Audio as it is NOW, not as it was
-          // when these (reused) providers were built (applyVoiceLabels).
-          this.applyVoiceLabels(this.googleSTT, 'interviewer');
-          this.applyVoiceLabels(this.googleSTT_User, 'user');
 
           // Per-channel isolated start (F-105) — mic first for the HAL
           // ordering invariant; a mic failure no longer prevents the system
