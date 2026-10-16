@@ -3721,6 +3721,29 @@ export class AppState {
   public disposeAutoAnswerForShutdown(): void {
   }
 
+  /**
+   * Voice labels (sttDiarization.ts) follow the user's choice, and only it:
+   * the mic when "People sharing your microphone" (Settings › Audio) is on;
+   * the meeting audio only behind the speakerDiarizationV1 flag (default off,
+   * Auto Answer's judge, Deepgram only as before). Off otherwise, in both directions. Providers are
+   * built once and reused across meetings, so a choice made at build time
+   * outlived the setting (turned off, labels were still asked for; turned on,
+   * nothing until a restart). Called for a fresh provider and at every meeting
+   * start, before the streams open, so applying it never reconnects. Any
+   * provider that can label voices on a live stream takes it: Natively
+   * (through its relay), Deepgram, Soniox; the rest are left alone.
+   */
+  private applyVoiceLabels(stt: unknown, speaker: 'interviewer' | 'user'): void {
+    if (!canDiarize(stt)) return;
+    try {
+      stt.setDiarization(shouldDiarize(speaker, {
+        roomSpeakers: SettingsManager.getInstance().get('roomSpeakersEnabled') === true,
+        // The flag's scope is unchanged: Deepgram only, as it always was.
+        remoteFlag: stt instanceof DeepgramStreamingSTT && isIntelligenceFlagEnabled('speakerDiarizationV1'),
+      }));
+    } catch { /* flag / setting read non-fatal: labels stay as they were */ }
+  }
+
   private createSTTProvider(speaker: 'interviewer' | 'user'): STTProvider | null {
     const { CredentialsManager } = require('./services/CredentialsManager');
     const sttProvider = CredentialsManager.getInstance().getSttProvider();
@@ -3896,21 +3919,9 @@ export class AppState {
       try { (stt as any).setContext(currentWhisperGlossaryPrompt()); } catch { /* a hint, never a blocker */ }
     }
 
-    // Voice labels (sttDiarization.ts), opt-in on both channels: the meeting
-    // audio behind the speakerDiarizationV1 flag (Auto Answer's judge), the mic
-    // when the user turned on "People sharing your microphone" (Settings ›
-    // Audio; split at save by meeting/roomSpeakers.ts). Any provider that can
-    // label voices on a live stream takes it: Natively (through its relay),
-    // Deepgram, Soniox. Never for every
-    // meeting: labelling changes the live path and its cost. Before start(),
-    // so no provider reconnects to apply it.
-    try {
-      const wantLabels = shouldDiarize(speaker, {
-        roomSpeakers: SettingsManager.getInstance().get('roomSpeakersEnabled') === true,
-        remoteFlag: isIntelligenceFlagEnabled('speakerDiarizationV1'),
-      });
-      if (wantLabels && canDiarize(stt)) stt.setDiarization(true);
-    } catch { /* flag / setting read non-fatal */ }
+    // Voice labels: off unless asked for (applyVoiceLabels). Applied here for
+    // a fresh provider and again at every meeting start.
+    this.applyVoiceLabels(stt, speaker);
 
     // Auto Answer V3 provider endpoints (Deepgram speech_final / UtteranceEnd,
     // Soniox <end>, OpenAI server VAD). Interviewer channel only; additive
@@ -7178,6 +7189,11 @@ export class AppState {
           systemSttOwnedByInit = this.googleSTT;
           userSttOwnedByInit = this.googleSTT_User;
           ragManagerOwnedByInit = this.ragManager;
+
+          // Voice labels follow Settings › Audio as it is NOW, not as it was
+          // when these (reused) providers were built (applyVoiceLabels).
+          this.applyVoiceLabels(this.googleSTT, 'interviewer');
+          this.applyVoiceLabels(this.googleSTT_User, 'user');
 
           // Per-channel isolated start (F-105) — mic first for the HAL
           // ordering invariant; a mic failure no longer prevents the system

@@ -128,6 +128,28 @@ describe('the split across provider connections', () => {
     });
 });
 
+describe('switching labels off really switches them off', () => {
+    test('Soniox: the config frame asks for labels only while they are on', () => {
+        const { SonioxStreamingSTT } = require(path.join(REPO, 'dist-electron/electron/audio/SonioxStreamingSTT.js'));
+        const stt = new SonioxStreamingSTT('test-key');
+        assert.equal('enable_speaker_diarization' in stt.buildConfigFrame(), false, 'off by default');
+        stt.setDiarization(true);
+        assert.equal(stt.buildConfigFrame().enable_speaker_diarization, true);
+        stt.setDiarization(false);
+        assert.equal('enable_speaker_diarization' in stt.buildConfigFrame(), false, 'off again after the setting is turned off');
+    });
+
+    test('Natively: the auth frame asks the relay only while they are on', () => {
+        const { NativelyProSTT } = require(path.join(REPO, 'dist-electron/electron/audio/NativelyProSTT.js'));
+        const stt = new NativelyProSTT('test-key', 'mic');
+        assert.equal('speaker_labels' in stt.buildLegacyAuthFrame(), false, 'off by default');
+        stt.setDiarization(true);
+        assert.equal(stt.buildLegacyAuthFrame().speaker_labels, true);
+        stt.setDiarization(false);
+        assert.equal('speaker_labels' in stt.buildLegacyAuthFrame(), false, 'off again after the setting is turned off');
+    });
+});
+
 describe('which providers can label voices', () => {
     const SOURCES = {
         deepgram: 'electron/audio/DeepgramStreamingSTT.ts',
@@ -180,12 +202,22 @@ describe('which providers can label voices', () => {
         assert.doesNotMatch(relayFrame, /speaker_labels/);
     });
 
-    test('main.ts asks any capable provider, before start, and tags only mic ids', () => {
+    test('main.ts: labels follow the setting at every meeting start, both ways, before the streams open', () => {
         const main = read('electron/main.ts');
         assert.doesNotMatch(main, /dg\.setDiarization/, 'no Deepgram-only switch-on left');
-        const askAt = main.indexOf('if (wantLabels && canDiarize(stt)) stt.setDiarization(true);');
-        const startAt = main.indexOf('stt.start();', askAt);
-        assert.ok(askAt > 0 && startAt > askAt, 'labels are switched on before the stream starts');
+        assert.doesNotMatch(main, /setDiarization\(true\)/, 'never switched on unconditionally');
+        const body = main.slice(main.indexOf('private applyVoiceLabels('), main.indexOf('private createSTTProvider('));
+        assert.match(body, /stt\.setDiarization\(shouldDiarize\(speaker, \{/, 'set to the setting, so OFF switches it off');
+        assert.match(body, /roomSpeakers: SettingsManager\.getInstance\(\)\.get\('roomSpeakersEnabled'\) === true/);
+        assert.match(body, /remoteFlag: stt instanceof DeepgramStreamingSTT && isIntelligenceFlagEnabled\('speakerDiarizationV1'\)/, 'the old flag keeps its Deepgram-only scope');
+        // A fresh provider, before its start().
+        const atBuild = main.indexOf('this.applyVoiceLabels(stt, speaker);');
+        assert.ok(atBuild > 0 && main.indexOf('stt.start();', atBuild) > atBuild);
+        // Every meeting start, before the channels (and their streams) start.
+        const userAt = main.indexOf("this.applyVoiceLabels(this.googleSTT_User, 'user');");
+        const sysAt = main.indexOf("this.applyVoiceLabels(this.googleSTT, 'interviewer');");
+        const startAt = main.indexOf("this.startCaptureChannels('startMeeting')");
+        assert.ok(userAt > 0 && sysAt > 0 && startAt > userAt && startAt > sysAt, 'applied before the meeting\'s streams start');
         assert.match(main, /const speakerId = segment\.speakerId && speaker === 'user'\s*\? withVoiceEpoch\(segment\.speakerId, segment\.voiceEpoch\)\s*: segment\.speakerId;/);
     });
 });
