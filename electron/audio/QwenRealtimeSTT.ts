@@ -7,6 +7,7 @@ import { RealtimeSilenceTail } from './realtimeSilenceTail';
 const URL = 'wss://dashscope.aliyuncs.com/api-ws/v1/realtime?model=qwen3-asr-flash-realtime';
 const OUTPUT_RATE = 16_000;
 const MAX_BUFFER_MS = 2_000;
+const RECONNECT_COOLDOWN_MS = 30_000;
 const SUPPORTED_LANGUAGES = new Set([
     'zh', 'yue', 'en', 'ja', 'de', 'ko', 'ru', 'fr', 'pt', 'ar', 'it', 'es',
     'hi', 'id', 'th', 'tr', 'uk', 'vi', 'cs', 'da', 'fil', 'fi', 'is', 'ms',
@@ -133,7 +134,9 @@ export class QwenRealtimeSTT extends EventEmitter {
             if (response.statusCode === 401 || response.statusCode === 403) {
                 this.terminalFailure = true;
             }
-            this.emit('error', new Error(`Qwen ASR returned HTTP ${response.statusCode}`));
+            if (this.active && this.socket === ws) {
+                this.emit('error', new Error(`Qwen ASR returned HTTP ${response.statusCode}`));
+            }
             ws.terminate();
         });
 
@@ -170,7 +173,9 @@ export class QwenRealtimeSTT extends EventEmitter {
             } else if (event.type === 'input_audio_buffer.speech_stopped') {
                 if (this.active) this.emit('endpoint', { type: 'speech_final', confidence: 1 });
             } else if (event.type === 'error') {
-                this.emit('error', new Error(event.error?.message || 'Qwen ASR rejected the request'));
+                if (this.active && this.socket === ws) {
+                    this.emit('error', new Error(event.error?.message || 'Qwen ASR rejected the request'));
+                }
             }
         });
 
@@ -188,6 +193,11 @@ export class QwenRealtimeSTT extends EventEmitter {
             }
             this.readyAt = 0;
             if (++this.reconnectAttempts > 5) {
+                this.reconnectTimer = setTimeout(() => {
+                    this.reconnectTimer = null;
+                    this.reconnectAttempts = 0;
+                    this.connect();
+                }, RECONNECT_COOLDOWN_MS);
                 this.emit('error', new Error('Qwen ASR connection failed after retries'));
                 return;
             }
