@@ -5,12 +5,16 @@
 // drew "Listening..." for as long as the user spoke, and nothing could ever
 // arrive in it. These checks hold the overlay to what main actually does:
 //
-//  - it reads the setting when it mounts and again when a meeting starts
-//    (session-reset), because main decides capture at meeting start;
-//  - with the setting on it says so in a banner, with the way out;
-//  - with the setting on, Answer does not open a recording. It goes straight
-//    to What to Answer, which is where a Stop with nothing heard already goes
-//    (issue #540), so no "Listening..." is drawn for audio that is not captured.
+//  - main keeps, per meeting, whether it runs without audio: set from the
+//    setting at the capture decision, cleared by any capture start (a speech
+//    engine change mid-meeting) and at the end, pushed on every change;
+//  - the overlay follows that, not the live setting, read on mount and at
+//    every meeting start;
+//  - while it holds, a banner says so with the way out, and Answer does not
+//    open a recording. It goes straight to What to Answer, which is where a
+//    Stop with nothing heard already goes (issue #540);
+//  - main does not open the mic in such a meeting from the notepad's mic
+//    picker or on wake from sleep (both used to record the meeting anyway).
 
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
@@ -30,10 +34,69 @@ test('the overlay has an Ambient AI Chat notice', () => {
   assert.ok(exists(NOTICE), `${NOTICE} is missing`);
 });
 
-test('the notice reads the setting on mount and again when a meeting starts', () => {
+const MAIN = () => fs.readFileSync(path.resolve(SRC, '../electron/main.ts'), 'utf8');
+const between = (text, from, to) => {
+  const start = text.indexOf(from);
+  assert.ok(start >= 0, `${from} not found`);
+  return text.slice(start, text.indexOf(to, start));
+};
+
+test('main owns "this meeting runs without audio", per meeting, and pushes every change', () => {
+  const main = MAIN();
+  // Set from the setting where the meeting's audio init decides capture.
+  assert.match(main, /this\.setMeetingWithoutAudio\(this\._ambientChatEnabled\);\s*if \(!this\._ambientChatEnabled\) \{/, 'not set at the capture decision');
+  // Cleared where every capture start goes, only when a capture exists.
+  // Only once a capture has actually started: both starts can throw.
+  const channels = between(main, 'private startCaptureChannels(', 'return started;');
+  const clear = channels.search(/if \(this\.isMeetingActive && \(\(started\.mic && this\.microphoneCapture\) \|\| \(started\.system && this\.systemAudioCapture\)\)\) \{\s*this\.setMeetingWithoutAudio\(false\);/);
+  assert.ok(clear > 0, 'a capture started mid-meeting leaves the notice up');
+  assert.ok(clear > channels.lastIndexOf('this.googleSTT?.start();'), 'cleared before the captures have started');
+  // Cleared when the meeting ends (after the double-Stop guard).
+  const end = between(main, 'private async endMeetingTransition(', 'this.cancelAutoAnswer();');
+  assert.match(end, /this\.setMeetingWithoutAudio\(false\);\s*$/, 'a finished meeting keeps the flag');
+  // Pushed to the meeting surfaces on change only.
+  const setter = between(main, 'private setMeetingWithoutAudio(', '\n  }\n');
+  assert.match(setter, /if \(this\._meetingWithoutAudio === withoutAudio\) return;/);
+  assert.match(setter, /this\.sendToMeetingSurfaces\('meeting-audio-capture', \{ withoutAudio \}\)/);
+});
+
+test('main does not open the mic for a meeting that runs without audio', () => {
+  const main = MAIN();
+  // The notepad's mic picker: reconfigureAudio builds and starts both captures
+  // and the pre-warmed speech engines.
+  const sw = between(main, 'public switchMeetingInputDevice(', 'this._inputSwitchChain = ');
+  const gate = sw.indexOf('if (this._meetingWithoutAudio) {');
+  assert.ok(gate > 0, 'no gate on the mic switch');
+  assert.ok(gate < sw.indexOf('await this.reconfigureAudio('), 'the gate comes after the mic is opened');
+  assert.match(sw.slice(gate), /^if \(this\._meetingWithoutAudio\) \{[\s\S]{0,200}return false;/);
+  // Wake from sleep recreated the mic and the speech engines and started them.
+  const wake = between(main, 'public async restartCapturesAfterResume(', 'this._systemAudioRecoveryInProgress = false;');
+  assert.match(wake, /if \(this\._meetingWithoutAudio\) \{[\s\S]{0,200}return;\s*\}/, 'wake from sleep opens the mic in an Ambient AI Chat meeting');
+});
+
+test('the fact crosses to the renderer: a getter and a push', () => {
+  const ipc = fs.readFileSync(path.resolve(SRC, '../electron/ipcHandlers.ts'), 'utf8');
+  assert.match(ipc, /safeHandle\('meeting:get-audio-capture', async \(\) => \{\s*return \{ withoutAudio: appState\.isMeetingWithoutAudio\(\) \};/);
+  const preload = fs.readFileSync(path.resolve(SRC, '../electron/preload.ts'), 'utf8');
+  assert.match(preload, /getMeetingAudioCapture: \(\) => ipcRenderer\.invoke\('meeting:get-audio-capture'\)/);
+  assert.match(preload, /ipcRenderer\.on\('meeting-audio-capture', subscription\)/);
+  assert.match(preload, /ipcRenderer\.removeListener\('meeting-audio-capture', subscription\)/);
+  const types = read('types/electron.d.ts');
+  assert.match(types, /getMeetingAudioCapture\?: \(\) => Promise<\{ withoutAudio: boolean \}>/);
+  assert.match(types, /onMeetingAudioCapture\?: /);
+});
+
+test('the notice follows main, not the setting: read on mount and at every meeting start, pushes win', () => {
   const notice = read(NOTICE);
-  assert.match(notice, /getAmbientChatEnabled\?\.\(\)/, 'the setting is never read');
-  assert.match(notice, /onSessionReset\?\.\(/, 'a meeting start does not re-read the setting');
+  assert.doesNotMatch(notice, /getAmbientChatEnabled/, 'the notice reads the live setting, which can differ from this meeting');
+  assert.match(notice, /getMeetingAudioCapture\?\.\(\)/, 'never read on mount');
+  const reset = between(notice, 'onSessionReset?.(', '});');
+  assert.match(reset, /read\(\)/, 'a meeting start does not re-read');
+  assert.match(reset, /setDismissed\(false\)/, 'a closed notice stays closed into the next meeting');
+  assert.match(notice, /onMeetingAudioCapture\?\.\(/, 'changes are not followed');
+  // A read already in flight when a push lands must not overwrite the push.
+  assert.match(notice, /pushes === pushesAtRead/);
+  assert.match(notice, /unsubPush\?\.\(\)/, 'the push listener is never removed');
 });
 
 test('the overlay draws the notice in a fold, like the other meeting banners', () => {

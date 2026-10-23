@@ -1674,6 +1674,15 @@ export class AppState {
   // contextDebugLevel at 'verbose' forever — exactly the flattening of the
   // user's Intelligence-settings choice this exists to prevent.
   private _ambientChatEnabled: boolean = false;
+  /**
+   * The running meeting started without audio capture because Ambient AI Chat
+   * was on, and nothing has started a capture since. Per meeting: the setting
+   * itself can change mid-meeting, and a speech-engine change in Settings ›
+   * Audio rebuilds and starts the pipeline anyway (startCaptureChannels clears
+   * this). The overlay draws its "Not listening" notice from it
+   * (meeting-audio-capture event, meeting:get-audio-capture).
+   */
+  private _meetingWithoutAudio: boolean = false;
   private _autoAnswerEnabled: boolean = false;
   // Tracks whether STT sample-rate has been applied for the current capture
   // session. Reset on every reconfigureAudio / new pipeline build so the next
@@ -5158,6 +5167,12 @@ export class AppState {
       console.log('[Main] System resume — no active meeting, nothing to restart.');
       return;
     }
+    // An Ambient AI Chat meeting has no captures to restart. Going on would
+    // open the mic and system audio and start transcribing on every wake.
+    if (this._meetingWithoutAudio) {
+      console.log('[Main] System resume — this meeting runs without audio (Ambient AI Chat), nothing to restart.');
+      return;
+    }
     console.log('[Main] System resume — restarting captures so CoreAudio/cpal handles are fresh.');
 
     // B7: reset ALL audio recovery state BEFORE recreating captures. State is
@@ -7256,6 +7271,13 @@ export class AppState {
         stuck: false,
       });
     }
+    // Every start of a meeting's captures comes through here, so this is where
+    // a meeting begun without audio (Ambient AI Chat) becomes one with it: only
+    // when a capture actually started, or the overlay would say it is listening
+    // to nothing.
+    if (this.isMeetingActive && ((started.mic && this.microphoneCapture) || (started.system && this.systemAudioCapture))) {
+      this.setMeetingWithoutAudio(false);
+    }
     return started;
   }
 
@@ -7571,6 +7593,7 @@ export class AppState {
           // meeting starts without it.
           console.warn('[Main] Meeting starting WITHOUT audio capture — Ambient AI Chat is ON (Settings > General). Transcript, summary and usage will be empty for this meeting.');
         }
+        this.setMeetingWithoutAudio(this._ambientChatEnabled);
         if (!this._ambientChatEnabled) {
           // Voice labels follow Settings › Audio as it is NOW, not as it was
           // when these (reused) providers were built (applyVoiceLabels). FIRST,
@@ -7831,6 +7854,7 @@ export class AppState {
       await this._pendingTeardown?.catch((): void => {});
       return;
     }
+    this.setMeetingWithoutAudio(false);
 
     this.cancelAutoAnswer();
     this.autoAnswerUsage.meetingEnded();
@@ -8465,6 +8489,15 @@ export class AppState {
     }
     const run = async (): Promise<boolean> => {
       if (!this.isMeetingActive) return false;
+      // An Ambient AI Chat meeting captures nothing. reconfigureAudio builds
+      // and starts both captures (and the pre-warmed speech engines), so a
+      // mic pick here began recording a meeting the user chose to keep
+      // unrecorded. The renderer has saved the choice for the next meeting,
+      // as outside one.
+      if (this._meetingWithoutAudio) {
+        console.log('[Main] Meeting mic switch skipped: this meeting runs without audio (Ambient AI Chat).');
+        return false;
+      }
       await this.reconfigureAudio(deviceId, this._lastRequestedOutputDeviceId);
       return true;
     };
@@ -9590,6 +9623,16 @@ export class AppState {
 
   public getAmbientChatEnabled(): boolean {
     return this._ambientChatEnabled;
+  }
+
+  public isMeetingWithoutAudio(): boolean {
+    return this._meetingWithoutAudio;
+  }
+
+  private setMeetingWithoutAudio(withoutAudio: boolean): void {
+    if (this._meetingWithoutAudio === withoutAudio) return;
+    this._meetingWithoutAudio = withoutAudio;
+    this.sendToMeetingSurfaces('meeting-audio-capture', { withoutAudio });
   }
 
   public setAmbientChatEnabled(enabled: boolean): void {

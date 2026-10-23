@@ -7546,6 +7546,13 @@ export function initializeIpcHandlers(appState: AppState): void {
     return { success: true };
   });
 
+  // Whether the running meeting captures no audio (it started with Ambient AI
+  // Chat on and nothing has started a capture since). Changes are pushed as
+  // 'meeting-audio-capture'.
+  safeHandle('meeting:get-audio-capture', async () => {
+    return { withoutAudio: appState.isMeetingWithoutAudio() };
+  });
+
   safeHandle('get-auto-answer-enabled', async () => {
     return appState.getAutoAnswerEnabled();
   });

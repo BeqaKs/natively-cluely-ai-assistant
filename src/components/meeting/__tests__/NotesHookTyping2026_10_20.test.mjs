@@ -106,7 +106,7 @@ test("laid out like Granola's: serif title, Today + people chip, folder button, 
   assert.match(controls, /choices \? setOpen[\s\S]{0,80}: openAudioSettings\(\)/);
   // Main: the switch is queued (each one rebuilds the native mic capture) and only runs in a meeting.
   const main = read('electron/main.ts');
-  assert.match(main, /public switchMeetingInputDevice\(deviceId: string \| null\): Promise<boolean> \{[\s\S]{0,300}isInternalCaptureDevice\(deviceId\)[\s\S]{0,200}if \(!this\.isMeetingActive\) return false;\s*await this\.reconfigureAudio\(deviceId, this\._lastRequestedOutputDeviceId\);[\s\S]{0,100}this\._inputSwitchChain\.then\(run, run\)/);
+  assert.match(main, /public switchMeetingInputDevice\(deviceId: string \| null\): Promise<boolean> \{[\s\S]{0,300}isInternalCaptureDevice\(deviceId\)[\s\S]{0,200}if \(!this\.isMeetingActive\) return false;[\s\S]{0,900}await this\.reconfigureAudio\(deviceId, this\._lastRequestedOutputDeviceId\);[\s\S]{0,100}this\._inputSwitchChain\.then\(run, run\)/);
   assert.match(read('electron/ipcHandlers.ts'), /safeHandle\('meeting:set-input-device'/);
   assert.match(read('electron/preload.ts'), /setMeetingInputDevice: \(deviceId: string \| null\) => ipcRenderer\.invoke\('meeting:set-input-device', deviceId\)/);
   assert.match(page, /placeholder=\{turns\.length > 0 \? 'Continue chat' : 'Ask anything'\}/);

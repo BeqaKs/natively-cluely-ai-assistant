@@ -1244,6 +1244,9 @@ interface ElectronAPI {
   // Ambient AI Chat — when enabled, meetings run without mic/system audio capture
   getAmbientChatEnabled: () => Promise<boolean>;
   setAmbientChatEnabled: (enabled: boolean) => Promise<{ success: boolean }>;
+  // The running meeting captures no audio (started with Ambient AI Chat on)
+  getMeetingAudioCapture: () => Promise<{ withoutAudio: boolean }>;
+  onMeetingAudioCapture: (callback: (data: { withoutAudio: boolean }) => void) => () => void;
   getAutoAnswerEnabled: () => Promise<boolean>;
   setAutoAnswerEnabled: (enabled: boolean) => Promise<{ success: boolean; error?: string }>;
   getDirectAssistEnabled: () => Promise<boolean>;
@@ -3470,6 +3473,15 @@ contextBridge.exposeInMainWorld('electronAPI', {
   // Ambient AI Chat — when enabled, meetings run without mic/system audio capture
   getAmbientChatEnabled: () => ipcRenderer.invoke('get-ambient-chat-enabled'),
   setAmbientChatEnabled: (enabled: boolean) => ipcRenderer.invoke('set-ambient-chat-enabled', enabled),
+  // The running meeting captures no audio (started with Ambient AI Chat on)
+  getMeetingAudioCapture: () => ipcRenderer.invoke('meeting:get-audio-capture'),
+  onMeetingAudioCapture: (callback: (data: { withoutAudio: boolean }) => void) => {
+    const subscription = (_: any, data: { withoutAudio: boolean }) => callback(data);
+    ipcRenderer.on('meeting-audio-capture', subscription);
+    return () => {
+      ipcRenderer.removeListener('meeting-audio-capture', subscription);
+    };
+  },
   getAutoAnswerEnabled: () => ipcRenderer.invoke('get-auto-answer-enabled'),
   setAutoAnswerEnabled: (enabled: boolean) => ipcRenderer.invoke('set-auto-answer-enabled', enabled),
   getDirectAssistEnabled: () => ipcRenderer.invoke('get-direct-assist-enabled'),
