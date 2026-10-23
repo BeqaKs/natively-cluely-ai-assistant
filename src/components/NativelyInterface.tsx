@@ -432,6 +432,7 @@ import ChromeFold from './overlay/ChromeFold';
 import { useOverlayTrial } from './overlay/useOverlayTrial';
 import { TrialChip, TrialNoticeBanner } from './overlay/TrialNotice';
 import { AutoStopNoticeBanner, useMeetingAutoStopNotice } from './overlay/AutoStopNotice';
+import { AmbientChatNoticeBanner, useAmbientChatMeeting } from './overlay/AmbientChatNotice';
 import { LastTimeRecapBanner, useLastTimeRecap } from './overlay/LastTimeRecapNotice';
 import type { LiveHelperAction } from '../types/assist';
 import { useMeetingMute } from './overlay/useMeetingMute';
@@ -1425,6 +1426,8 @@ const NativelyInterface: React.FC<NativelyInterfaceProps> = ({
   const trial = useOverlayTrial();
   // The automatic stop's "stops in 1 minute" notice, and typing reported to main.
   const autoStop = useMeetingAutoStopNotice();
+  // Ambient AI Chat: this meeting captures no audio (overlay/AmbientChatNotice.tsx).
+  const ambientChat = useAmbientChatMeeting();
   // "Last time" for a recurring meeting (overlay/LastTimeRecapNotice.tsx).
   const lastTime = useLastTimeRecap();
   // Muted in Zoom / Teams / Meet: the mic is transcribed as silence (main: MeetingMuteSync).
@@ -9434,6 +9437,13 @@ Provide only the answer, nothing else.`;
       // A previous Stop may still be collecting its transcript tail; starting
       // now would wipe voiceInput while that snapshot is being taken.
       if (answerStopInFlightRef.current) return;
+      // Ambient AI Chat: main captured no audio for this meeting, so a
+      // recording would draw "Listening..." with nothing able to arrive in it
+      // (issue #679). Go where a Stop with nothing heard goes (issue #540).
+      if (ambientChat.on) {
+        void handlersRef.current.handleWhatToSay();
+        return;
+      }
       setVoiceInput('');
       voiceInputRef.current = '';
       setManualTranscript('');
@@ -11750,6 +11760,12 @@ Provide only the answer, nothing else.`;
                   (overlay/AutoStopNotice.tsx; main: MeetingEndDetector). */}
               <ChromeFold show={autoStop.stopsAt !== null} overlayVisible={isExpanded} requestHeightMotion={requestChromeHeightMotion} innerClassName="pt-3 pb-1" testId="fold-auto-stop">
               {autoStop.stopsAt !== null && <AutoStopNoticeBanner notice={autoStop} />}
+              </ChromeFold>
+
+              {/* Ambient AI Chat is on: this meeting captures no audio, so
+                  nothing is transcribed (issue #679). */}
+              <ChromeFold show={ambientChat.on && !ambientChat.dismissed} overlayVisible={isExpanded} requestHeightMotion={requestChromeHeightMotion} innerClassName="pt-3 pb-1" testId="fold-ambient-chat">
+              {ambientChat.on && !ambientChat.dismissed && <AmbientChatNoticeBanner ambientChat={ambientChat} />}
               </ChromeFold>
 
               {/* PR #173: STT Not Configured Warning Banner */}
