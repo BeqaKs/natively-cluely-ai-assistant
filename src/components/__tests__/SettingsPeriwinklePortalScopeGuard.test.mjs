@@ -60,6 +60,8 @@ const GUARDED_FILES = [
   'src/components/settings/ModesSettings.tsx',
   'src/components/settings/NativelyApiSettings.tsx',
   'src/components/settings/NativelyProSettings.tsx',
+  'src/components/settings/OverlayMockup.tsx',
+  'src/components/settings/OverlaySettings.tsx',
   'src/components/settings/PhoneMirrorSettings.tsx',
   'src/components/settings/PlansSettings.tsx',
   'src/components/settings/ProviderCard.tsx',

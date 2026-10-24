@@ -1,0 +1,151 @@
+import { useSyncExternalStore } from 'react';
+
+/**
+ * Settings › Overlay: which five buttons the meeting overlay shows, and in
+ * what order. Every button is kept in one list: the first five are the
+ * overlay's row, the rest wait in the page's tray. Dragging swaps places in
+ * this list, between the row and the tray or within the row.
+ *
+ * localStorage, so every Natively window starts from the same order. A change
+ * reaches the other windows two ways, as the genie switch does
+ * (genieAnimationSetting.ts): the `storage` event, and an IPC hop through main
+ * carrying the new order (the `storage` event does not reliably cross
+ * BrowserWindows; see meetingInterfaceTheme.ts).
+ */
+export type OverlayButtonId =
+    | 'what_to_answer'
+    | 'clarify'
+    | 'recap'
+    | 'follow_up'
+    | 'answer'
+    | 'brainstorm'
+    | 'catch_me_up'
+    | 'define'
+    | 'sound_smart'
+    | 'follow_up_questions';
+
+/** How many buttons the overlay's row holds. */
+export const OVERLAY_ROW_SIZE = 5;
+
+export const DEFAULT_OVERLAY_BUTTON_ORDER: readonly OverlayButtonId[] = [
+    'what_to_answer',
+    'clarify',
+    'recap',
+    'follow_up',
+    'answer',
+    'brainstorm',
+    'catch_me_up',
+    'define',
+    'sound_smart',
+    'follow_up_questions',
+];
+
+/** The overlay's row: the first OVERLAY_ROW_SIZE of an order. */
+export const overlayRowOf = (order: readonly OverlayButtonId[]): OverlayButtonId[] => order.slice(0, OVERLAY_ROW_SIZE);
+
+export const OVERLAY_BUTTON_ORDER_KEY = 'natively_overlay_button_order';
+
+/**
+ * Any stored or sent value, made into a full order: known ids once each, in
+ * the order given, then any button missing from it (a value from an older
+ * version, a damaged one) at the end in its default place. Never throws.
+ */
+export function normalizeOverlayButtonOrder(value: unknown): OverlayButtonId[] {
+    const out: OverlayButtonId[] = [];
+    if (Array.isArray(value)) {
+        for (const id of value) {
+            if (DEFAULT_OVERLAY_BUTTON_ORDER.includes(id as OverlayButtonId) && !out.includes(id as OverlayButtonId)) {
+                out.push(id as OverlayButtonId);
+            }
+        }
+    }
+    for (const id of DEFAULT_OVERLAY_BUTTON_ORDER) if (!out.includes(id)) out.push(id);
+    return out;
+}
+
+export function sameOverlayButtonOrder(a: readonly OverlayButtonId[], b: readonly OverlayButtonId[]): boolean {
+    return a.length === b.length && a.every((id, i) => id === b[i]);
+}
+
+/** `a` and `b` trade places; the order unchanged if either is missing. */
+export function swapOverlayButtons(order: readonly OverlayButtonId[], a: OverlayButtonId, b: OverlayButtonId): OverlayButtonId[] {
+    const i = order.indexOf(a);
+    const j = order.indexOf(b);
+    const next = [...order];
+    if (i < 0 || j < 0) return next;
+    [next[i], next[j]] = [next[j], next[i]];
+    return next;
+}
+
+/**
+ * `id` moved one place left (-1) or right (+1) within its own group (the row,
+ * or the tray); unchanged at either end of the group.
+ */
+export function moveOverlayButton(order: readonly OverlayButtonId[], id: OverlayButtonId, step: -1 | 1): OverlayButtonId[] {
+    const from = order.indexOf(id);
+    const to = from + step;
+    const sameGroup = (from < OVERLAY_ROW_SIZE) === (to < OVERLAY_ROW_SIZE);
+    if (from < 0 || to < 0 || to >= order.length || !sameGroup) return [...order];
+    return swapOverlayButtons(order, id, order[to]);
+}
+
+function read(): OverlayButtonId[] {
+    try {
+        const raw = localStorage.getItem(OVERLAY_BUTTON_ORDER_KEY);
+        return normalizeOverlayButtonOrder(raw ? JSON.parse(raw) : null);
+    } catch {
+        return [...DEFAULT_OVERLAY_BUTTON_ORDER];
+    }
+}
+
+let current: OverlayButtonId[] = typeof window !== 'undefined' ? read() : [...DEFAULT_OVERLAY_BUTTON_ORDER];
+const listeners = new Set<() => void>();
+
+function adopt(order: OverlayButtonId[]): void {
+    if (sameOverlayButtonOrder(order, current)) return;
+    current = order;
+    for (const fn of listeners) fn();
+}
+
+// Listening from load, not from the first subscriber, so the order is fresh
+// whenever the overlay first reads it.
+if (typeof window !== 'undefined') {
+    window.addEventListener('storage', (e: StorageEvent) => {
+        if (e.key === OVERLAY_BUTTON_ORDER_KEY || e.key === null) adopt(read());
+    });
+    try {
+        (window as any).electronAPI?.onOverlayButtonOrderChanged?.((order: unknown) => {
+            adopt(normalizeOverlayButtonOrder(order));
+        });
+    } catch {
+        /* no preload (a harness): the storage event still works */
+    }
+}
+
+export function getOverlayButtonOrder(): OverlayButtonId[] {
+    return current;
+}
+
+export function setOverlayButtonOrder(order: readonly OverlayButtonId[]): void {
+    const next = normalizeOverlayButtonOrder(order);
+    try {
+        localStorage.setItem(OVERLAY_BUTTON_ORDER_KEY, JSON.stringify(next));
+    } catch {
+        /* storage unavailable: this window still follows the change */
+    }
+    adopt(next);
+    try {
+        (window as any).electronAPI?.setOverlayButtonOrder?.(next);
+    } catch {
+        /* no preload: the other windows follow through the storage event */
+    }
+}
+
+export function subscribeOverlayButtonOrder(onChange: () => void): () => void {
+    listeners.add(onChange);
+    return () => { listeners.delete(onChange); };
+}
+
+export function useOverlayButtonOrder(): OverlayButtonId[] {
+    return useSyncExternalStore(subscribeOverlayButtonOrder, getOverlayButtonOrder, () => current);
+}

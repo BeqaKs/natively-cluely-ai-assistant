@@ -9055,6 +9055,32 @@ export function initializeIpcHandlers(appState: AppState): void {
     });
   });
 
+  // Settings › Overlay: which buttons the meeting overlay shows and in what
+  // order (every button once; the first five are the row), passed on the same
+  // way. Only the known ids, each once, are passed on; the renderer
+  // re-normalises whatever arrives (src/lib/overlayButtonOrder.ts).
+  const OVERLAY_BUTTON_IDS = new Set([
+    'what_to_answer', 'clarify', 'recap', 'follow_up', 'answer',
+    'brainstorm', 'catch_me_up', 'define', 'sound_smart', 'follow_up_questions',
+  ]);
+  safeOn('overlay-buttons:set', (_event, order: unknown) => {
+    if (
+      !Array.isArray(order) ||
+      order.length !== OVERLAY_BUTTON_IDS.size ||
+      new Set(order).size !== order.length ||
+      !order.every((id) => typeof id === 'string' && OVERLAY_BUTTON_IDS.has(id))
+    ) return;
+    const copy = [...order] as string[];
+    BrowserWindow.getAllWindows().forEach((win) => {
+      if (win.isDestroyed()) return;
+      try {
+        win.webContents.send('overlay-buttons:changed', copy);
+      } catch {
+        // Renderer may be tearing down between isDestroyed() and send.
+      }
+    });
+  });
+
   safeHandle('get-arch', async () => {
     return process.arch;
   });
@@ -16174,31 +16200,10 @@ export function initializeIpcHandlers(appState: AppState): void {
     });
   });
 
-  // Dynamic Action Button Mode (Recap vs Brainstorm)
-  safeHandle('get-action-button-mode', () => {
-    const { SettingsManager } = require('./services/SettingsManager');
-    const sm = SettingsManager.getInstance();
-    return sm.get('actionButtonMode') ?? 'recap';
-  });
-
-  safeHandle('set-action-button-mode', (_, mode: 'recap' | 'brainstorm') => {
-    const { SettingsManager } = require('./services/SettingsManager');
-    const sm = SettingsManager.getInstance();
-    if (!sm.set('actionButtonMode', mode)) {
-      // R-24: the write was refused (degraded settings store). Returning
-      // success — and broadcasting below — put every window on a value disk
-      // never received, which silently reverted on the next launch.
-      return { success: false, error: 'settings_store_degraded' };
-    }
-
-    BrowserWindow.getAllWindows().forEach((win) => {
-      if (!win.isDestroyed()) {
-        win.webContents.send('action-button-mode-changed', mode);
-      }
-    });
-
-    return { success: true };
-  });
+  // The Recap/Brainstorm slot ("Interview Mode", get/set-action-button-mode)
+  // was removed on 2026-10-20: Brainstorm is its own overlay button, picked in
+  // Settings › Overlay (overlay-buttons:set below). SettingsManager still
+  // carries actionButtonMode so an old settings file loads; nothing reads it.
 
   // MODE 3: Follow-Up (Refinement)
   safeHandle('generate-follow-up', async (_, intent: string, userRequest?: string) => {

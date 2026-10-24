@@ -406,6 +406,8 @@ import { registerPrismLanguages } from '../utils/registerPrismLanguages';
 import { useShortcuts } from '../hooks/useShortcuts';
 import { analytics, detectProviderType, reportAnswerFailed } from '../lib/analytics/analytics.service';
 import type { MeetingInterfaceTheme } from '../lib/meetingInterfaceTheme';
+import { overlayRowOf, useOverlayButtonOrder, type OverlayButtonId } from '../lib/overlayButtonOrder';
+import { OVERLAY_BUTTONS } from './overlay/overlayButtons';
 import {
   getGlassOverlayAppearance,
   getOverlayAppearance,
@@ -2341,35 +2343,6 @@ const NativelyInterface: React.FC<NativelyInterfaceProps> = ({
     };
   }, []);
 
-  // Dynamic Action Button Mode (Recap vs Brainstorm)
-  const [actionButtonMode, setActionButtonMode] = useState<'recap' | 'brainstorm'>('recap');
-  // The shortcut listeners further down subscribe once and read the slot
-  // through this ref, as they read their handlers through handlersRef. Read
-  // from the closure it was always the first render's 'recap', so Cmd/Ctrl+3
-  // ran Recap with the button showing Brainstorm (2026-10-10).
-  const actionButtonModeRef = useRef(actionButtonMode);
-  actionButtonModeRef.current = actionButtonMode;
-
-  useEffect(() => {
-    // Load persisted mode
-    window.electronAPI
-      ?.getActionButtonMode?.()
-      ?.then((mode: 'recap' | 'brainstorm') => {
-        if (mode) setActionButtonMode(mode);
-      })
-      .catch(() => {});
-
-    // Listen for live changes from SettingsPopup / IPC
-    const unsubscribe = window.electronAPI?.onActionButtonModeChanged?.(
-      (mode: 'recap' | 'brainstorm') => {
-        setActionButtonMode(mode);
-      },
-    );
-    return () => {
-      unsubscribe?.();
-    };
-  }, []);
-
   const useDarkCodeTheme = !isLightTheme || isGlassTheme || isModernTheme;
   // Glass and modern keep a dark panel under the light app theme, so only the
   // default interface theme ever puts the chat's content on a light surface.
@@ -2697,18 +2670,12 @@ const NativelyInterface: React.FC<NativelyInterfaceProps> = ({
   // new is that the slack now also exists on the VERTICAL axis, and at the
   // panel's fully expanded width.
   const SHELL_WIDTH_EXPANDED = WINDOW_WIDTH - OVERLAY_PANEL_INSET * 2;
-  // The quick-action row's single-line width in EACH mode, measured from two
-  // hidden copies of the row (0 until the first measure). The collapsed panel
-  // grows past its default only as far as the row needs, so Interview Mode's
-  // Brainstorm chip never pushes Answer onto a second line in any language.
+  // The quick-action row's single-line width, measured from a hidden copy of
+  // the row (0 until the first measure). The collapsed panel grows past its
+  // default only as far as the row needs, so the five buttons picked in
+  // Settings › Overlay never push one onto a second line in any language.
   // See the measuring effect after handleManualResizeToggle.
-  const [quickRowNeeds, setQuickRowNeeds] = useState({ recap: 0, brainstorm: 0 });
-  // The mode whose chip label is ON SCREEN. It trails actionButtonMode: a
-  // longer label waits for the panel to make room, and a shorter one is swapped
-  // in before the panel narrows. Until they agree the panel holds the wider of
-  // the two, so the row never wraps mid-change.
-  const [shownActionMode, setShownActionMode] = useState(actionButtonMode);
-  const quickRowNeed = Math.max(quickRowNeeds[actionButtonMode], quickRowNeeds[shownActionMode]);
+  const [quickRowNeed, setQuickRowNeed] = useState(0);
   const SHELL_WIDTH_COLLAPSED = collapsedWidthForRow(
     collapsedWidthFor(SHELL_WIDTH_EXPANDED),
     SHELL_WIDTH_EXPANDED,
@@ -4215,59 +4182,51 @@ const NativelyInterface: React.FC<NativelyInterfaceProps> = ({
   }, [shellWidth, startTransition, SHELL_WIDTH_COLLAPSED, SHELL_WIDTH_EXPANDED]);
 
   // ── Collapsed width follows the quick-action row ──────────────────────────
-  // Interview Mode swaps Recap for Brainstorm, and in several languages that
-  // chip is long enough to push Answer onto a second line at the default
-  // collapsed width. So the row is measured from layout and the collapsed
-  // width grows to fit it (collapsedWidthForRow: never below the default,
-  // never above the expanded width). English with Inter fits the default and
-  // never moves.
+  // The row holds whichever five buttons Settings › Overlay put there, and in
+  // several languages a long pick (What did I miss?, Brainstorm) pushes the
+  // last chip onto a second line at the default collapsed width. So the row is
+  // measured from layout and the collapsed width grows to fit it
+  // (collapsedWidthForRow: never below the default, never above the expanded
+  // width). English with Inter and the default five fits the default.
+  const overlayButtonOrder = useOverlayButtonOrder();
+  const overlayRow = overlayRowOf(overlayButtonOrder);
   const quickRowRef = useRef<HTMLDivElement>(null);
-  const recapRowMeasureRef = useRef<HTMLDivElement>(null);
-  const brainstormRowMeasureRef = useRef<HTMLDivElement>(null);
+  const rowMeasureRef = useRef<HTMLDivElement>(null);
   useLayoutEffect(() => {
     const row = quickRowRef.current;
     const card = shellRef.current;
-    const recapRow = recapRowMeasureRef.current;
-    const brainstormRow = brainstormRowMeasureRef.current;
-    if (!row || !card || !recapRow || !brainstormRow || typeof ResizeObserver === 'undefined') return;
+    const measureRow = rowMeasureRef.current;
+    if (!row || !card || !measureRow || typeof ResizeObserver === 'undefined') return;
     const px = (v: string) => parseFloat(v) || 0;
     const measure = () => {
-      // The hidden rows are the real chips laid out on one line at their
-      // natural width, so their width IS the single-line need; add the card
+      // The hidden row is the real chips laid out on one line at their
+      // natural width, so its width IS the single-line need; add the card
       // chrome around the row (its borders: card width minus row width).
       const chrome = px(getComputedStyle(card).width) - px(getComputedStyle(row).width);
-      const next = {
-        recap: px(getComputedStyle(recapRow).width) + chrome,
-        brainstorm: px(getComputedStyle(brainstormRow).width) + chrome,
-      };
-      setQuickRowNeeds((prev) =>
-        Math.abs(prev.recap - next.recap) < 0.25 && Math.abs(prev.brainstorm - next.brainstorm) < 0.25
-          ? prev
-          : next,
-      );
+      const next = px(getComputedStyle(measureRow).width) + chrome;
+      setQuickRowNeed((prev) => (Math.abs(prev - next) < 0.25 ? prev : next));
     };
     measure();
-    // Fires on language changes and when Inter finishes loading over the
-    // fallback font. Neither the mode nor Answer/Stop moves these rows.
+    // Fires on language changes, when Inter finishes loading over the
+    // fallback font, and when Settings › Overlay changes the row's buttons.
+    // Answer/Stop does not move this row.
     const ro = new ResizeObserver(measure);
-    ro.observe(recapRow);
-    ro.observe(brainstormRow);
+    ro.observe(measureRow);
     return () => ro.disconnect();
   }, []);
 
   // When the collapsed width changes, move a panel that is resting at (or
   // heading to) the old collapsed width onto the new one. Expanded, dragged
-  // and custom widths are left alone. Only an Interview Mode change animates —
-  // the width follows the mode in the same render, so that is known exactly;
-  // the first measure and a late-loading font snap, inside the reflow they
-  // come with. A spring already in flight is redirected, never stopped: its
-  // completion is what settles the window height.
-  const quickRowModeKey = `${actionButtonMode}|${shownActionMode}`;
-  const appliedModeKeyRef = useRef(quickRowModeKey);
+  // and custom widths are left alone. Only a change of the row's buttons
+  // animates; the first measure and a late-loading font snap, inside the
+  // reflow they come with. A spring already in flight is redirected, never
+  // stopped: its completion is what settles the window height.
+  const quickRowKey = overlayRow.join('|');
+  const appliedRowKeyRef = useRef(quickRowKey);
   const appliedCollapsedRef = useRef(SHELL_WIDTH_COLLAPSED);
   useLayoutEffect(() => {
-    const modeDriven = appliedModeKeyRef.current !== quickRowModeKey;
-    appliedModeKeyRef.current = quickRowModeKey;
+    const rowDriven = appliedRowKeyRef.current !== quickRowKey;
+    appliedRowKeyRef.current = quickRowKey;
     const previous = appliedCollapsedRef.current;
     appliedCollapsedRef.current = SHELL_WIDTH_COLLAPSED;
     if (previous === SHELL_WIDTH_COLLAPSED) return;
@@ -4280,43 +4239,13 @@ const NativelyInterface: React.FC<NativelyInterfaceProps> = ({
     if (manualWidthOverrideRef.current !== null) {
       manualWidthOverrideRef.current = SHELL_WIDTH_COLLAPSED;
     }
-    if (inFlight || (modeDriven && hasRenderedExpandedRef.current)) {
+    if (inFlight || (rowDriven && hasRenderedExpandedRef.current)) {
       startTransition(SHELL_WIDTH_COLLAPSED);
       return;
     }
     transitionTargetRef.current = SHELL_WIDTH_COLLAPSED;
     shellWidth.set(SHELL_WIDTH_COLLAPSED);
-  }, [SHELL_WIDTH_COLLAPSED, quickRowModeKey, shellWidth, startTransition]);
-
-  // The chip label the swap is heading to. A longer label waits until the
-  // panel is wide enough for the row; if nothing is widening the panel (it is
-  // expanded, dragged, or the window is too narrow) it swaps at once.
-  const [labelActionMode, setLabelActionMode] = useState(actionButtonMode);
-  useEffect(() => {
-    if (labelActionMode === actionButtonMode) return;
-    const target = actionButtonMode;
-    const fits = () => shellWidth.get() + 0.5 >= quickRowNeeds[target];
-    const swap = () => setLabelActionMode(target);
-    if (fits()) {
-      swap();
-      return;
-    }
-    const unsubscribe = shellWidth.on('change', () => {
-      if (fits()) swap();
-    });
-    const raf = requestAnimationFrame(() => {
-      if (animationControlsRef.current === null) swap();
-    });
-    const timer = setTimeout(swap, 1200);
-    return () => {
-      unsubscribe();
-      cancelAnimationFrame(raf);
-      clearTimeout(timer);
-    };
-  }, [actionButtonMode, labelActionMode, quickRowNeeds, shellWidth]);
-  const handleModeLabelShown = useCallback((key: string) => {
-    setShownActionMode(key === 'brainstorm' ? 'brainstorm' : 'recap');
-  }, []);
+  }, [SHELL_WIDTH_COLLAPSED, quickRowKey, shellWidth, startTransition]);
 
   // ── Free-form resize handles ──────────────────────────────────────────────
   // EAST-side directions only ('e', 's', 'se'). A west-side handle would need
@@ -10470,11 +10399,7 @@ Provide only the answer, nothing else.`;
         handleFollowUpQuestions();
       } else if (isShortcutPressed(e, 'dynamicAction4')) {
         e.preventDefault();
-        if (actionButtonModeRef.current === 'brainstorm') {
-          handleBrainstorm();
-        } else {
-          handleRecap();
-        }
+        handleRecap();
       } else if (isShortcutPressed(e, 'answer')) {
         e.preventDefault();
         handleAnswerNow();
@@ -10845,10 +10770,8 @@ Provide only the answer, nothing else.`;
       else if (action === 'shorten') handlers.handleFollowUp('shorten');
       else if (action === 'followUp') handlers.handleFollowUpQuestions();
       else if (action === 'recap') handlers.handleRecap();
-      else if (action === 'dynamicAction4') {
-        if (actionButtonModeRef.current === 'brainstorm') handlers.handleBrainstorm();
-        else handlers.handleRecap();
-      } else if (action === 'answer') handlers.handleAnswerNow();
+      else if (action === 'dynamicAction4') handlers.handleRecap();
+      else if (action === 'answer') handlers.handleAnswerNow();
       else if (action === 'clarify') handlers.handleClarify();
       else if (action === 'codeHint') handlers.handleCodeHint();
       else if (action === 'brainstorm') handlers.handleBrainstorm();
@@ -12342,16 +12265,6 @@ Provide only the answer, nothing else.`;
                   // not DOM text, so the copies never show up in textContent,
                   // text queries or text search.
                   const ghost = (text: string) => <span className="ov-ghost-label" data-label={text} />;
-                  const modeChipContent = (mode: 'recap' | 'brainstorm') =>
-                    mode === 'brainstorm' ? (
-                      <span className="flex items-center gap-1.5">
-                        <Lightbulb className="w-3 h-3 opacity-70" /> {t('Brainstorm')}
-                      </span>
-                    ) : (
-                      <span className="flex items-center gap-1.5">
-                        <RefreshCw className="w-3 h-3 opacity-70" /> {t('Recap')}
-                      </span>
-                    );
                   const answerContent = (
                     <span className="flex items-center gap-1.5">
                       <Mic className="w-3 h-3 opacity-70" /> {t('Answer')}
@@ -12378,62 +12291,42 @@ Provide only the answer, nothing else.`;
                       </span>
                     </>
                   );
-                  // The row laid out on one line for one mode, invisible and
-                  // inert: its width is what the collapsed panel needs (see the
-                  // measuring effect). Same classes and icons as the real
-                  // chips; spans, not buttons, and CSS-drawn labels.
-                  const measureRow = (mode: 'recap' | 'brainstorm', ref: React.RefObject<HTMLDivElement | null>) => (
-                    <div ref={ref} className="ov-row-measure flex flex-nowrap items-center gap-1.5 px-4" aria-hidden inert>
-                      <span className={chipClass} style={appearance.chipStyle}>
-                        <Pencil className="w-3 h-3 opacity-70" />
-                        {ghost(t('What to answer?'))}
+                  // The row laid out on one line, invisible and inert: its
+                  // width is what the collapsed panel needs (see the measuring
+                  // effect). Same classes and icons as the real chips; spans,
+                  // not buttons, and CSS-drawn labels.
+                  const measureChip = (id: OverlayButtonId) => {
+                    if (id === 'answer') {
+                      return (
+                        <span key={id} className={answerChipClass(false)} style={appearance.chipStyle}>
+                          <span className="ov-chip-stack">{answerSizers}</span>
+                        </span>
+                      );
+                    }
+                    const { Icon, label } = OVERLAY_BUTTONS[id];
+                    return (
+                      <span key={id} className={chipClass} style={appearance.chipStyle}>
+                        <Icon className="w-3 h-3 opacity-70" />
+                        {ghost(t(label))}
                       </span>
-                      <span className={chipClass} style={appearance.chipStyle}>
-                        <MessageSquare className="w-3 h-3 opacity-70" />
-                        {ghost(t('Clarify'))}
-                      </span>
-                      <span className={chipClass} style={appearance.chipStyle}>
-                        {mode === 'brainstorm' ? (
-                          <Lightbulb className="w-3 h-3 opacity-70" />
-                        ) : (
-                          <RefreshCw className="w-3 h-3 opacity-70" />
-                        )}
-                        {ghost(mode === 'brainstorm' ? t('Brainstorm') : t('Recap'))}
-                      </span>
-                      <span className={chipClass} style={appearance.chipStyle}>
-                        <HelpCircle className="w-3 h-3 opacity-70" />
-                        {ghost(t('Follow Up Question'))}
-                      </span>
-                      <span className={answerChipClass(false)} style={appearance.chipStyle}>
-                        <span className="ov-chip-stack">{answerSizers}</span>
-                      </span>
-                    </div>
-                  );
-                  return (
-                    <>
-                      <div
-                        ref={quickRowRef}
-                        className={`ov-chip-row ov-quickrow-pad flex flex-wrap justify-center items-center gap-1.5 px-4 pb-3 max-w-full overflow-visible ${rollingTranscript && showTranscript ? 'pt-1' : 'pt-3 is-bare'}`}
-                      >
-                        <button onClick={handleWhatToSay} className={chipClass} style={appearance.chipStyle}>
-                          <Pencil className="w-3 h-3 opacity-70" /> {t('What to answer?')}
-                        </button>
-                        <button onClick={handleClarify} className={chipClass} style={appearance.chipStyle}>
-                          <MessageSquare className="w-3 h-3 opacity-70" /> {t('Clarify')}
-                        </button>
+                    );
+                  };
+                  const onChip: Record<Exclude<OverlayButtonId, 'answer'>, () => void> = {
+                    what_to_answer: () => void handleWhatToSay(),
+                    clarify: () => void handleClarify(),
+                    recap: () => void handleRecap(),
+                    follow_up: () => void handleFollowUpQuestions(),
+                    brainstorm: () => void handleBrainstorm(),
+                    catch_me_up: () => void handleLiveHelper('catch_me_up'),
+                    define: () => void handleLiveHelper('define'),
+                    sound_smart: () => void handleLiveHelper('sound_smart'),
+                    follow_up_questions: () => void handleLiveHelper('follow_up_questions'),
+                  };
+                  const chip = (id: OverlayButtonId) => {
+                    if (id === 'answer') {
+                      return (
                         <button
-                          onClick={shownActionMode === 'brainstorm' ? handleBrainstorm : handleRecap}
-                          className={chipClass}
-                          style={appearance.chipStyle}
-                        >
-                          <SwapText swapKey={labelActionMode} onShown={handleModeLabelShown}>
-                            {modeChipContent(labelActionMode)}
-                          </SwapText>
-                        </button>
-                        <button onClick={handleFollowUpQuestions} className={chipClass} style={appearance.chipStyle}>
-                          <HelpCircle className="w-3 h-3 opacity-70" /> {t('Follow Up Question')}
-                        </button>
-                        <button
+                          key={id}
                           onClick={handleAnswerNow}
                           className={answerChipClass(isManualRecording)}
                           style={isManualRecording ? undefined : appearance.chipStyle}
@@ -12447,25 +12340,28 @@ Provide only the answer, nothing else.`;
                             </span>
                           </span>
                         </button>
-                        {/* The live helpers sit on a line of their own under
-                            the main actions, at any width, so the collapsed
-                            panel keeps its measured width (measureRow). */}
-                        <span className="basis-full h-0" aria-hidden />
-                        <button onClick={() => handleLiveHelper('catch_me_up')} className={chipClass} style={appearance.chipStyle}>
-                          <History className="w-3 h-3 opacity-70" /> {t('What did I miss?')}
-                        </button>
-                        <button onClick={() => handleLiveHelper('define')} className={chipClass} style={appearance.chipStyle}>
-                          <BookOpen className="w-3 h-3 opacity-70" /> {t('Define')}
-                        </button>
-                        <button onClick={() => handleLiveHelper('sound_smart')} className={chipClass} style={appearance.chipStyle}>
-                          <Quote className="w-3 h-3 opacity-70" /> {t('Sound smart')}
-                        </button>
-                        <button onClick={() => handleLiveHelper('follow_up_questions')} className={chipClass} style={appearance.chipStyle}>
-                          <Quote className="w-3 h-3 opacity-70" /> {t('Follow-up questions')}
-                        </button>
+                      );
+                    }
+                    const { Icon, label } = OVERLAY_BUTTONS[id];
+                    return (
+                      <button key={id} onClick={onChip[id]} className={chipClass} style={appearance.chipStyle}>
+                        <Icon className="w-3 h-3 opacity-70" /> {t(label)}
+                      </button>
+                    );
+                  };
+                  return (
+                    <>
+                      <div
+                        ref={quickRowRef}
+                        className={`ov-chip-row ov-quickrow-pad flex flex-wrap justify-center items-center gap-1.5 px-4 pb-3 max-w-full overflow-visible ${rollingTranscript && showTranscript ? 'pt-1' : 'pt-3 is-bare'}`}
+                      >
+                        {/* One row: the five buttons picked in Settings ›
+                            Overlay, in its order. */}
+                        {overlayRow.map(chip)}
                       </div>
-                      {measureRow('recap', recapRowMeasureRef)}
-                      {measureRow('brainstorm', brainstormRowMeasureRef)}
+                      <div ref={rowMeasureRef} className="ov-row-measure flex flex-nowrap items-center gap-1.5 px-4" aria-hidden inert>
+                        {overlayRow.map(measureChip)}
+                      </div>
                     </>
                   );
                 })()}

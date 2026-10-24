@@ -10,7 +10,7 @@ import {
     ChevronDown, ChevronUp, Check, BadgeCheck, Power, Palette, Calendar, Ghost, Sun, Moon, RefreshCw, Info, Globe, FlaskConical, Terminal, Download, Settings, Activity, ExternalLink, Trash2,
     Sparkles, Pencil, Briefcase, Building2, Search, MapPin, CheckCircle, HelpCircle, Zap, SlidersHorizontal, PointerOff,
     Star, AlertCircle, Gift, Smartphone, Cpu, Shield, Code2, Headphones, Boxes, Languages, Volume2, KeyRound, Loader2, CornerDownRight, PanelBottomClose, TriangleAlert, MicOff,
-    Plug
+    Plug, AppWindow
 } from 'lucide-react';
 import { AutoAnswerIcon } from './AutoAnswerIcon';
 import { HiCreditCard } from 'react-icons/hi2';
@@ -26,6 +26,8 @@ import { PlansSettings } from './settings/PlansSettings';
 import { PhoneMirrorSettings } from './settings/PhoneMirrorSettings';
 import { RetrievalSettings } from './settings/RetrievalSettings';
 import { IntelligenceSettings } from './settings/IntelligenceSettings';
+import { OverlaySettings } from './settings/OverlaySettings';
+import { OverlayMockup } from './settings/OverlayMockup';
 import { LocalWhisperModelPanel, type ChannelConfig as LocalWhisperChannelConfig } from './LocalWhisperModelPanel';
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import { useShortcuts } from '../hooks/useShortcuts';
@@ -110,132 +112,17 @@ import { isRecognitionLanguageOffered, PARAKEET_ONLY_LANGUAGE_KEYS } from '../..
 
 
 // ---------------------------------------------------------------------------
-// MockupNativelyInterface — fake in-meeting widget for the opacity preview.
-// Mirrors NativelyInterface.tsx's own theme resolution (isGlassTheme /
-// isModernTheme / data-interface-theme / GlassEffectLayer) so the preview
-// actually reflects whichever "Meeting Interface Style" the user has picked,
-// instead of always rendering the default theme's appearance.
+// MockupNativelyInterface — the meeting overlay floated over the app for the
+// opacity preview (OverlayMockup, which Settings › Overlay shows on its page).
 // ---------------------------------------------------------------------------
-const MockupNativelyInterface = ({ opacity, theme }: { opacity: number; theme: MeetingInterfaceTheme }) => {
-    const t = useT();
-    const resolvedTheme = useResolvedTheme();
-    const isGlassTheme = theme === 'liquid-glass';
-    const isModernTheme = theme === 'modern';
-    const shellRef = React.useRef<HTMLDivElement>(null);
-    const appearance = useMemo(
-        () => (isGlassTheme ? getGlassOverlayAppearance() : getOverlayAppearance(opacity, resolvedTheme)),
-        [opacity, resolvedTheme, isGlassTheme]
-    );
-
-    return (
-        <div
-            className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none select-none bg-transparent"
-            // The "modern" theme's CSS (index.css [data-interface-theme="modern"]
-            // .overlay-shell-surface etc.) reads --overlay-opacity directly via
-            // calc(), same as the real overlay window (see App.tsx's
-            // '--overlay-opacity' inline style) — it does NOT go through
-            // appearance.shellStyle. Without setting it here too, the modern
-            // theme's preview would silently ignore the slider entirely.
-            style={{ ['--overlay-opacity' as '--overlay-opacity']: String(opacity) } as React.CSSProperties}
-        >
-                {/* NativelyInterface Widget — opacity controlled by the slider.
-                    Shifted up enough to clear the opacity-slider-card, which
-                    stays visible (and in its normal in-flow position) during
-                    the preview — see #opacity-slider-card's z-index override
-                    in startPreviewingOpacity(). */}
-                <div
-                    id="mockup-natively-interface"
-                    data-interface-theme={isGlassTheme ? 'liquid-glass' : isModernTheme ? 'modern' : 'default'}
-                    className="flex flex-col items-center pointer-events-none -mt-96"
-                >
-                    {/* TopPill Replica */}
-                    <div className="flex justify-center mb-2 select-none z-50">
-                        <div className="flex items-center gap-2 rounded-full overlay-pill-surface backdrop-blur-md pl-1.5 pr-1.5 py-1.5" style={appearance.pillStyle}>
-                            <div className="w-8 h-8 rounded-full flex items-center justify-center overflow-hidden overlay-icon-surface" style={appearance.iconStyle}>
-                                <img
-                                    src={icon}
-                                    alt="Natively"
-                                    className="w-[24px] h-[24px] object-contain opacity-95 scale-105 force-black-icon"
-                                    draggable="false"
-                                />
-                            </div>
-                            <div className="flex items-center gap-2 px-4 py-1.5 rounded-full text-[12px] font-medium border overlay-chip-surface overlay-text-interactive" style={appearance.chipStyle}>
-                                <ChevronUp className="w-3.5 h-3.5 opacity-70" />
-                                <span className="opacity-80 tracking-wide">{t('Hide')}</span>
-                            </div>
-                            <div className="w-8 h-8 rounded-full flex items-center justify-center overlay-icon-surface overlay-text-primary" style={appearance.iconStyle}>
-                                <div className="w-3.5 h-3.5 rounded-[3px] bg-red-400 opacity-80" />
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Main Interface Window Replica */}
-                    <div ref={shellRef} className="relative w-[600px] max-w-full overlay-shell-surface overlay-text-primary backdrop-blur-2xl border rounded-[24px] overflow-hidden flex flex-col pt-2 pb-3" style={appearance.shellStyle}>
-                        {isGlassTheme && <GlassEffectLayer parentRef={shellRef} cornerRadius={24} />}
-
-                        {/* Rolling Transcript Bar */}
-                        <div className="w-full flex justify-center py-2 px-4 border-b mb-1 overlay-transcript-surface" style={appearance.transcriptStyle}>
-                            <p className="text-[13px] truncate max-w-[90%] font-medium overlay-text-primary">
-                                <span className="overlay-text-muted mr-2 font-semibold">{t('Interviewer')}</span>
-                                <span className="opacity-95">{t('So how would you optimize the current algorithm?')}</span>
-                            </p>
-                        </div>
-
-                        {/* Chat History Mock */}
-                        <div className="flex-1 overflow-y-auto px-4 py-2 space-y-3">
-                            <div className="flex justify-start">
-                                <div className="max-w-[85%] px-4 py-3 text-[14px] leading-relaxed font-normal overlay-text-primary">
-                                    <span className="font-semibold text-emerald-500 block mb-1">{t('Suggestion')}</span>
-                                    {t('A good approach would be to use a hash map to cache the intermediate results, which brings the time complexity down from O(n²) to O(n).')}
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* Quick Actions */}
-                        <div className="flex flex-nowrap justify-center items-center gap-1.5 px-4 pb-3 pt-3">
-                            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-medium border shrink-0 overlay-chip-surface overlay-text-interactive" style={appearance.chipStyle}>
-                                <Pencil className="w-3 h-3 opacity-70" /> {t('What to answer?')}
-                            </div>
-                            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-medium border shrink-0 overlay-chip-surface overlay-text-interactive" style={appearance.chipStyle}>
-                                <MessageSquare className="w-3 h-3 opacity-70" /> {t('Clarify')}
-                            </div>
-                            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-medium border shrink-0 overlay-chip-surface overlay-text-interactive" style={appearance.chipStyle}>
-                                <RefreshCw className="w-3 h-3 opacity-70" /> {t('Recap')}
-                            </div>
-                            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-medium border shrink-0 overlay-chip-surface overlay-text-interactive" style={appearance.chipStyle}>
-                                <HelpCircle className="w-3 h-3 opacity-70" /> {t('Follow Up Question')}
-                            </div>
-                            <div className="flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-medium min-w-[74px] shrink-0 border overlay-chip-surface overlay-text-interactive" style={appearance.chipStyle}>
-                                <Mic className="w-3 h-3 opacity-70" /> {t('Answer')}
-                            </div>
-                        </div>
-
-                        {/* Input Area */}
-                        <div className="px-3">
-                            <div className="relative group">
-                                <div className="w-full border rounded-xl pl-3 pr-10 py-2.5 h-[38px] flex items-center overlay-input-surface" style={appearance.inputStyle}>
-                                    <span className="text-[13px] overlay-text-muted">{t('Ask anything on screen or conversation')}</span>
-                                </div>
-                            </div>
-
-                            {/* Bottom Row */}
-                            <div className="flex items-center justify-between mt-3 px-0.5">
-                                <div className="flex items-center gap-1.5">
-                                    <div className="flex items-center gap-1 pl-3 pr-1.5 h-7 border rounded-[9px] text-xs font-medium text-left shrink-0 overlay-control-surface overlay-text-interactive" style={{ ...appearance.controlStyle, width: MODEL_SELECTOR_WIDTH }}>
-                                        <ModelSelectorLabel>Gemini 3 Flash</ModelSelectorLabel>
-                                        <ChevronDown size={12} className="shrink-0" />
-                                    </div>
-                                    <div className="w-7 h-7 rounded-[9px] flex items-center justify-center overlay-bare-icon">
-                                        <SlidersHorizontal className="w-3.5 h-3.5" />
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-        </div>
-    );
-};
+const MockupNativelyInterface = ({ opacity, theme }: { opacity: number; theme: MeetingInterfaceTheme }) => (
+    <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none select-none bg-transparent">
+        {/* Shifted up enough to clear the opacity-slider-card, which stays
+            visible (and in its normal in-flow position) during the preview —
+            see #opacity-slider-card's z-index override in startPreviewingOpacity(). */}
+        <OverlayMockup id="mockup-natively-interface" className="pointer-events-none -mt-96" opacity={opacity} theme={theme} />
+    </div>
+);
 
 // A button label or result line that changes on a click: Companion's text swap
 // (150ms, 4px, 2px blur). Always ready, because these only ever change in
@@ -569,6 +456,7 @@ const SETTINGS_NAV_ORDER = [
     'ai-providers',
     'retrieval',
     'audio',
+    'overlay',
     'calendar',
     'keybinds',
     'phone-mirror',
@@ -832,8 +720,6 @@ const SettingsOverlay: React.FC<SettingsOverlayProps> = ({
     const themeDropdownRef = React.useRef<HTMLDivElement>(null);
     const aiLangDropdownRef = React.useRef<HTMLDivElement>(null);
     const [meetingInterfaceTheme, setMeetingInterfaceThemeState] = useState<MeetingInterfaceTheme>(getMeetingInterfaceTheme);
-    const [isInterfaceThemeDropdownOpen, setIsInterfaceThemeDropdownOpen] = useState(false);
-    const interfaceThemeDropdownRef = React.useRef<HTMLDivElement>(null);
     const [isLangDropdownOpen, setIsLangDropdownOpen] = useState(false);
     const langDropdownRef = React.useRef<HTMLDivElement>(null);
 
@@ -932,9 +818,6 @@ const SettingsOverlay: React.FC<SettingsOverlayProps> = ({
             if (aiLangDropdownRef.current && !aiLangDropdownRef.current.contains(event.target as Node)) {
                 setIsAiLangDropdownOpen(false);
             }
-            if (interfaceThemeDropdownRef.current && !interfaceThemeDropdownRef.current.contains(event.target as Node)) {
-                setIsInterfaceThemeDropdownOpen(false);
-            }
             if (langDropdownRef.current && !langDropdownRef.current.contains(event.target as Node)) {
                 setIsLangDropdownOpen(false);
             }
@@ -948,7 +831,6 @@ const SettingsOverlay: React.FC<SettingsOverlayProps> = ({
             const open = [
                 [isThemeDropdownOpen, themeDropdownRef, setIsThemeDropdownOpen],
                 [isAiLangDropdownOpen, aiLangDropdownRef, setIsAiLangDropdownOpen],
-                [isInterfaceThemeDropdownOpen, interfaceThemeDropdownRef, setIsInterfaceThemeDropdownOpen],
                 [isLangDropdownOpen, langDropdownRef, setIsLangDropdownOpen],
             ] as const;
             for (const [isOpen, ref, setOpen] of open) {
@@ -959,7 +841,7 @@ const SettingsOverlay: React.FC<SettingsOverlayProps> = ({
             }
         };
 
-        if (isThemeDropdownOpen || isAiLangDropdownOpen || isInterfaceThemeDropdownOpen || isLangDropdownOpen) {
+        if (isThemeDropdownOpen || isAiLangDropdownOpen || isLangDropdownOpen) {
             document.addEventListener('mousedown', handleClickOutside);
             document.addEventListener('keydown', handleEscape, true);
         }
@@ -968,7 +850,7 @@ const SettingsOverlay: React.FC<SettingsOverlayProps> = ({
             document.removeEventListener('mousedown', handleClickOutside);
             document.removeEventListener('keydown', handleEscape, true);
         };
-    }, [isThemeDropdownOpen, isAiLangDropdownOpen, isInterfaceThemeDropdownOpen, isLangDropdownOpen]);
+    }, [isThemeDropdownOpen, isAiLangDropdownOpen, isLangDropdownOpen]);
 
     const [showTranscript, setShowTranscript] = useState(() => {
         const stored = localStorage.getItem('natively_interviewer_transcript');
@@ -2317,6 +2199,72 @@ const SettingsOverlay: React.FC<SettingsOverlayProps> = ({
         setSystemAudioError(null);
     }, [isOpen, activeTab, selectedInput]);
 
+    // Interface Opacity (Stealth Mode), shown on Settings › Overlay. Held, it
+    // hides Settings and floats the overlay over the real desktop
+    // (startPreviewingOpacity); it is built here because that preview, and
+    // the commit on release, are Settings' own state.
+    const opacityCard = (
+        <div
+            id="opacity-slider-card"
+            style={isPreviewingOpacity ? { visibility: 'visible', position: 'relative', zIndex: 9999 } : {}}
+            className={`${isLight ? 'bg-bg-card' : 'bg-bg-item-surface'} rounded-xl p-5 border border-border-subtle`}
+        >
+            <div className="flex items-center justify-between mb-3">
+                <label className="flex items-center gap-2 text-xs font-medium text-text-secondary uppercase tracking-wide">
+                    <Eye size={13} className="text-text-secondary" />
+                    {t('Interface Opacity')}
+                </label>
+                {/*
+                 * Render previewOverlayOpacity (live drag value), NOT
+                 * overlayOpacity (committed). The drag handler at
+                 * handleOpacityChange does an imperative
+                 *   document.querySelectorAll('.opacity-percent-label')
+                 *     .forEach(el => el.textContent = percentText)
+                 * for sub-frame latency, then calls setPreviewOverlayOpacity(val).
+                 * That setter queues a React re-render — if this JSX read
+                 * `overlayOpacity` (the un-committed pre-drag value), React
+                 * would clobber the imperative text back to the stale value
+                 * on the next commit, producing a visible flicker every
+                 * drag tick. Reading previewOverlayOpacity keeps React's
+                 * render and the imperative write in agreement — the
+                 * imperative write still wins the sub-frame race, React's
+                 * commit just confirms the same value.
+                 */}
+                <span className="opacity-percent-label text-xs font-semibold text-text-primary tabular-nums">
+                    {Math.round(previewOverlayOpacity * 100)}%
+                </span>
+            </div>
+
+            <input
+                type="range"
+                min={OVERLAY_OPACITY_MIN}
+                max={1.0}
+                step={0.01}
+                defaultValue={overlayOpacity}
+                onChange={(e) => handleOpacityChange(parseFloat(e.target.value))}
+                onPointerDown={startPreviewingOpacity}
+                onPointerUp={stopPreviewingOpacity}
+                onPointerCancel={stopPreviewingOpacity}
+                onPointerLeave={stopPreviewingOpacity}
+                className="lg-slider w-full h-1.5 rounded-full appearance-none bg-bg-input"
+                style={{
+                    WebkitAppearance: 'none',
+                    '--lg-knob-bg': isLight ? SELECTED_PERIWINKLE_LIGHT : SELECTED_PERIWINKLE,
+                } as React.CSSProperties}
+            />
+
+            <div className="flex justify-between mt-1.5">
+                <span className="text-[10px] text-text-tertiary">{t('More Stealth')}</span>
+                <span className="text-[10px] text-text-tertiary">{t('Fully Visible')}</span>
+            </div>
+
+            <p className="text-xs text-text-tertiary mt-2">
+                {t('Controls the visibility of the in-meeting overlay.')}{' '}
+                <span className="text-text-secondary">{t('Hold the slider to preview.')}</span>
+            </p>
+        </div>
+    );
+
     return (
         <>
             {confirmDialog}
@@ -2412,6 +2360,13 @@ const SettingsOverlay: React.FC<SettingsOverlayProps> = ({
                                     >
                                         {activeTab === 'audio' && navActivePill}
                                         <Mic size={16} /> {t('Audio')}
+                                    </button>
+                                    <button
+                                        onClick={() => setActiveTab('overlay')}
+                                        className={navItemClass(activeTab === 'overlay')}
+                                    >
+                                        {activeTab === 'overlay' && navActivePill}
+                                        <AppWindow size={16} /> {t('Overlay')}
                                     </button>
                                     <button
                                         onClick={() => setActiveTab('calendar')}
@@ -2751,12 +2706,13 @@ const SettingsOverlay: React.FC<SettingsOverlayProps> = ({
                                                         </div>
                                                     </div>
 
-                                                    {/* Theme, Language, Meeting Interface Style and the Check
-                                                        and Export buttons share px-2.5 + min-w-[105px], so they
-                                                        match. 105px holds the widest label each can show in
-                                                        English: Theme "System" with its icon (104.9px, icon at
-                                                        gap-1.5) and Check's "Up to date" (104.4px), so no state
-                                                        resizes them. A longer label ("Liquid Glass") still grows. */}
+                                                    {/* Theme, Language and the Check and Export buttons (and
+                                                        Settings › Overlay's style picker) share px-2.5 +
+                                                        min-w-[105px], so they match. 105px holds the widest label
+                                                        each can show in English: Theme "System" with its icon
+                                                        (104.9px, icon at gap-1.5) and Check's "Up to date"
+                                                        (104.4px), so no state resizes them. A longer label
+                                                        ("Liquid Glass") still grows. */}
                                                     <div className="relative" ref={themeDropdownRef}>
                                                         <button
                                                             onClick={() => setIsThemeDropdownOpen(!isThemeDropdownOpen)}
@@ -3135,74 +3091,6 @@ const SettingsOverlay: React.FC<SettingsOverlayProps> = ({
                                                         )}
                                                     </AnimatePresence>
 
-                                                    {/* Meeting Interface Style */}
-                                                    <div className="flex items-center justify-between px-4 py-3">
-                                                        <div className="flex items-center gap-4">
-                                                            <div className="w-10 h-10 bg-bg-item-surface rounded-lg border border-border-subtle text-text-primary flex items-center justify-center shrink-0">
-                                                                <Layout size={20} />
-                                                            </div>
-                                                            <div>
-                                                                <h3 className="text-sm font-bold text-text-primary">{t('Meeting Interface Style')}</h3>
-                                                                <p className="text-xs text-text-secondary mt-0.5">
-                                                                    <Presence kind="text" id={meetingInterfaceTheme}>
-                                                                        {meetingInterfaceTheme === 'liquid-glass'
-                                                                            ? t('Liquid glass — Apple-inspired transparent overlay')
-                                                                            : meetingInterfaceTheme === 'modern'
-                                                                                ? t('Modern — polished dark glass with cobalt accents')
-                                                                                : t('Default overlay appearance')}
-                                                                    </Presence>
-                                                                </p>
-                                                            </div>
-                                                        </div>
-
-                                                        <div className="relative" ref={interfaceThemeDropdownRef}>
-                                                            {/* Centred like Language's picker: two spacers share the free
-                                                                space, and the right one holds the chevron and never gets
-                                                                narrower than the chevron plus the old 8px gap, so
-                                                                "Liquid Glass" slides left instead of under it. */}
-                                                            <button
-                                                                onClick={() => setIsInterfaceThemeDropdownOpen(!isInterfaceThemeDropdownOpen)}
-                                                                className="bg-bg-component hover:bg-bg-elevated border border-border-subtle text-text-primary px-2.5 py-1.5 rounded-lg text-xs font-medium transition-colors flex items-center min-w-[105px]"
-                                                            >
-                                                                <span aria-hidden="true" className="flex-1 basis-0 min-w-0" />
-                                                                <span className="min-w-0 text-ellipsis overflow-hidden whitespace-nowrap">
-                                                                    <Presence kind="text" id={meetingInterfaceTheme}>
-                                                                        {meetingInterfaceTheme === 'liquid-glass'
-                                                                            ? 'Liquid Glass'
-                                                                            : meetingInterfaceTheme === 'modern'
-                                                                                ? 'Modern'
-                                                                                : t('Default')}
-                                                                    </Presence>
-                                                                </span>
-                                                                <span aria-hidden="true" className="flex-1 basis-0 min-w-[20px] flex justify-end">
-                                                                    <ChevronDown size={12} className={`shrink-0 transition-transform duration-[250ms] ease-sculpted motion-reduce:transition-none ${isInterfaceThemeDropdownOpen ? 'rotate-180' : ''}`} />
-                                                                </span>
-                                                            </button>
-
-                                                            {/* Opens down past the Export row: the advanced Disclosure is
-                                                                unclipWhenOpen, so the menu is not cut off at its edge. */}
-                                                            <SettingsMenu open={isInterfaceThemeDropdownOpen} origin="top right" className="absolute right-0 top-full mt-1 min-w-full w-max bg-bg-elevated border border-border-subtle rounded-lg shadow-xl overflow-hidden z-20 p-1 select-none">
-                                                                {([
-                                                                    { mode: 'default' as MeetingInterfaceTheme, label: 'Default' },
-                                                                    { mode: 'liquid-glass' as MeetingInterfaceTheme, label: 'Liquid Glass' },
-                                                                    { mode: 'modern' as MeetingInterfaceTheme, label: 'Modern' },
-                                                                ] as const).map((option) => (
-                                                                    <button
-                                                                        key={option.mode}
-                                                                        onClick={() => {
-                                                                            setMeetingInterfaceTheme(option.mode);
-                                                                            setMeetingInterfaceThemeState(option.mode);
-                                                                            setIsInterfaceThemeDropdownOpen(false);
-                                                                        }}
-                                                                        className={`w-full text-center px-2.5 py-1.5 rounded-md text-xs flex items-center justify-center transition-colors ${meetingInterfaceTheme === option.mode ? 'text-text-primary bg-[color:color-mix(in_srgb,var(--bg-item-active)_50%,transparent)]' : 'text-text-secondary hover:bg-bg-input hover:text-text-primary'}`}
-                                                                    >
-                                                                        <span className="font-medium">{t(option.label)}</span>
-                                                                    </button>
-                                                                ))}
-                                                            </SettingsMenu>
-                                                        </div>
-                                                    </div>
-
                                                     {/* Export debug logs — collects the main log, the previous
                                                         session, the structured JSONL records and a system-info
                                                         header into one folder and reveals it. */}
@@ -3250,68 +3138,6 @@ const SettingsOverlay: React.FC<SettingsOverlayProps> = ({
                                                 </Disclosure>
                                             </div>
 
-                                                {/* ------------------------------------------------------------------ */}
-                                                {/* Interface Opacity (Stealth Mode)                                   */}
-                                                {/* ------------------------------------------------------------------ */}
-                                                <div
-                                                    id="opacity-slider-card"
-                                                    style={isPreviewingOpacity ? { visibility: 'visible', position: 'relative', zIndex: 9999 } : {}}
-                                                    className={`${isLight ? 'bg-bg-card' : 'bg-bg-item-surface'} rounded-xl p-5 border border-border-subtle mt-4`}
-                                                >
-                                                    <div className="flex items-center justify-between mb-3">
-                                                        <label className="flex items-center gap-2 text-xs font-medium text-text-secondary uppercase tracking-wide">
-                                                            <Eye size={13} className="text-text-secondary" />
-                                                            {t('Interface Opacity')}
-                                                        </label>
-                                                        {/*
-                                                         * Render previewOverlayOpacity (live drag value), NOT
-                                                         * overlayOpacity (committed). The drag handler at
-                                                         * handleOpacityChange does an imperative
-                                                         *   document.querySelectorAll('.opacity-percent-label')
-                                                         *     .forEach(el => el.textContent = percentText)
-                                                         * for sub-frame latency, then calls setPreviewOverlayOpacity(val).
-                                                         * That setter queues a React re-render — if this JSX read
-                                                         * `overlayOpacity` (the un-committed pre-drag value), React
-                                                         * would clobber the imperative text back to the stale value
-                                                         * on the next commit, producing a visible flicker every
-                                                         * drag tick. Reading previewOverlayOpacity keeps React's
-                                                         * render and the imperative write in agreement — the
-                                                         * imperative write still wins the sub-frame race, React's
-                                                         * commit just confirms the same value.
-                                                         */}
-                                                        <span className="opacity-percent-label text-xs font-semibold text-text-primary tabular-nums">
-                                                            {Math.round(previewOverlayOpacity * 100)}%
-                                                        </span>
-                                                    </div>
-
-                                                    <input
-                                                        type="range"
-                                                        min={OVERLAY_OPACITY_MIN}
-                                                        max={1.0}
-                                                        step={0.01}
-                                                        defaultValue={overlayOpacity}
-                                                        onChange={(e) => handleOpacityChange(parseFloat(e.target.value))}
-                                                        onPointerDown={startPreviewingOpacity}
-                                                        onPointerUp={stopPreviewingOpacity}
-                                                        onPointerCancel={stopPreviewingOpacity}
-                                                        onPointerLeave={stopPreviewingOpacity}
-                                                        className="lg-slider w-full h-1.5 rounded-full appearance-none bg-bg-input"
-                                                        style={{
-                                                            WebkitAppearance: 'none',
-                                                            '--lg-knob-bg': isLight ? SELECTED_PERIWINKLE_LIGHT : SELECTED_PERIWINKLE,
-                                                        } as React.CSSProperties}
-                                                    />
-
-                                                    <div className="flex justify-between mt-1.5">
-                                                        <span className="text-[10px] text-text-tertiary">{t('More Stealth')}</span>
-                                                        <span className="text-[10px] text-text-tertiary">{t('Fully Visible')}</span>
-                                                    </div>
-
-                                                    <p className="text-xs text-text-tertiary mt-2">
-                                                        {t('Controls the visibility of the in-meeting overlay.')}{' '}
-                                                        <span className="text-text-secondary">{t('Hold the slider to preview.')}</span>
-                                                    </p>
-                                                </div>
 
                                         </div>
 
@@ -4609,6 +4435,18 @@ const SettingsOverlay: React.FC<SettingsOverlayProps> = ({
                                 </div>
                             )}
 
+
+                            {activeTab === 'overlay' && (
+                                <OverlaySettings
+                                    opacity={previewOverlayOpacity}
+                                    opacityControl={opacityCard}
+                                    theme={meetingInterfaceTheme}
+                                    onThemeChange={(theme) => {
+                                        setMeetingInterfaceTheme(theme);
+                                        setMeetingInterfaceThemeState(theme);
+                                    }}
+                                />
+                            )}
 
                             {activeTab === 'calendar' && <CalendarSettings />}
 

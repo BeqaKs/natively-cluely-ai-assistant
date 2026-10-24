@@ -1470,6 +1470,9 @@ interface ElectronAPI {
   // Settings → Advanced → "Genie animation", passed to every window the same way.
   setGenieAnimationEnabled: (enabled: boolean) => void;
   onGenieAnimationChanged: (callback: (enabled: boolean) => void) => () => void;
+  // Settings › Overlay: the meeting overlay's button order, passed to every window the same way.
+  setOverlayButtonOrder: (order: string[]) => void;
+  onOverlayButtonOrderChanged: (callback: (order: string[]) => void) => () => void;
 
   // Cancel the in-flight gemini-chat-stream. Renderer wires this to "drop
   // the current answer" user actions (Escape, navigation, chat-overlay unmount).
@@ -2277,18 +2280,6 @@ contextBridge.exposeInMainWorld('electronAPI', {
   }) => ipcRenderer.invoke('test-inject-transcript', segment),
   testGetModeContext: () => ipcRenderer.invoke('test-get-mode-context'),
   resetIntelligence: () => ipcRenderer.invoke('reset-intelligence'),
-
-  // Action Button Mode (Dynamic Recap / Brainstorm toggle)
-  getActionButtonMode: () => ipcRenderer.invoke('get-action-button-mode'),
-  setActionButtonMode: (mode: 'recap' | 'brainstorm') =>
-    ipcRenderer.invoke('set-action-button-mode', mode),
-  onActionButtonModeChanged: (callback: (mode: 'recap' | 'brainstorm') => void) => {
-    const subscription = (_: any, mode: 'recap' | 'brainstorm') => callback(mode);
-    ipcRenderer.on('action-button-mode-changed', subscription);
-    return () => {
-      ipcRenderer.removeListener('action-button-mode-changed', subscription);
-    };
-  },
 
   onModeChanged: (callback: (data: { id: string | null; name: string | null; fileCount?: number; indexedCount?: number }) => void) => {
     const subscription = (_: any, data: { id: string | null; name: string | null }) =>
@@ -3733,6 +3724,16 @@ contextBridge.exposeInMainWorld('electronAPI', {
     ipcRenderer.on('genie-animation:changed', handler);
     return () => {
       ipcRenderer.removeListener('genie-animation:changed', handler);
+    };
+  },
+  setOverlayButtonOrder: (order: string[]) => {
+    ipcRenderer.send('overlay-buttons:set', order);
+  },
+  onOverlayButtonOrderChanged: (callback: (order: string[]) => void) => {
+    const handler = (_evt: unknown, order: string[]) => callback(order);
+    ipcRenderer.on('overlay-buttons:changed', handler);
+    return () => {
+      ipcRenderer.removeListener('overlay-buttons:changed', handler);
     };
   },
 

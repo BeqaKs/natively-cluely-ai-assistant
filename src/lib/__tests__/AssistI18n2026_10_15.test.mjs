@@ -14,7 +14,9 @@ const dirname = path.dirname(fileURLToPath(import.meta.url));
 const SRC = path.resolve(dirname, '../..');
 const read = (file) => fs.readFileSync(path.join(SRC, file), 'utf8');
 const launcher = read('components/assist/AssistToday.tsx');
-const overlay = read('components/NativelyInterface.tsx');
+// The overlay's buttons are labelled from one table (2026-10-20, Settings ›
+// Overlay), passed through t() where they are drawn.
+const overlayButtons = read('components/overlay/overlayButtons.ts');
 const settings = read('components/settings/CalendarSettings.tsx');
 const tStrings = (text) => [...text.matchAll(/\bt\(\s*'((?:[^'\\]|\\.)*)'\s*\)/g)].map((m) => m[1].replace(/\\'/g, "'"));
 // Words that already had rows elsewhere in the app.
@@ -22,7 +24,7 @@ const EXISTING = new Set(['Dismiss', 'Close', 'Copy', 'Meeting']);
 
 const used = new Set([
   ...tStrings(launcher),
-  ...['What did I miss?', 'Define', 'Sound smart'].filter((s) => overlay.includes(`t('${s}')`)),
+  ...['What did I miss?', 'Define', 'Sound smart'].filter((s) => overlayButtons.includes(`label: '${s}'`)),
   ...tStrings(settings).filter((s) => s.startsWith('Catch up after') || s.startsWith('After two or more')),
 ].filter((s) => !EXISTING.has(s)));
 

@@ -486,9 +486,6 @@ export interface ElectronAPI {
   resetIntelligence: () => Promise<{ success: boolean; error?: string }>
 
   // Dynamic Action Button Mode
-  getActionButtonMode: () => Promise<'recap' | 'brainstorm'>
-  setActionButtonMode: (mode: 'recap' | 'brainstorm') => Promise<{ success: boolean }>
-  onActionButtonModeChanged: (callback: (mode: 'recap' | 'brainstorm') => void) => () => void
   onModeChanged: (callback: (data: { id: string | null; name: string | null; fileCount?: number; indexedCount?: number }) => void) => () => void
 
   // Modes
@@ -835,6 +832,8 @@ export interface ElectronAPI {
   onMeetingInterfaceThemeChanged: (callback: (theme: string) => void) => () => void
   setGenieAnimationEnabled: (enabled: boolean) => void
   onGenieAnimationChanged: (callback: (enabled: boolean) => void) => () => void
+  setOverlayButtonOrder: (order: string[]) => void
+  onOverlayButtonOrderChanged: (callback: (order: string[]) => void) => () => void
 
   // Phase 3 — Cluely-style dynamic action cards.
   onIntelligenceDynamicAction: (callback: (data: { action: DynamicActionPayload }) => void) => () => void

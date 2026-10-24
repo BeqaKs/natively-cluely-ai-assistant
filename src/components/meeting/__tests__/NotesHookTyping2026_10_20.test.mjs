@@ -131,6 +131,17 @@ test('the notepad as a preview: talks to nothing, no drag handle, takes no click
   assert.match(page, /inert=\{preview \? true : undefined\}/);
 });
 
+test('Settings › Overlay: the switcher at the top picks what meetings open, and the notepad side shows the real page', () => {
+  const settings = read('src/components/settings/OverlaySettings.tsx');
+  assert.match(settings, /label: 'Natively overlay'/);
+  assert.match(settings, /label: 'Natively notepad'/);
+  assert.match(settings, /role="radiogroup"/);
+  assert.match(settings, /window\.electronAPI\?\.setMeetingSurface\?\.\(next\)/);
+  assert.match(settings, /<NotesWindow preview=\{NOTEPAD_SAMPLE\} \/>/);
+  // Each side keeps its own settings.
+  assert.match(settings, /surface === 'notepad'[\s\S]*<NotepadPreview \/>[\s\S]*\{opacityControl\}/);
+});
+
 test('plainAnswerText: a model answer reads as plain text in the notepad', async () => {
   const { plainAnswerText } = await import('../notesView.ts');
   assert.equal(plainAnswerText('**Maya** drafts the `release note`.'), 'Maya drafts the release note.');

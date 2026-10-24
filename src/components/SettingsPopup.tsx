@@ -245,8 +245,6 @@ const SettingsPopup = () => {
         }
     }, [useGroqFastText]);
 
-    const [actionButtonMode, setActionButtonModeState] = useState<'recap' | 'brainstorm'>('recap');
-
     const [showTranscript, setShowTranscript] = useState(() => {
         const stored = localStorage.getItem('natively_interviewer_transcript');
         return stored !== 'false'; // Default to true if not set
@@ -260,21 +258,6 @@ const SettingsPopup = () => {
 
         window.addEventListener('storage', handleStorage);
         return () => window.removeEventListener('storage', handleStorage);
-    }, []);
-
-    // Load action button mode and subscribe to changes from other windows
-    useEffect(() => {
-        // @ts-ignore
-        window.electronAPI?.getActionButtonMode?.()?.then((mode: 'recap' | 'brainstorm') => {
-            setActionButtonModeState(mode ?? 'recap');
-        }).catch(() => {});
-        // @ts-ignore
-        if (!window.electronAPI?.onActionButtonModeChanged) return;
-        // @ts-ignore
-        const unsubscribe = window.electronAPI.onActionButtonModeChanged((mode: 'recap' | 'brainstorm') => {
-            setActionButtonModeState(mode);
-        });
-        return () => unsubscribe();
     }, []);
 
     const contentRef = useRef<HTMLDivElement>(null);
@@ -472,38 +455,9 @@ const SettingsPopup = () => {
                         onClassName: accentTrackClass,
                     })}
 
-                    {/* Interview Mode = the Brainstorm action button. */}
-                    {renderToggleRow({
-                        key: 'interview-mode',
-                        icon: (
-                            <svg
-                                xmlns="http://www.w3.org/2000/svg"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="currentColor"
-                                strokeWidth="2"
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                className={iconClass}
-                            >
-                                <line x1="6" y1="3" x2="6" y2="15" />
-                                <circle cx="18" cy="6" r="3" />
-                                <circle cx="6" cy="18" r="3" />
-                                <path d="M18 9a9 9 0 0 1-9 9" />
-                            </svg>
-                        ),
-                        label: 'Interview Mode',
-                        checked: actionButtonMode === 'brainstorm',
-                        onToggle: async () => {
-                            const newMode: 'recap' | 'brainstorm' = actionButtonMode === 'brainstorm' ? 'recap' : 'brainstorm';
-                            setActionButtonModeState(newMode);
-                            try {
-                                // @ts-ignore
-                                await window.electronAPI?.setActionButtonMode?.(newMode);
-                            } catch (e) { console.error(e); }
-                        },
-                        onClassName: accentTrackClass,
-                    })}
+                    {/* Interview Mode (Recap read Brainstorm) was dropped on
+                        2026-10-20: Brainstorm is its own button, put in the
+                        overlay's row from Settings › Overlay. */}
 
                     {/* Profile Mode lives in Settings › Profile Intelligence only;
                         it was dropped from this popup by owner request. */}
