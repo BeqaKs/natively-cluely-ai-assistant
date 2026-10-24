@@ -47,10 +47,12 @@ const NOT_COMPLETED = "The request couldn't be completed.";
 const NO_PROVIDER = 'No AI provider is set up yet';
 // An answer Natively itself stopped (2026-10-04): the output reached the
 // length limit, or the model began repeating one passage over and over.
-// Not a provider failure — nothing in AI Providers fixes it.
+// Not a provider failure — nothing in AI Providers fixes it. Since #644 also
+// the stall guard: no more text arrived mid-answer, so the stream was ended.
 const LENGTH_LIMIT = 'It reached the length limit';
 const REPEATING = 'It started repeating itself';
-const OWN_STOP_BY_CODE = { OUTPUT_LIMIT: LENGTH_LIMIT, OUTPUT_REPETITION: REPEATING };
+const STALLED = 'The rest of it stopped arriving';
+const OWN_STOP_BY_CODE = { OUTPUT_LIMIT: LENGTH_LIMIT, OUTPUT_REPETITION: REPEATING, OUTPUT_STALLED: STALLED };
 // A failure that is nobody's provider and needs no provider's words: the
 // sentence is the whole explanation. Used by the overlay's other answer paths
 // (src/lib/chatFailure.mjs), which get a raw error string, not a reason code.
@@ -97,11 +99,12 @@ export function chatNoteText(note, t = identity) {
  * provider breaking off is not reported through this path.
  *
  * @param {string | undefined | null} reason
- * @returns {{ partial: true, code: 'OUTPUT_LIMIT' | 'OUTPUT_REPETITION', provider: '' } | null}
+ * @returns {{ partial: true, code: 'OUTPUT_LIMIT' | 'OUTPUT_REPETITION' | 'OUTPUT_STALLED', provider: '' } | null}
  */
 export function ownStopFailure(reason) {
   if (reason === 'output_cap_reached') return { partial: true, code: 'OUTPUT_LIMIT', provider: '' };
   if (reason === 'output_repetition') return { partial: true, code: 'OUTPUT_REPETITION', provider: '' };
+  if (reason === 'stall_timeout') return { partial: true, code: 'OUTPUT_STALLED', provider: '' };
   return null;
 }
 
@@ -118,6 +121,7 @@ export const DIRECT_ASSIST_PHRASES = Object.freeze([
   CUT_OFF,
   LENGTH_LIMIT,
   REPEATING,
+  STALLED,
   APP_FAULT,
   NOT_COMPLETED,
   NO_PROVIDER,

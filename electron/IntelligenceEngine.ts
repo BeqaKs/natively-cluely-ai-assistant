@@ -4,7 +4,7 @@
 
 import type { SessionWriteDecision } from './llm/FinalAnswerGenerationPolicy';
 import { LiveHelperLLM, LIVE_HELPER_EMPTY, LIVE_HELPER_WINDOW_SECONDS, catchUpWindowSeconds, liveHelperDisplayKind, type LiveHelperAction } from './llm/liveHelpers';
-import { repairCapReached, endsInsideFence } from './llm/repairCap';
+import { repairCapReached, endsInsideFence, looksCutOff } from './llm/repairCap';
 import { EventEmitter } from 'events';
 import { LLMHelper } from './LLMHelper';
 import { SessionTracker, TranscriptSegment, SuggestionTrigger, ContextItem } from './SessionTracker';
@@ -4851,6 +4851,10 @@ export class IntelligenceEngine extends EventEmitter {
                     criticalViolations: ['stream_truncated'],
                 });
             }
+            // Set wherever the streamed text is swapped for a regenerated
+            // answer or a canned line, so the user is not told that a
+            // replacement was cut off.
+            let streamedAnswerReplaced = false;
             if (liveDeadlineFired && !emittedStreamingToken && !isSpeculative
                 && this.currentGenerationId === generationId) {
                 streamingTokenBuffer = '';
@@ -4947,6 +4951,7 @@ export class IntelligenceEngine extends EventEmitter {
                     }
                     const regenUsable = this.currentGenerationId === generationId
                         && (regenerated.trim().length >= STREAMING_SAFE_PREFIX_CHARS || isCompleteShortAnswer(regenerated));
+                    streamedAnswerReplaced = true;
                     if (regenUsable) {
                         trace.mark('answer_regeneration_succeeded', { chars: regenerated.trim().length, answerType: answerPlan.answerType });
                         fullAnswer = regenerated;
@@ -4988,6 +4993,25 @@ export class IntelligenceEngine extends EventEmitter {
                         trace.mark('fallback_answer_used', { answerType: answerPlan.answerType, finalGenerationMode: 'provider_error_no_answer' });
                     }
                 }
+            }
+
+            // The stall guard ended a stream that was mid-answer (issue #644:
+            // Codex went quiet for 8s inside a code block). The partial it
+            // leaves is incomplete, like an output-cap stop: it must not
+            // become session history, and the overlay must say it was cut off.
+            // WhatToAnswerLLM cannot report this one, because its stream never
+            // drained; the engine's own deadline ended it. A complete answer
+            // whose stream was only held open is not cut off (looksCutOff).
+            if (raceOutcome === 'stall_timeout' && !streamAborted && !streamedAnswerReplaced
+                && !wtaTruncation.truncated && looksCutOff(fullAnswer)) {
+                wtaTruncation.truncated = true;
+                wtaTruncation.reason = 'stall_timeout';
+                wtaWriteDecision = decideSessionWritePolicy({
+                    finalGenerationMode: 'provider_error_no_answer',
+                    validationOk: false,
+                    criticalViolations: ['stream_truncated'],
+                });
+                console.warn(`[IntelligenceEngine] wta answer stalled mid-stream (${fullAnswer.length} chars) — shown as cut off, not stored`);
             }
 
             if (streamAborted) {
@@ -5036,6 +5060,7 @@ export class IntelligenceEngine extends EventEmitter {
                 // W6b: topic-aware graceful retry — now an honest "no answer came
                 // back, press again" line, never a request to repeat.
                 fullAnswer = regenerated ?? buildGracefulRetry(question || extractedQuestion.latestQuestion || lastInterviewerTurn);
+                streamedAnswerReplaced = true;
             }
 
             // LEAKED-SCHEMA-STUB GUARD + PROVIDER-TRANSPORT-ERROR GUARD — MUST run
@@ -5509,6 +5534,7 @@ export class IntelligenceEngine extends EventEmitter {
                             && !IntelligenceEngine.isNonAnswerSentinel(scaffoldRepairedTrim)
                             && !IntelligenceEngine.isFalseNoContentClaim(scaffoldRepairedTrim)) {
                             fullAnswer = scaffoldRepairedTrim;
+                            streamedAnswerReplaced = true;
                             trace.mark('repair_used', { reason: 'scaffold_contamination_regenerated' });
                         } else {
                             trace.mark('validation_completed', { reason: 'scaffold_contamination_repair_rejected' });
@@ -5845,6 +5871,7 @@ export class IntelligenceEngine extends EventEmitter {
                                         hasOkfEvidence,
                                     }).ok) {
                                     fullAnswer = repairedTrim;
+                                    streamedAnswerReplaced = true;
                                     trace.mark('repair_used', { reason: 'doc_grounded_repair_applied', originalReason: firstCheck.reason });
                                 } else {
                                     // Keep the original whenever the repair did not cleanly
@@ -6063,6 +6090,7 @@ export class IntelligenceEngine extends EventEmitter {
                             });
                             if (profileVerdict.accepted) {
                                 fullAnswer = profileVerdict.text;
+                                streamedAnswerReplaced = true;
                                 trace.mark('repair_used', { reason: 'profile_applied', code: criticalViolation.code });
                             } else {
                                 trace.mark('validation_completed', { reason: 'profile_repair_rejected', code: criticalViolation.code, rejection: profileVerdict.reason });
@@ -6165,6 +6193,7 @@ export class IntelligenceEngine extends EventEmitter {
                             // own this surface, not the profile sanitizer.
                         } else {
                             fullAnswer = "The model produced an invalid assistant-identity answer, so I won't guess from your profile. Please try again.";
+                            streamedAnswerReplaced = true;
                         }
                     }
                 } catch (saniErr: any) {
@@ -6214,6 +6243,7 @@ export class IntelligenceEngine extends EventEmitter {
                             : answerPlan.answerType === 'sales_answer'
                                 ? "I don't have enough context on that yet — could you share a bit more?"
                                 : 'Could you give me a bit more to go on?');
+                        streamedAnswerReplaced = true;
                         trace.mark('repair_used', { reason: 'assistant_voice_misfire', misfireReason: mis.reason, regenerated: Boolean(regenerated) });
                     }
                 } catch (avErr: any) {
@@ -6748,6 +6778,7 @@ export class IntelligenceEngine extends EventEmitter {
                                 });
                                 if (relevanceVerdict.accepted) {
                                     fullAnswer = relevanceVerdict.text;
+                                    streamedAnswerReplaced = true;
                                     trace.mark('repair_used', { reason: 'answer_relevance_regenerated' });
                                 } else {
                                     trace.mark('validation_completed', { reason: 'answer_relevance_repair_rejected', rejection: relevanceVerdict.reason });
@@ -6968,7 +6999,12 @@ export class IntelligenceEngine extends EventEmitter {
             // emit id-less and are always accepted downstream — backward
             // compatible with all existing consumers (code-hint, brainstorm,
             // legacy answerLLM, etc.).
-            this.emit('suggested_answer', finalWtaAnswer, question || 'What to Answer', confidence, generationId);
+            // The stop reason rides along on this, the normal exit, too: an
+            // answer cut off by the output cap, repetition or a stall says so
+            // under the text instead of reading as finished (#644). Not when
+            // the cut-off text was replaced: the user reads the replacement.
+            const wtaStopReason = wtaTruncation.truncated && !streamedAnswerReplaced ? wtaTruncation.reason : undefined;
+            this.emit('suggested_answer', finalWtaAnswer, question || 'What to Answer', confidence, generationId, undefined, wtaStopReason);
             // Compile-only syntax check of fenced JavaScript (observe-only: the
             // turn trace + telemetry record it, the answer is never changed).
             try {

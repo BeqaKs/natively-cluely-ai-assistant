@@ -26,6 +26,7 @@ import type { ModeRetrievalOptions } from "../services/ModeContextRetriever";
 import { isCodeVerificationEnabled } from "./codeVerification/verificationEnabled";
 import type { WhatToAnswerRequestSnapshot } from "./whatToAnswerRequestSnapshot";
 import { withDiagramContract, withDiagramTurnBlock } from "./diagramPromptSignals";
+import { looksCutOff } from "./repairCap";
 
 // Wall-clock budget for the pre-stream mode-context HYBRID retrieval await.
 // The hybrid retriever embeds the live query, and the embedder's own hard
@@ -213,6 +214,8 @@ export class WhatToAnswerLLM {
         const interTokenLatencies: number[] = [];
         let tPrevToken = 0;
         let tFirstToken = 0;
+        // Outside the try so the catch can tell a break-off from a failed start.
+        let yieldedText = '';
 
         try {
             if (MEASURE) tStart = performance.now();
@@ -1235,6 +1238,7 @@ The user triggered this action with a coding problem on screen and NO new questi
                     tPrevToken = now;
                 }
                 tokenCount++;
+                yieldedText += token;
                 streamedBuffer.push(token);
                 yield token;
             }
@@ -1302,6 +1306,15 @@ The user triggered this action with a coding problem on screen and NO new questi
 
         } catch (error: any) {
             console.error("[WhatToAnswerLLM] Stream failed:", error);
+            // The provider broke off partway through the answer already
+            // yielded: what the user has is incomplete (#644). Not when the
+            // abort is the caller's own (a deadline, a cancel, a newer
+            // question), which the caller accounts for itself and which lands
+            // here only after it has moved on; nor when the text reads finished.
+            if (truncationSink && !abortSignal?.aborted && looksCutOff(yieldedText)) {
+                truncationSink.truncated = true;
+                truncationSink.reason = 'provider_failed_after_first_token';
+            }
             // Distinguish a provider/transport failure (expired key, 429 rate
             // limit, billing) from a genuinely empty completion. Masking the
             // former as "Could you repeat that?" made a dead API key look like the
