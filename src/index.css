@@ -8595,6 +8595,86 @@ html[data-platform="linux"][data-window="launcher"] body {
     linear-gradient(90deg, rgba(0, 0, 0, 0.028) 1px, transparent 1px) !important;
 }
 
+/* ── 1b. The plaque as a group of rows (SettingsPlaque, SettingsRow.tsx) ──
+   A hairline between rows, starting at the text column (1px border + 16px
+   padding + 40px tile + 16px gap = 73px) and stopping on the tile edge at the
+   right, as macOS System Settings insets its separators. Drawn as a pseudo
+   on each row after the first, so a row that folds in or out (Collapse,
+   CollapseItem) brings its own line and fades with it. Explicit colours:
+   dark --border-subtle is transparent. */
+.settings-plaque-rows > * { position: relative; }
+.settings-plaque-rows > * + *::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 73px;
+  right: 17px;
+  height: 1px;
+  background: rgba(255, 255, 255, 0.07);
+  pointer-events: none;
+}
+[data-theme='light'] .settings-plaque-rows > * + *::before { background: rgba(0, 0, 0, 0.07); }
+
+/* A sunken well on the plaque (SETTINGS_WELL): forms and previews that open
+   under a row. Darker than the plaque with a soft inner top shadow in dark;
+   a faint grey with a hairline in light, where an inner shadow reads as dirt. */
+.settings-plaque-well {
+  background: rgba(0, 0, 0, 0.18);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.22);
+}
+[data-theme='light'] .settings-plaque-well {
+  background: rgba(0, 0, 0, 0.025);
+  border-color: rgba(0, 0, 0, 0.07);
+  box-shadow: none;
+}
+/* A well that is itself a text field (About you): the edge takes the accent
+   while the field inside has focus, as SETTINGS_INPUT's border does. No ring. */
+.settings-well-field {
+  transition: border-color 150ms ease, background-color 150ms ease;
+}
+.settings-well-field:focus-within {
+  border-color: color-mix(in srgb, var(--accent-primary) 60%, transparent);
+}
+[data-theme='light'] .settings-well-field:focus-within {
+  background: #fff;
+}
+
+/* The Skills plaque while a file is dragged over it: a periwinkle ring and a
+   frosted veil carrying one line, so the whole card reads as the target. It
+   materialises (blur and scale with the fade) in 180ms ease-out and leaves
+   in 120ms; pointer-events stay off so the card underneath keeps the drag. */
+.settings-drop-veil {
+  position: absolute;
+  inset: 0;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border-radius: inherit;
+  pointer-events: none;
+  color: var(--accent-primary);
+  background: color-mix(in srgb, var(--accent-primary) 10%, transparent);
+  box-shadow: inset 0 0 0 2px var(--accent-primary);
+  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px);
+  opacity: 0;
+  transform: scale(0.985);
+  transition: opacity 120ms ease-out, transform 120ms ease-out;
+}
+.settings-drop-veil[data-open='true'] {
+  opacity: 1;
+  transform: none;
+  transition: opacity 180ms cubic-bezier(0.23, 1, 0.32, 1), transform 180ms cubic-bezier(0.23, 1, 0.32, 1);
+}
+@media (prefers-reduced-motion: reduce) {
+  .settings-drop-veil, .settings-drop-veil[data-open='true'] { transform: none; transition: opacity 120ms ease; }
+}
+@media (prefers-reduced-transparency: reduce) {
+  .settings-drop-veil { -webkit-backdrop-filter: none; backdrop-filter: none; background: var(--bg-card); }
+}
+
 /* ── 2. The input, as a pressed-in well ───────────────────────────────────
    A hairline box on a flat card was the flattest thing on the flattest
    surface. Sinking it gives the plaque somewhere for the credential to go,
@@ -9378,6 +9458,20 @@ html[data-platform="linux"][data-window="launcher"] body {
     --toggle-on: #6688F5;
     --toggle-thumb: #e1ebfe;
     --toggle-focus-ring: rgba(102, 136, 245, 0.22);
+}
+/* Light theme only (2026-10-24): the near-black #474949 off track read as a
+   heavy dark pill on the white plaques, louder than the ON switches beside
+   it. Off is now Apple's light-mode track (systemGray5 on white), and the
+   knob goes white with a small lift shadow, which is what keeps it visible
+   on a light track. Dark mode keeps the shared values above. */
+[data-theme='light'] {
+    --toggle-off: #DEDEE3;
+    --toggle-thumb: #FFFFFF;
+}
+[data-theme='light'] .t-toggle-thumb {
+    box-shadow:
+        0 1px 2.5px rgba(0, 0, 0, 0.18),
+        0 0 0 0.5px rgba(0, 0, 0, 0.04);
 }
 .t-toggle {
     position: relative;

@@ -8,7 +8,7 @@ import {
     ArrowUp, ArrowDown, ArrowLeft, ArrowRight,
     Camera, RotateCcw, Eye, Layout, MessageSquare, Crop,
     ChevronDown, ChevronUp, Check, BadgeCheck, Power, Palette, Calendar, Ghost, Sun, Moon, RefreshCw, Info, Globe, FlaskConical, Terminal, Download, Settings, Activity, ExternalLink, Trash2,
-    Sparkles, Pencil, Briefcase, Building2, Search, MapPin, CheckCircle, HelpCircle, Zap, SlidersHorizontal, PointerOff, Folder,
+    Sparkles, Pencil, Briefcase, Building2, Search, MapPin, CheckCircle, HelpCircle, Zap, SlidersHorizontal, PointerOff,
     Star, AlertCircle, Gift, Smartphone, Cpu, Shield, Code2, Headphones, Boxes, Languages, Volume2, KeyRound, Loader2, CornerDownRight, PanelBottomClose, TriangleAlert, MicOff,
     Plug
 } from 'lucide-react';
@@ -22,12 +22,10 @@ import { AIProvidersSettings, AIP_CSS, AipModelList, AipPassedCheck } from './se
 import { SpeechDictionarySettings } from './settings/SpeechDictionarySettings';
 import { RoomSpeakersSettings } from './settings/RoomSpeakersSettings';
 import { FollowMicDeviceSettings } from './settings/FollowMicDeviceSettings';
-import { AboutYouSettings } from './settings/AboutYouSettings';
 import { PlansSettings } from './settings/PlansSettings';
 import { PhoneMirrorSettings } from './settings/PhoneMirrorSettings';
 import { RetrievalSettings } from './settings/RetrievalSettings';
 import { IntelligenceSettings } from './settings/IntelligenceSettings';
-import { SkillsSettings } from './settings/SkillsSettings';
 import { LocalWhisperModelPanel, type ChannelConfig as LocalWhisperChannelConfig } from './LocalWhisperModelPanel';
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import { useShortcuts } from '../hooks/useShortcuts';
@@ -571,7 +569,6 @@ const SETTINGS_NAV_ORDER = [
     'ai-providers',
     'retrieval',
     'audio',
-    'skills',
     'calendar',
     'keybinds',
     'phone-mirror',
@@ -592,6 +589,12 @@ const SETTINGS_SHADOW_DARK = '0 25px 50px -12px rgba(0,0,0,0.25)';
 
 const isRetrievalTab = (tab: string) =>
     tab === 'retrieval' || tab === 'embedding' || tab === 'reranker';
+
+/* Skills is a section of the Intelligence page now, not a page of its own.
+   'skills' stays as an alias so an old deep link opens Intelligence instead
+   of a blank content area. */
+const isIntelligenceTab = (tab: string) =>
+    tab === 'intelligence' || tab === 'skills';
 
 interface SettingsOverlayProps {
     isOpen: boolean;
@@ -676,7 +679,9 @@ const SettingsOverlay: React.FC<SettingsOverlayProps> = ({
         ? 'plans'
         : isRetrievalTab(activeTab)
             ? 'retrieval'
-            : activeTab;
+            : isIntelligenceTab(activeTab)
+                ? 'intelligence'
+                : activeTab;
 
     /* Read the previous key during render, write it in an effect — mutating a
        ref while rendering double-fires under StrictMode. */
@@ -2409,13 +2414,6 @@ const SettingsOverlay: React.FC<SettingsOverlayProps> = ({
                                         <Mic size={16} /> {t('Audio')}
                                     </button>
                                     <button
-                                        onClick={() => setActiveTab('skills')}
-                                        className={navItemClass(activeTab === 'skills')}
-                                    >
-                                        {activeTab === 'skills' && navActivePill}
-                                        <Folder size={16} /> {t('Skills')}
-                                    </button>
-                                    <button
                                         onClick={() => setActiveTab('calendar')}
                                         className={navItemClass(activeTab === 'calendar')}
                                     >
@@ -2445,9 +2443,9 @@ const SettingsOverlay: React.FC<SettingsOverlayProps> = ({
                                     </button>
                                     <button
                                         onClick={() => setActiveTab('intelligence')}
-                                        className={navItemClass(activeTab === 'intelligence')}
+                                        className={navItemClass(isIntelligenceTab(activeTab))}
                                     >
-                                        {activeTab === 'intelligence' && navActivePill}
+                                        {isIntelligenceTab(activeTab) && navActivePill}
                                         <Cpu size={16} /> {t('Intelligence')}
                                     </button>
                                     <button
@@ -3409,9 +3407,6 @@ const SettingsOverlay: React.FC<SettingsOverlayProps> = ({
                                     }}
                                     aiLangDropdownRef={aiLangDropdownRef}
                                 />
-                            )}
-                            {activeTab === 'skills' && (
-                                <SkillsSettings />
                             )}
                             {(activeTab === 'plans' || activeTab === 'natively-api' || activeTab === 'natively-pro') && (
                                 <PlansSettings initialIsPremium={initialIsPremium} initialHasNativelyKey={hasNativelyKey} />
@@ -4640,11 +4635,8 @@ const SettingsOverlay: React.FC<SettingsOverlayProps> = ({
                                 />
                             )}
 
-                            {activeTab === 'intelligence' && (
-                                <>
-                                    <AboutYouSettings />
-                                    <IntelligenceSettings />
-                                </>
+                            {isIntelligenceTab(activeTab) && (
+                                <IntelligenceSettings />
                             )}
 
                             {activeTab === 'help' && (

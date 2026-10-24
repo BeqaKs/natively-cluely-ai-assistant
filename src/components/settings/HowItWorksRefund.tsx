@@ -494,10 +494,11 @@ export const HowItWorksRefund: React.FC = () => {
 
 /**
  * The two programs on heynatively.com, above How it works in Plans & Billing.
- * Always open: two rows don't need a disclosure. The header takes the
- * accordion header's type and padding so the two cards read as a pair, and
- * the rows are this file's IconRow, so text sits on the same column as the
- * card below. Join and Open are Manage's button: Liquid Glass in the
+ * Folded behind its header like Change plan and How it works (2026-10-24, it
+ * used to stay open): the same AccordionSection, so the three cards open and
+ * close alike, and the programs wait for a click instead of selling on every
+ * visit. The rows are this file's IconRow, so text sits on the same column
+ * as the card below. Join and Open are Manage's button: Liquid Glass in the
  * periwinkle toggle colour (--hiw-indigo). Copy stays inside what the pages promise (the affiliate page
  * shows no rate, so neither does this), as on the launcher's program cards.
  */
@@ -507,14 +508,18 @@ export const PartnerPrograms: React.FC = () => {
   };
 
   return (
-    <section className="bg-bg-item-surface rounded-2xl border border-border-subtle shadow-sm overflow-hidden">
-      <div className="p-4 pb-1">
-        <span className="block font-semibold text-sm text-text-primary">Earn with Natively</span>
-        <span className="block text-[11.5px] text-text-secondary leading-relaxed mt-1">
-          Share Natively and get paid, or get Ultra free.
-        </span>
-      </div>
-      <div className="pb-1">
+    <AccordionSection
+      title="Earn with Natively"
+      description="Share Natively and get paid, or get Ultra free."
+      className="bg-bg-item-surface rounded-2xl border-border-subtle !mb-0"
+      divider={false}
+      hoverFill={false}
+    >
+      {/* -mx-5 / -mt-5 cancel the body's p-5, so the tiles sit on the header's
+          text edge and the first row follows the header's own 16px. No more:
+          the panel clips, and a deeper -mt cut the row's top off. -mb-4 leaves
+          the last row 16px from the card's foot, the header's padding again. */}
+      <div className="-mx-5 -mt-5 -mb-4">
         <IconRow
           icon={<HandCoins size={20} />}
           title="Affiliate program"
@@ -536,6 +541,6 @@ export const PartnerPrograms: React.FC = () => {
           )}
         />
       </div>
-    </section>
+    </AccordionSection>
   );
 };
