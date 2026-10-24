@@ -19,6 +19,7 @@ import { test, describe, beforeEach, afterEach } from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { helper, png, fakeCredentials, isolateSingletons, userData, dist, require, CRED_SLOT } from './fakeOllamaHarness.mjs';
 
 const { getScreenUnderstandingService, OAUTH_RECORD_BUDGET_MS } = require(dist('services/screen/ScreenUnderstandingService.js'));
@@ -285,7 +286,9 @@ describe('the screen record through the service', () => {
 });
 
 describe('wiring of the two callers that are not an answer', () => {
-  const src = (p) => fs.readFileSync(path.join(path.dirname(new URL(import.meta.url).pathname), '../../', p), 'utf8');
+  // fileURLToPath, not URL.pathname: on Windows the pathname is "/D:/a/…" and
+  // the join lands nowhere (CI, windows-latest, 2026-10-24).
+  const src = (p) => fs.readFileSync(path.join(path.dirname(fileURLToPath(import.meta.url)), '../../', p), 'utf8');
   test('screen-share snapshots pass allowOAuthRecord: false, and transcribeScreenForMemory forwards it', () => {
     assert.match(src('main.ts'), /transcribeScreenForMemory\(\[imagePath\], hint, \{ allowOAuthRecord: false \}\)/);
     assert.match(src('services/screen/screenTranscription.ts'), /allowOAuthRecord: options\.allowOAuthRecord/);
