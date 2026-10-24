@@ -33,6 +33,7 @@ import { getBoundedOnnxSessionOptions } from '../../utils/onnxThreadConfig';
 //    derived from MODEL_CATALOG's own `multilingual` flag instead.
 import { detectedWhisperLanguage, isEnglishOnlyLocalModel, resolveWhisperLanguage } from './modelLanguageSupport';
 import { moonshineMaxNewTokens } from './moonshineTokenBudget';
+import { loadedOnnxFiles, onnxDirFor } from './modelManager';
 
 let pipe: any = null;
 let loadedModelId = '';
@@ -378,19 +379,19 @@ parentPort.on('message', async (msg: any) => {
       try {
         const _fs = require('fs');
         const _path = require('path');
-        const _orgName = String(sourceRepoId).split('/');
-        const _modelDir = _path.join(String(msg.cacheDir), _orgName[0] || '', _orgName[1] || '', 'onnx');
-        const _encName = typeof dtype === 'string' && dtype !== 'fp32' ? `encoder_model_${dtype}.onnx` : 'encoder_model.onnx';
-        const _decName = typeof dtype === 'string' && dtype !== 'fp32' ? `decoder_model_merged_${dtype}.onnx` : 'decoder_model_merged.onnx';
+        const _modelDir = onnxDirFor(String(msg.cacheDir), String(sourceRepoId));
         const _stat = (p: string) => { try { return _fs.statSync(p).size; } catch { return -1; } };
+        // Bytes per file transformers.js will load, -1 when missing.
+        const _files = Object.fromEntries(
+          loadedOnnxFiles(dtype, msg.useExternalDataFormat, msg.sessionLayout).map(f => [f, _stat(_path.join(_modelDir, f))]),
+        );
         let _ortVer = 'unknown';
         try { _ortVer = require('onnxruntime-node/package.json').version; } catch { /* bundled? */ }
         console.log('[WhisperWorker][diag]', JSON.stringify({
           cacheDir: String(msg.cacheDir),
           modelDir: _modelDir,
           modelDirExists: _fs.existsSync(_modelDir),
-          encoderFile: _encName, encoderBytes: _stat(_path.join(_modelDir, _encName)),
-          decoderFile: _decName, decoderBytes: _stat(_path.join(_modelDir, _decName)),
+          files: _files,
           providers, dtype: dtypeDesc,
           sessionOptions,
           ortNodeVersion: _ortVer,

@@ -1556,6 +1556,7 @@ export class AppState {
 
   private hasDebugged: boolean = false
   private isMeetingActive: boolean = false; // Guard for session state leaks
+  private legacyCopyUpgrader: import('./audio/whisper/legacyCopyUpgrade').LegacyCopyUpgrader | null = null;
   /**
    * Set by initializeIpcHandlers. A meeting that starts with no AI to answer it
    * starts the free trial by itself (src/lib/trial/autoTrial.mjs). Returns at
@@ -1891,13 +1892,8 @@ export class AppState {
 
           // Collect every model ID the user has selected (global + per-channel)
           // so we can auto-repair each one that's missing or corrupt.
-          const modelIds = new Set<string>([modelId]);
-          if (settingsManager.get('localWhisperPerChannelEnabled')) {
-            const mic = settingsManager.get('localWhisperModelMic');
-            const sys = settingsManager.get('localWhisperModelSystem');
-            if (mic && MODEL_CATALOG_IDS.has(mic)) modelIds.add(mic);
-            if (sys && MODEL_CATALOG_IDS.has(sys)) modelIds.add(sys);
-          }
+          const { selectedLocalModelIds } = require('./audio/whisper/modelManager');
+          const modelIds = new Set<string>([modelId, ...selectedLocalModelIds((key: string) => settingsManager.get(key as any))]);
 
           // Which model to warm: mic-channel > global (mic is the user's own
           // voice — most latency-critical). The preloader is single-slot so we
@@ -1942,6 +1938,7 @@ export class AppState {
         console.warn('[AppState] Local Whisper preload skipped:', e);
       }
     });
+    this.scheduleLegacyCopyUpgrades();
 
     // Generalized ONNX load-sentinel consume (intent / embeddings / reranker).
     // Runs UNCONDITIONALLY — these families are loaded on demand and a poisoned
@@ -2704,7 +2701,66 @@ export class AppState {
     this._isQuitting = value;
   }
 
+  /**
+   * A selected local model still running from an earlier version's heavier
+   * copy moves to the current one by itself, outside meetings
+   * (audio/whisper/legacyCopyUpgrade.ts, issue #668). First look 90 s after
+   * launch, out of the way of startup; again after every meeting.
+   */
+  private scheduleLegacyCopyUpgrades(): void {
+    const timer = setTimeout(() => {
+      try {
+        const { createLegacyCopyUpgrader } = require('./audio/whisper/legacyCopyUpgrade');
+        const mm = require('./audio/whisper/modelManager');
+        const { resolveInferenceConfig } = require('./audio/whisper/inferenceConfig');
+        const { modelPreloader } = require('./audio/whisper/modelPreloader');
+        const { LocalModelDownloadService, resolveLocalModelProviderName } = require('./services/LocalModelDownloadService');
+        const service = LocalModelDownloadService.getInstance();
+        const settings = SettingsManager.getInstance();
+        this.legacyCopyUpgrader = createLegacyCopyUpgrader({
+          // The same models the startup preload warms (the provider check too).
+          selectedModelIds: () => CredentialsManager.getInstance().getSttProvider() === 'local-whisper'
+            ? mm.selectedLocalModelIds((key: string) => settings.get(key as any))
+            : [],
+          isUpgradeAvailable: (id: string) => mm.isModelUpgradeAvailable(id, resolveInferenceConfig().dtype),
+          isMeetingActive: () => this.isMeetingActive,
+          downloadStatus: (id: string) => service.getState(resolveLocalModelProviderName(id), id)?.status ?? null,
+          start: (id: string) => service.hasProvider(resolveLocalModelProviderName(id))
+            ? service.startWhenReady(resolveLocalModelProviderName(id), id)
+            : Promise.resolve({ success: false, error: 'the download service is not ready' }),
+          cancel: (id: string) => { service.cancel(resolveLocalModelProviderName(id), id); },
+          downloadBytes: (id: string) => mm.getModelSizeBytes(id),
+          freeDiskBytes: () => {
+            try {
+              const s = fs.statfsSync(mm.getModelsDir());
+              return Number(s.bavail) * Number(s.bsize);
+            } catch {
+              return null;
+            }
+          },
+          // The warm worker loaded the old copy; load the new one in its place.
+          // Never during a meeting: the meeting's own worker is not the warm one.
+          onUpgraded: (id: string) => {
+            if (this.isMeetingActive || !modelPreloader.isWarm(id)) return;
+            modelPreloader.terminate();
+            modelPreloader.preload(id);
+          },
+          log: (message: string) => console.log(message),
+        });
+        service.subscribe(({ entry }: { entry: { modelId: string; status: any } }) => {
+          this.legacyCopyUpgrader?.onDownloadStatus(entry.modelId, entry.status);
+        });
+        void this.legacyCopyUpgrader!.run();
+      } catch (e: any) {
+        console.warn('[AppState] Lighter-copy update check skipped:', e?.message ?? e);
+      }
+    }, 90_000);
+    (timer as any).unref?.();
+  }
+
   private broadcastMeetingState(): void {
+    // Pauses a background model update for the meeting, resumes it after.
+    try { this.legacyCopyUpgrader?.onMeetingStateChanged(this.isMeetingActive); } catch { /* an update never touches a meeting */ }
     this.broadcast('meeting-state-changed', { isActive: this.isMeetingActive });
     // A new meeting starts without the last one's phone images, as the overlay
     // starts without its attachments (session-reset).
@@ -4659,7 +4715,13 @@ export class AppState {
         console.log(`${prefix}Interviewer STT rate locked from first chunk: ${rate}Hz`);
       }
       if (chunkCount <= 3 || chunkCount % 500 === 0) {
-        console.log(`${prefix}SystemAudio->STT: chunk #${chunkCount}, ${chunk.length}B, googleSTT=${this.googleSTT ? 'active' : 'NULL'}`);
+        // `googleSTT` is the interviewer provider of any kind. Name the one
+        // createSTTProvider actually built (Google when a key is missing), not
+        // the field: issue #668 read "googleSTT=active" on Local STT.
+        const sttLabel = this.googleSTT
+          ? `${this._sttGapProvider.system.effective || 'unknown'}${this._sttFailover.system?.active ? ' (stand-in carrying)' : ''}`
+          : 'NULL';
+        console.log(`${prefix}SystemAudio->STT: chunk #${chunkCount}, ${chunk.length}B, stt=${sttLabel}`);
       }
 
 

@@ -494,8 +494,45 @@ export function getResumableDownloadFiles(modelId: string, dtype: string | Recor
   const m = catalogEntry(modelId);
   const layout = m?.sessionLayout;
   if (!m || layout === 'nemotron-rnnt' || layout === 'parakeet-tdt' || layout === 'single') return [];
-  const { encoder, encoderData, decoderOptions } = expectedOnnxFiles(dtype, m.externalDataFormat, layout);
-  return [encoder, ...encoderData, ...decoderOptions[0]].map(f => `onnx/${f}`);
+  return loadedOnnxFiles(dtype, m.externalDataFormat, layout).map(f => `onnx/${f}`);
+}
+
+/**
+ * The files in `onnx/` that transformers.js loads under the init `dtype`: the
+ * encoder (or the one `model` of a 'single' layout) and the merged decoder,
+ * with their external-data companions. transformers.js 3.8.1 never loads the
+ * split decoder pair, so it is not listed. For the default mixed map that is
+ * `encoder_model.onnx` + `decoder_model_merged_quantized.onnx`.
+ *
+ * The worker's load diagnostics stat these. They used to build the names
+ * themselves and, for a mixed map, named `decoder_model_merged.onnx` (not
+ * there) with size -1 (issue #668).
+ */
+export function loadedOnnxFiles(
+  dtype: string | Record<string, string>,
+  externalDataFormat?: boolean | Record<string, boolean>,
+  sessionLayout?: WhisperModelInfo['sessionLayout'],
+): string[] {
+  const layout = sessionLayout === 'single' ? 'single' : undefined;
+  const { encoder, encoderData, decoderOptions } = expectedOnnxFiles(dtype, externalDataFormat, layout);
+  return [encoder, ...encoderData, ...decoderOptions[0]];
+}
+
+/**
+ * The local models the settings select, catalog ids only: the global one
+ * (Tiny English when unset, as a meeting start reads it), plus the mic and
+ * system ones when per-channel models are on. Startup preload and the
+ * background update (legacyCopyUpgrade.ts) both read it.
+ */
+export function selectedLocalModelIds(get: (key: string) => unknown): string[] {
+  const ids: unknown[] = [get('localWhisperModel') ?? 'Xenova/whisper-tiny.en'];
+  if (get('localWhisperPerChannelEnabled')) ids.push(get('localWhisperModelMic'), get('localWhisperModelSystem'));
+  return [...new Set(ids.filter((id): id is string => typeof id === 'string' && MODEL_CATALOG_IDS.has(id)))];
+}
+
+/** The `onnx/` folder of one repo's copy in the models cache. */
+export function onnxDirFor(cacheDir: string, repo: string): string {
+  return path.join(repoDir(cacheDir, repo), 'onnx');
 }
 
 /**
