@@ -5628,7 +5628,11 @@ export class AppState {
     }
   }
 
-  private async reconfigureAudio(inputDeviceId?: string | null, outputDeviceId?: string | null): Promise<void> {
+  private async reconfigureAudio(
+    inputDeviceId?: string | null,
+    outputDeviceId?: string | null,
+    options: { start?: boolean } = {},
+  ): Promise<void> {
     console.log(`[Main] Reconfiguring Audio: Input=${inputDeviceId}, Output=${outputDeviceId}`);
 
     // PERF: skip the entire destroy+recreate cycle when neither device changed
@@ -5951,6 +5955,9 @@ export class AppState {
       }
     }
 
+    // The STT rebuild builds captures without starting them: it starts them
+    // itself once its STT providers exist.
+    if (options.start === false) return;
     if (this.isMeetingActive) {
       // Per-channel isolated start (F-105); mic first for HAL ordering.
       this.startCaptureChannels('reconfigureAudio');
@@ -6067,6 +6074,19 @@ export class AppState {
     // eagerly construct a MicrophoneCapture (which calls build_input_stream on
     // macOS and immediately triggers the orange mic indicator even without .play()).
     if (isRebuildMeeting()) {
+      // No captures at all means this meeting never built them (Ambient AI
+      // Chat on, or both failed to open). Build them on the devices the
+      // meeting asked for: setupSystemAudioPipeline alone opens the system
+      // defaults. Not started here; the start below does that once the STT
+      // providers exist.
+      const meetingAudio = this._meetingAudioRequest;
+      if (meetingAudio && !this.systemAudioCapture && !this.microphoneCapture) {
+        await this.reconfigureAudio(
+          this.followedInputDeviceId(meetingAudio.inputDeviceId),
+          meetingAudio.outputDeviceId,
+          { start: false },
+        );
+      }
       await this.setupSystemAudioPipeline();
       if (isRebuildMeeting()) {
         // Per-channel isolated start (F-105); mic first for HAL ordering.
@@ -6816,6 +6836,13 @@ export class AppState {
   private _micRecoveryTimer: NodeJS.Timeout | null = null;
   /** Last input device id passed to reconfigureAudio; used by mic recovery. */
   private _lastRequestedInputDeviceId: string | undefined = undefined;
+  /**
+   * The devices the current meeting asked for (startMeeting's metadata.audio).
+   * A meeting started with Ambient AI Chat on builds no captures; when
+   * Settings › Audio later rebuilds the pipeline mid-meeting, it opens these
+   * rather than the system defaults.
+   */
+  private _meetingAudioRequest: { inputDeviceId?: string | null; outputDeviceId?: string | null } | null = null;
 
   private setupMicRecoveryHandler(): void {
     if (!this.microphoneCapture) return;
@@ -7377,6 +7404,9 @@ export class AppState {
 
   private async startMeetingTransition(metadata?: any): Promise<void> {
     console.log('[Main] Starting Meeting...', metadata);
+    this._meetingAudioRequest = metadata?.audio
+      ? { inputDeviceId: metadata.audio.inputDeviceId, outputDeviceId: metadata.audio.outputDeviceId }
+      : null;
     this.simpleAutoAnswer.onMeetingStart();
 
     // If a previous endMeeting() is still draining STT in the background, wait
