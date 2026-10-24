@@ -7844,7 +7844,8 @@ export class AppState {
         capture: (title) => captureShareFrame(title, userData),
         describe: async (imagePath, hint) => {
           const { transcribeScreenForMemory } = require('./services/screen/screenTranscription');
-          return transcribeScreenForMemory([imagePath], hint);
+          // Automatic frames stay off the user's Codex / Antigravity quota.
+          return transcribeScreenForMemory([imagePath], hint, { allowOAuthRecord: false });
         },
         remove: (file) => fs.rm(file, { force: true }, () => {}),
         onEntries: (entries) => {

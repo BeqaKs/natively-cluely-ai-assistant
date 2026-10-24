@@ -33,6 +33,7 @@ import {
   VisionMode,
   VisionFailureReason,
   VisionRungHealth,
+  VisionSkipReason,
 } from './VisionProviderFallbackChain';
 import { getImageOptimizer, ImageOptimizer } from './ImageOptimizer';
 import { buildVisionProviders, selectionRung, VisionProviderBuildInputs } from './VisionProviderRegistry';
@@ -82,6 +83,8 @@ export type ScreenType =
 
 export interface ScreenUnderstandingRequest {
   modeId: string;
+  /** Record only: false keeps a signed-in Codex / Antigravity model out (VisionProviderBuildInputs.allowOAuthRecord). */
+  allowOAuthRecord?: boolean;
   modeTemplateType?: string;
   transcript?: string;
   userAction: UserAction;
@@ -163,6 +166,27 @@ export const SCREEN_UNDERSTANDING_TOTAL_BUDGET_MS = 6000;
  * record (LLMHelper.cancelOllamaRecordFor), so this bounds only idle time.
  */
 export const OLLAMA_RECORD_BUDGET_MS = 45_000;
+
+/**
+ * The time a signed-in Codex or Antigravity model gets to write the record
+ * when no other provider can (issue #647). Also after the answer, so no answer
+ * waits for it; longer than the 6 s pre-pass because a reasoning model
+ * transcribing a whole screen does not fit in it.
+ *
+ * Measured 2026-10-24, nine real Codex calls (gpt-6-luna on a ChatGPT
+ * account, low effort, default tier, this request exactly: 'balanced' image,
+ * STRUCTURED_EXTRACTION prompt) on three full-screen browser captures from
+ * issue #647: 6.7 / 7.2 / 8.4 / 8.6 / 8.9 / 9.1 / 10.1 / 10.8 / 15.6 s, median
+ * 8.9 s; the slowest waited 12.2 s for its first token. Every one is over the
+ * 6 s pre-pass, and 30 s is about twice the worst seen.
+ */
+export const OAUTH_RECORD_BUDGET_MS = 30_000;
+
+/** Record rungs that run in their own stage after the first, each with its own time limit. */
+const LATE_RECORD_BUDGETS_MS: Readonly<Record<string, number>> = {
+  ollama: OLLAMA_RECORD_BUDGET_MS,
+  oauth_model: OAUTH_RECORD_BUDGET_MS,
+};
 
 export class ScreenUnderstandingService {
   private imageHashService: ImageHashService;
@@ -317,14 +341,25 @@ export class ScreenUnderstandingService {
     // upstream was failing kept the rung skipped after the user picked another.
     const carrying = selectionRung();
     if (carrying) forgetBreakersOfOtherSelections(this.rungLedFor, this.rungHealth, [carrying.id], carrying.key);
+    // The Codex / Antigravity record rung is one id for both families and every
+    // model, and need not be the selection, so its breaker is keyed on the
+    // model it will send to: a Codex timeout must not skip Antigravity, or a
+    // different Codex model, for the cooldown.
+    const oauthRung = providers.find(p => p.id === 'oauth_model' && p.isConfigured);
+    if (oauthRung?.modelId) forgetBreakersOfOtherSelections(this.rungLedFor, this.rungHealth, [oauthRung.id], oauthRung.modelId);
 
     // Run the chain.
     const latestPath = validPaths[validPaths.length - 1];
-    // The Ollama record rung runs as a SECOND stage with its own time limit
-    // (below), so everything else — the pre-pass, and the cloud record — keeps
-    // the 6 s envelope it always had.
-    const ollamaRecordRung = isRecord ? providers.find(p => p.id === 'ollama') : undefined;
-    const firstStage = ollamaRecordRung ? providers.filter(p => p !== ollamaRecordRung) : providers;
+    // The Ollama and Codex / Antigravity record rungs run as a SECOND stage with
+    // their own time limits (below), so everything else — the pre-pass, and the
+    // cloud record — keeps the 6 s envelope it always had.
+    const lateRecordRungs = isRecord ? providers.filter(p => p.id in LATE_RECORD_BUDGETS_MS) : [];
+    const firstStage = lateRecordRungs.length ? providers.filter(p => !lateRecordRungs.includes(p)) : providers;
+    // Only rungs that can run are given a stage. An unconfigured one returns
+    // 'no_vision_provider', and since each stage's result replaces the last,
+    // it would overwrite why the earlier attempts failed — telling a user whose
+    // Codex just timed out that no provider is configured.
+    const runnableLateRungs = lateRecordRungs.filter(p => p.isConfigured && p.supportsVision);
     let result = await runVisionFallback({
       imagePath: latestPath,
       cacheKey: imageHash,
@@ -359,21 +394,41 @@ export class ScreenUnderstandingService {
     // one failed, or "Keep screenshots on this device" allows none — so the
     // selected Ollama's vision model writes it. The chain applies the same
     // eligibility rules (a remote Ollama is skipped in that mode).
-    if (!result.ok && ollamaRecordRung) {
-      const local = await runVisionFallback({
+    //
+    // A signed-in Codex or Antigravity model takes the same seat (issue #647):
+    // it has no rung in the first stage, so without this a user with only that
+    // model was left with no record at all. It is a cloud provider, so by the
+    // rule above it goes before Ollama (registry order) when both can run.
+    for (const rung of runnableLateRungs) {
+      if (result.ok) break;
+      const budgetMs = LATE_RECORD_BUDGETS_MS[rung.id];
+      const late = await runVisionFallback({
         imagePath: latestPath,
         cacheKey: imageHash,
         mode,
-        providers: [ollamaRecordRung],
+        providers: [rung],
         systemPrompt,
         userPrompt,
         optimizer: this.optimizer,
         optimizationProfile: profile,
-        perProviderTimeoutMs: OLLAMA_RECORD_BUDGET_MS,
-        totalDeadlineMs: OLLAMA_RECORD_BUDGET_MS,
+        perProviderTimeoutMs: budgetMs,
+        totalDeadlineMs: budgetMs,
         health: this.rungHealth,
       });
-      result = { ...local, attempts: [...result.attempts, ...local.attempts], durationMs: result.durationMs + local.durationMs };
+      result = { ...late, attempts: [...result.attempts, ...late.attempts], durationMs: result.durationMs + late.durationMs };
+    }
+    // The late rungs that could not run are still named in the ledger below
+    // (code review, 2026-10-24) — "skipped" vs "never considered" is what that
+    // line is for — without letting their skip replace the failure reason.
+    const unrunnable = lateRecordRungs.filter(p => !runnableLateRungs.includes(p));
+    if (unrunnable.length) {
+      result = {
+        ...result,
+        attempts: [...result.attempts, ...unrunnable.map(p => ({
+          provider: p.id, model: p.modelId, ok: false, skipped: true,
+          skipReason: (p.isConfigured ? 'no_vision' : 'not_configured') as VisionSkipReason, durationMs: 0,
+        }))],
+      };
     }
 
     // The chain's attempt ledger is otherwise WRITE-ONLY: runVisionFallback
@@ -424,6 +479,7 @@ export class ScreenUnderstandingService {
       // `transcribe` is the after-the-answer record (screenTranscription.ts);
       // every other action describes the screen for the answer being built.
       purpose: request.userAction === 'transcribe' ? 'record' : 'prepass',
+      allowOAuthRecord: request.allowOAuthRecord,
     };
   }
 

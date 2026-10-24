@@ -35,6 +35,8 @@ export async function transcribeScreenForMemory(
   imagePaths: readonly string[],
   /** The turn's question, passed only as disambiguation context. */
   transcriptHint?: string,
+  /** `allowOAuthRecord: false` for automatic captures (see VisionProviderBuildInputs). */
+  options: { allowOAuthRecord?: boolean } = {},
 ): Promise<string> {
   if (!imagePaths.length) return '';
   try {
@@ -62,6 +64,7 @@ export async function transcribeScreenForMemory(
       // The whole point: this reaches STRUCTURED_EXTRACTION_SYSTEM_PROMPT,
       // which every existing call site missed.
       userAction: 'transcribe',
+      allowOAuthRecord: options.allowOAuthRecord,
       qualityMode: 'balanced',
       imagePaths: [...imagePaths],
       // ONE policy, read the same way as the other call sites — a transcription
@@ -89,4 +92,65 @@ export async function transcribeScreenForMemory(
       error?.message ?? error);
     return '';
   }
+}
+
+/**
+ * Wait for a description only up to `waitMs`. Resolves with the text if it
+ * came in time, else with null, and `late` still resolves with the eventual
+ * text (or '' on failure) so the caller can fill it in afterwards.
+ *
+ * For a user action that must not hang on a slow reader: Notes › Attach image
+ * waited out the whole record, which is 30 s for a signed-in Codex /
+ * Antigravity model and 45 s for Ollama.
+ */
+export async function awaitDescriptionWithin(
+  describing: Promise<string>,
+  waitMs: number,
+): Promise<{ text: string | null; late: Promise<string> }> {
+  const late = describing.then((text) => String(text ?? '').trim()).catch(() => '');
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  const text = await Promise.race([
+    late,
+    new Promise<null>((resolve) => { timer = setTimeout(() => resolve(null), waitMs); }),
+  ]);
+  clearTimeout(timer);
+  return { text: text || null, late };
+}
+
+/**
+ * Descriptions still being written for images already attached to the notes,
+ * by entry object. Notes › Attach image returns after the pre-pass budget and
+ * lets a slower reader finish in the background; the notes writer waits for
+ * these before it reads the descriptions (awaitPendingImageDescriptions), so
+ * an image attached just before Stop is still described. A WeakMap, not a
+ * field on the entry: the entry is saved with the meeting and a Promise is not
+ * data.
+ */
+const pendingDescriptions = new WeakMap<object, Promise<string>>();
+
+export function notePendingImageDescription(entry: object, late: Promise<string>): void {
+  const settled: Promise<string> = late
+    .catch(() => '')
+    .finally(() => { if (pendingDescriptions.get(entry) === settled) pendingDescriptions.delete(entry); });
+  pendingDescriptions.set(entry, settled);
+}
+
+/**
+ * Wait for any still-pending descriptions of these entries, up to the longest
+ * record time limit (the Ollama one, 45 s). Never throws; returns at once when
+ * nothing is pending.
+ */
+export async function awaitPendingImageDescriptions(entries: unknown): Promise<void> {
+  if (!Array.isArray(entries)) return;
+  const pending = entries
+    .map((e) => (e && typeof e === 'object' ? pendingDescriptions.get(e) : undefined))
+    .filter((p): p is Promise<string> => !!p);
+  if (!pending.length) return;
+  const { OLLAMA_RECORD_BUDGET_MS } = require('./ScreenUnderstandingService');
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  await Promise.race([
+    Promise.allSettled(pending),
+    new Promise<void>((resolve) => { timer = setTimeout(resolve, OLLAMA_RECORD_BUDGET_MS); }),
+  ]);
+  clearTimeout(timer);
 }

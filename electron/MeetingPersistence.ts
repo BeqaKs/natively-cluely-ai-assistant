@@ -1181,6 +1181,14 @@ export class MeetingPersistence {
             })
             : null;
         if (notesInputs?.previousMeetingId) console.log(`[MeetingPersistence] Notes will read last time from meeting ${notesInputs.previousMeetingId}.`);
+        // An image attached just before Stop may still be being described:
+        // Notes › Attach image waits only 6 s and lets a slower reader finish
+        // in the background. Wait for it (bounded) so the notes do not read
+        // "(not described)" for a description seconds away.
+        if (notesInputs) {
+            const { awaitPendingImageDescriptions } = require('./services/screen/screenTranscription') as typeof import('./services/screen/screenTranscription');
+            await awaitPendingImageDescriptions(metadata?.attachedImages);
+        }
         const notesContextParams = {
             meetingContextBlock: notesInputs?.meetingContextBlock,
             lastTimeBlock: notesInputs?.lastTimeBlock,

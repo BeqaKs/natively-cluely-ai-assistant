@@ -14211,13 +14211,29 @@ export function initializeIpcHandlers(appState: AppState): void {
     const name = pathMod.basename(src).slice(0, 80);
     const dest = pathMod.join(dir, `${Date.now()}-${name.replace(/[^\w.-]+/g, '_')}`);
     await fsp.copyFile(src, dest);
-    let description = '';
+    // The description is waited for only as long as a cloud provider takes
+    // (the 6 s pre-pass budget). A slower reader — a signed-in Codex /
+    // Antigravity model gets 30 s, Ollama 45 s — finishes in the background
+    // and fills the entry in, so the button never hangs on it. The notes
+    // prompt reads the description when the notes are written, not now.
+    // The notes writer waits for a description still pending at Stop
+    // (awaitPendingImageDescriptions), so a late one is not lost.
+    //
+    // A description that never comes leaves "(not described)": the notes just
+    // say an image was attached.
+    const entry = { path: dest, name, description: `Image "${name}" (not described)`, at: Date.now() };
     try {
-      const { transcribeScreenForMemory } = require('./services/screen/screenTranscription');
-      description = String((await transcribeScreenForMemory([dest], 'A picture the user attached to their meeting notes: describe what it shows, including any text, in a few sentences.')) ?? '').trim();
-    } catch { /* kept without a description; the notes just say an image was attached */ }
+      const { transcribeScreenForMemory, awaitDescriptionWithin, notePendingImageDescription } = require('./services/screen/screenTranscription');
+      const { SCREEN_UNDERSTANDING_TOTAL_BUDGET_MS } = require('./services/screen/ScreenUnderstandingService');
+      const { text, late } = await awaitDescriptionWithin(
+        Promise.resolve().then(() => transcribeScreenForMemory([dest], 'A picture the user attached to their meeting notes: describe what it shows, including any text, in a few sentences.')),
+        SCREEN_UNDERSTANDING_TOTAL_BUDGET_MS,
+      );
+      if (text) entry.description = text;
+      else notePendingImageDescription(entry, late.then((lateText: string) => { if (lateText) entry.description = lateText; return lateText; }));
+    } catch { /* kept without a description */ }
     const list = Array.isArray(meta.attachedImages) ? meta.attachedImages : [];
-    list.push({ path: dest, name, description: description || `Image "${name}" (not described)`, at: Date.now() });
+    list.push(entry);
     meta.attachedImages = list.slice(-12);
     return { count: meta.attachedImages.length };
   });

@@ -2328,7 +2328,7 @@ export class LLMHelper {
   // these named entry points so the surface stays auditable.
 
   public async runVisionRequest(
-    providerId: 'natively' | 'openai' | 'claude' | 'gemini_flash_lite' | 'gemini_flash' | 'gemini_pro' | 'groq_scout' | 'custom' | 'litellm' | 'nvidia_nim' | 'openrouter' | 'fluxion' | 'ninerouter' | 'agentrouter' | 'deepseek' | 'curl' | 'ollama',
+    providerId: 'natively' | 'openai' | 'claude' | 'gemini_flash_lite' | 'gemini_flash' | 'gemini_pro' | 'groq_scout' | 'custom' | 'litellm' | 'nvidia_nim' | 'openrouter' | 'fluxion' | 'ninerouter' | 'agentrouter' | 'deepseek' | 'curl' | 'ollama' | 'oauth_model',
     userPrompt: string,
     systemPrompt: string,
     imagePath: string,
@@ -2403,6 +2403,22 @@ export class LLMHelper {
           opts?.signal?.removeEventListener('abort', onOuterAbort);
           if (this.ollamaRecordAbort === record) this.ollamaRecordAbort = null;
         }
+      }
+      // The screen record written by Codex or Antigravity when nothing else can
+      // read the screenshot (see getOAuthRecordReader). Both adapters throw on
+      // failure, so an error is never stored as the screen's contents. Codex
+      // runs at low effort on the default tier: the user's own reasoning
+      // setting (high, xhigh, flex) is for answers, and a transcription at that
+      // effort runs past OAUTH_RECORD_BUDGET_MS every time.
+      case 'oauth_model': {
+        const reader = this.getOAuthRecordReader();
+        if (!reader) throw new Error('No signed-in model can read this screenshot');
+        const stream = reader.family === 'codex-cli'
+          ? this.streamWithCodexCli(userPrompt, systemPrompt, false, [imagePath], opts?.signal, undefined, { modelReasoningEffort: 'low', serviceTier: 'default' })
+          : this.streamWithAntigravity(userPrompt, systemPrompt, [imagePath], opts?.signal, reader.model);
+        let text = '';
+        for await (const piece of stream) text += piece;
+        return text;
       }
       case 'curl': {
         if (!this.activeCurlProvider) throw new Error('No cURL provider selected');
@@ -3336,7 +3352,7 @@ export class LLMHelper {
     });
   }
 
-  private async *streamWithCodexCli(userContent: string, systemPrompt?: string, fastMode = false, imagePaths?: string[], signal?: AbortSignal, modelOverride?: string): AsyncGenerator<string, void, unknown> {
+  private async *streamWithCodexCli(userContent: string, systemPrompt?: string, fastMode = false, imagePaths?: string[], signal?: AbortSignal, modelOverride?: string, tuning?: { modelReasoningEffort?: CodexCliConfig['modelReasoningEffort']; serviceTier?: CodexCliConfig['serviceTier'] }): AsyncGenerator<string, void, unknown> {
     if (!this.isCodexAvailable()) throw new Error('Codex CLI transport is disabled or ChatGPT is signed out.');
     // Codex routes to chatgpt.com/backend-api — it is a CLOUD provider, and it
     // needs the same local-only last boundary every other cloud provider has.
@@ -3360,8 +3376,8 @@ export class LLMHelper {
       timeoutMs: this.codexCliConfig.timeoutMs,
       imagePaths,
       sandboxMode: this.codexCliConfig.sandboxMode,
-      serviceTier: this.codexCliConfig.serviceTier,
-      modelReasoningEffort: this.codexCliConfig.modelReasoningEffort,
+      serviceTier: tuning?.serviceTier ?? this.codexCliConfig.serviceTier,
+      modelReasoningEffort: tuning?.modelReasoningEffort ?? this.codexCliConfig.modelReasoningEffort,
       signal,
     });
   }
@@ -3667,6 +3683,42 @@ export class LLMHelper {
   public getOllamaRecordTarget(): { model: string; url: string } | null {
     if (!this.useOllama || this.isProviderDisabled('ollama') || !this.ollamaVisionModel) return null;
     return { model: this.ollamaVisionModel, url: this.ollamaUrl };
+  }
+
+  /**
+   * The Codex or Antigravity model that writes the after-the-answer screen
+   * record when no other provider can. The vision registry has no rung of its
+   * own for either (both sign in with OAuth, no key it can see), so a user with
+   * only one of them had every screen record fail with `all_vision_failed` —
+   * the answer read the screenshot, since the streaming chain seats both
+   * whenever they are signed in, but no follow-up could ever quote that screen
+   * (issue #647's log).
+   *
+   * The same availability rule as the streaming chain (buildVisionChain), so
+   * the two cannot disagree about who may read a screenshot: signed in and
+   * switched on, not local-only, not "Reads images: Off". That chain seats both
+   * whatever the selection, an Ollama or custom one included, so this does too
+   * (code review, 2026-10-24) — and it matches the record's rule of 2026-10-01:
+   * a cloud provider when one is available, else the selected Ollama.
+   * "Keep screenshots on this device" never reaches here: the registry seats
+   * this rung only where cloud vision is allowed. The selection goes first when
+   * it is one of the two; otherwise Codex before Antigravity, the streaming order.
+   */
+  public getOAuthRecordReader(): { family: 'codex-cli' | 'antigravity'; model: string } | null {
+    if (this.isLocalOnlyMode) return null;
+    const codex = (): { family: 'codex-cli'; model: string } | null => {
+      if (!this.isCodexAvailable()) return null;
+      const model = this.getSelectedCodexCliModel();
+      return this.userVisionOverride('codex-cli', model) === false ? null : { family: 'codex-cli', model };
+    };
+    const antigravity = (): { family: 'antigravity'; model: string } | null => {
+      const model = this.antigravityFallbackModel();
+      if (!model) return null;
+      const routed = `antigravity:${model}`;
+      return this.userVisionOverride('antigravity', routed) === false ? null : { family: 'antigravity', model: routed };
+    };
+    if (this.isAntigravityModel(this.currentModelId)) return antigravity() ?? codex();
+    return codex() ?? antigravity();
   }
 
   /**
