@@ -1268,13 +1268,9 @@ export const NativelyApiSettings: React.FC<NativelyApiSettingsProps> = ({ initia
     // rotation is gone (it made the panel look like it was glitching
     // mid-transition), so there is nothing left to pause.
     <div className="space-y-3">
-      {/* Header. The "Pro, Max & Ultra include Natively Pro app" note that used
-          to sit opposite this label is gone: the tab header above the whole
-          section already states it, and each qualifying tier lists "Full
-          Natively Pro app features included" in its own feature rows. */}
-      <p className="text-[10px] font-semibold text-text-tertiary uppercase tracking-widest">
-        Choose a Plan
-      </p>
+      {/* No "Choose a Plan" label above the tier bar (removed 2026-10-24 at
+          Evin's request): the tier bar says it, and inside "Change plan" the
+          accordion's own title does. */}
 
       {/* Segmented control selector tab bar */}
       <div
@@ -2066,12 +2062,16 @@ export const NativelyApiSettings: React.FC<NativelyApiSettingsProps> = ({ initia
           >
             {/* hoverFill off, as on How it works below: the header answers the
                 pointer by brightening its chevron, not by filling the row. */}
+            {/* No divider under the header (2026-10-24), as How it works: the
+                tier bar follows the title directly; -mt-3 takes the body's
+                top padding down to How it works' spacing. */}
             <AccordionSection
               title="Change plan"
               className="bg-bg-item-surface rounded-2xl border-border-subtle !mb-0"
+              divider={false}
               hoverFill={false}
             >
-              {PlansCard}
+              <div className="-mt-3">{PlansCard}</div>
             </AccordionSection>
           </motion.div>
         )}
