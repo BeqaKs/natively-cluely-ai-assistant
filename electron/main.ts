@@ -11193,6 +11193,33 @@ if (process.env.THINKING_MATRIX === '1') {
     console.error('[Main] Failed to start the foreign-window capture guard:', e);
   }
 
+  // Notes saved before the GitHub #662 fix can hold a model's "empty" reply
+  // ("empty summary array.", "None"). Cleaned once, off the boot path, after the
+  // originals are backed up to userData/backups (placeholderNotesMigration).
+  setTimeout(() => {
+    try {
+      const { runPlaceholderNotesMigration } = require('./services/meeting/placeholderNotesMigration');
+      const { SettingsManager } = require('./services/SettingsManager');
+      const settings = SettingsManager.getInstance();
+      const db = DatabaseManager.getInstance();
+      const changed: string[] = runPlaceholderNotesMigration({
+        isDone: () => settings.get('placeholderNotesCleaned') === true,
+        markDone: () => { settings.set('placeholderNotesCleaned', true); },
+        listSummaries: () => db.listMeetingSummaries(),
+        replaceDetailedSummary: (id: string, detailed: any) => db.replaceDetailedSummary(id, detailed),
+        rekeyNotesRating: (id: string, fromHash: string, toHash: string) => db.rekeyNotesRating(id, fromHash, toHash),
+        backup: (rows: Array<{ id: string; summaryJson: string }>) => {
+          const dir = path.join(app.getPath('userData'), 'backups');
+          fs.mkdirSync(dir, { recursive: true });
+          fs.writeFileSync(path.join(dir, `placeholder-notes-${Date.now()}.json`), JSON.stringify(rows, null, 1));
+        },
+      });
+      if (changed.length) console.log(`[Main] Removed "empty" placeholders from the saved notes of ${changed.length} meeting(s).`);
+    } catch (e: any) {
+      console.warn('[Main] Placeholder notes cleanup skipped:', e?.message);
+    }
+  }, 9000);
+
   // Initialize CalendarManager
   try {
     const { CalendarManager } = require('./services/CalendarManager');

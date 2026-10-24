@@ -661,7 +661,98 @@ const QUESTION_TITLE_RES: RegExp[] = [
 /** True when a title describes the session's emptiness instead of naming it. */
 export function isEmptySessionTitle(title: string): boolean {
   const t = String(title || '').trim();
-  return !!t && EMPTY_SESSION_TITLE_RES.some((re) => re.test(t));
+  return !!t && (EMPTY_SESSION_TITLE_RES.some((re) => re.test(t)) || isEmptyPlaceholder(t) || EMPTY_TITLE_RE.test(placeholderKey(t)));
+}
+
+// ── A reply that says "this is empty" ────────────────────────────────────────
+// The notes prompts say what to send when there is nothing ('return an empty
+// "summary" array'). Some models write that back as text, and "empty summary
+// array." was saved as a meeting's Summary (GitHub #662). The check is narrow on
+// purpose: notes hold real short lines that look alike. "Empty array", "Empty
+// string" and "Value is null" are edge cases from a coding interview, "No resume
+// provided" is a hiring note. A placeholder is one of:
+//   - punctuation alone: "—", "[]", '""'
+//   - a "nothing" word alone: "None", "N/A", "Nothing found", "Rien", "なし"
+//   - an "empty" word naming the notes' own field: "empty summary array",
+//     "No summary available", "Tableau « summary » vide", "摘要为空"
+//   - the prompts' own condition: "The notes contain no concrete outcome."
+// "Empty array" / "Empty string" is a placeholder only where the prompt asked for
+// an empty array (isEmptyListPlaceholder), and "Untitled" / "No title" only as a
+// title (isEmptySessionTitle).
+
+function placeholderKey(text: string): string {
+  return String(text || '').normalize('NFC').toLowerCase().replace(/[\p{P}\p{S}]+/gu, ' ').replace(/\s+/g, ' ').trim()
+    .replace(/(^| )n a(?= |$)/g, '$1na'); // "N/A", "N.A."
+}
+
+const PLACEHOLDER_NOTHING_RE = new RegExp(`^(?:${[
+  'none', 'nothing', 'null', 'nil', 'undefined', 'empty', 'blank', 'not applicable',
+  'ninguno', 'ninguna', 'nada', 'aucun', 'aucune', 'rien', 'néant', 'nenhum', 'nenhuma',
+  'keine', 'keiner', 'nichts', 'nessuno', 'nessuna', 'niente', 'нет', 'ничего', 'пусто',
+  'कुछ नहीं', 'कोई नहीं', 'ഒന്നുമില്ല', 'ഇല്ല',
+].join('|')})(?: (?:found|given|provided|noted|identified|available|yet))?$`, 'u');
+
+const PLACEHOLDER_EMPTY_WORDS = new Set([
+  'empty', 'blank', 'no', 'none', 'null', 'nothing', 'unavailable', 'missing', 'na',
+  'sin', 'ningún', 'ninguna', 'aucun', 'aucune', 'sem', 'nenhum', 'nenhuma', 'kein', 'keine', 'senza', 'nessun', 'без',
+  'vacío', 'vacía', 'vacio', 'vacia', 'vide', 'vazio', 'vazia', 'leer', 'leere', 'leeres', 'vuoto', 'vuota',
+  'пусто', 'пустой', 'пустая', 'пустое', 'пустые', 'खाली', 'ശൂന്യം', 'ശൂന്യമാണ്',
+]);
+// The notes' own fields, in the languages the notes are written in. Not French
+// "résumé", which is also the English word for a CV.
+const PLACEHOLDER_FIELD_WORDS = new Set([
+  'summary', 'overview', 'resumen', 'resumo', 'zusammenfassung', 'riepilogo', 'резюме', 'сводка',
+  'सारांश', 'अवलोकन', 'സംഗ്രഹം', 'അവലോകനം',
+]);
+const PLACEHOLDER_CONTAINER_WORDS = new Set([
+  'array', 'list', 'string', 'tableau', 'liste', 'chaîne', 'chaine', 'lista', 'arreglo', 'matriz', 'cadena', 'elenco', 'stringa',
+  'zeichenkette', 'массив', 'список', 'строка', 'सूची', 'सरणी', 'പട്ടിക',
+]);
+const PLACEHOLDER_FILL_WORDS = new Set([
+  'a', 'an', 'the', 'is', 'are', 'was', 'here', 'available', 'provided', 'given', 'found',
+  'field', 'value', 'json', 'output', 'response', 'text',
+  'el', 'la', 'un', 'una', 'es', 'está', 'esta', 'le', 'les', 'une', 'est',
+  'die', 'der', 'das', 'ist', 'il', 'lo', 'è', 'o', 'um', 'uma', 'है', 'ആണ്',
+]);
+const NOTHING_TO_SUMMARIZE_RE = /^(?:there is )?nothing (?:to (?:summari[sz]e|report)|was said)$/;
+// The polish prompts' condition, written back. Pinned to the prompts' wording by
+// EmptyPlaceholderReply2026_10_24.test.mjs.
+const NO_OUTCOME_RE = /^(?:(?:the )?notes (?:contain|contained|have|had|include|included|hold|show) )?no (?:concrete |clear |real |meaningful )?(?:outcomes?|substance)(?: to (?:summari[sz]e|report))?$/;
+// Chinese and Japanese, without spaces: "摘要为空", "空的摘要", "无", "なし".
+const CJK_FIELD = '(?:摘要|总结|總結|概要|要約)';
+const CJK_EMPTY = '(?:空白|空|无|無|没有|沒有|なし)';
+const CJK_PLACEHOLDER_RE = new RegExp(`^(?:${CJK_FIELD}(?:は|が|の|为|為|是|的)*${CJK_EMPTY}(?:的|です)?|${CJK_EMPTY}(?:的|の)?${CJK_FIELD}|无|無|なし|没有|沒有)$`, 'u');
+const CJK_EMPTY_LIST_RE = /^(?:空|空的|空の)(?:数组|數組|配列|列表|リスト)$/u;
+const EMPTY_TITLE_RE = /^(?:(?:an? |the )?(?:empty|blank|no|untitled)(?: (?:title|meeting|name))?|untitled (?:call|session)|sans titre|titre vide|sin título|sin titulo|título vacío|sem título|sem titulo|kein titel|ohne titel|leerer titel|senza titolo|titolo vuoto|без названия|без заголовка|пустой заголовок|शीर्षक नहीं|无标题|無標題|タイトルなし)$/u;
+
+function isFieldEcho(words: string[], nouns: Set<string>): boolean {
+  return words.length <= 8
+    && words.some((w) => PLACEHOLDER_EMPTY_WORDS.has(w))
+    && words.some((w) => nouns.has(w))
+    && words.every((w) => PLACEHOLDER_EMPTY_WORDS.has(w) || PLACEHOLDER_FIELD_WORDS.has(w) || PLACEHOLDER_CONTAINER_WORDS.has(w) || PLACEHOLDER_FILL_WORDS.has(w));
+}
+
+/** True when the text says "this is empty" instead of being a note, overview or summary line. */
+export function isEmptyPlaceholder(text: string): boolean {
+  const raw = String(text || '');
+  if (/^[\p{P}\s]*$/u.test(raw)) return true;
+  if (/^\s*n\s*[/.]\s*a\s*\.?\s*$/i.test(raw)) return true;
+  const t = placeholderKey(raw);
+  if (!t) return false; // symbols only ("✅", "$") are not empty
+  return PLACEHOLDER_NOTHING_RE.test(t)
+    || NOTHING_TO_SUMMARIZE_RE.test(t)
+    || NO_OUTCOME_RE.test(t)
+    || CJK_PLACEHOLDER_RE.test(t.replace(/\s+/g, ''))
+    || isFieldEcho(t.split(' '), PLACEHOLDER_FIELD_WORDS);
+}
+
+/** isEmptyPlaceholder, plus "Empty array" / "Empty string": for a list the prompt
+ *  said to return empty (the polished summary, action items, decisions, risks,
+ *  open questions), where such a line is the instruction, never a note. */
+export function isEmptyListPlaceholder(text: string): boolean {
+  if (isEmptyPlaceholder(text)) return true;
+  const t = placeholderKey(text);
+  return isFieldEcho(t.split(' '), PLACEHOLDER_CONTAINER_WORDS) || CJK_EMPTY_LIST_RE.test(t.replace(/\s+/g, ''));
 }
 
 /** True when a title is a question rather than a name. Judge the text as the
@@ -778,7 +869,7 @@ export function sanitizeStringArray(value: unknown, max: number): string[] {
   const out: string[] = [];
   for (const item of arr(value)) {
     const cleaned = cleanNoteText(item);
-    if (!cleaned || FILLER_RE.test(cleaned)) continue;
+    if (!cleaned || FILLER_RE.test(cleaned) || isEmptyPlaceholder(cleaned)) continue;
     const key = normalizedKey(cleaned);
     if (seen.has(key)) continue;
     seen.add(key);
@@ -812,7 +903,7 @@ export function sanitizeDecisions(value: unknown, max: number, t?: Track): Decis
       confidence: normalizeConfidence(item?.confidence),
       ...(item?.fromUserNotes === true ? { fromUserNotes: true } : {}),
     } as DecisionItem;
-  }).filter((d: DecisionItem) => d.text), max);
+  }).filter((d: DecisionItem) => d.text && !isEmptyListPlaceholder(d.text)), max);
 }
 
 export function sanitizeActions(value: unknown, max: number, t?: Track): ActionItem[] {
@@ -831,7 +922,7 @@ export function sanitizeActions(value: unknown, max: number, t?: Track): ActionI
       ...(item?.party === 'ours' || item?.party === 'theirs' ? { party: item.party } : {}),
       ...(item?.fromUserNotes === true ? { fromUserNotes: true } : {}),
     } as ActionItem;
-  }).filter((a: ActionItem) => a.text), max);
+  }).filter((a: ActionItem) => a.text && !isEmptyListPlaceholder(a.text)), max);
 }
 
 export function sanitizeQuestions(value: unknown, max: number): QuestionItem[] {
@@ -843,7 +934,7 @@ export function sanitizeQuestions(value: unknown, max: number): QuestionItem[] {
     ...(item?.confidence ? { confidence: normalizeConfidence(item.confidence) } : {}),
     ...(item?.carriedOver === true ? { carriedOver: true } : {}),
     ...(item?.fromUserNotes === true ? { fromUserNotes: true } : {}),
-  } as QuestionItem)).filter((q: QuestionItem) => q.text), max);
+  } as QuestionItem)).filter((q: QuestionItem) => q.text && !isEmptyListPlaceholder(q.text)), max);
 }
 
 export function sanitizeRisks(value: unknown, max: number): RiskItem[] {
@@ -852,7 +943,7 @@ export function sanitizeRisks(value: unknown, max: number): RiskItem[] {
     severity: VALID_RISK_SEVERITY.has(item?.severity) ? item.severity : inferSeverity(item?.text),
     evidence: sanitizeEvidenceArray(item?.evidence, 3),
     ...(item?.confidence ? { confidence: normalizeConfidence(item.confidence) } : {}),
-  } as RiskItem)).filter((r: RiskItem) => r.text), max);
+  } as RiskItem)).filter((r: RiskItem) => r.text && !isEmptyListPlaceholder(r.text)), max);
 }
 
 function sanitizeBullets(value: unknown, max: number): NoteBullet[] {
@@ -865,7 +956,7 @@ function sanitizeBullets(value: unknown, max: number): NoteBullet[] {
       ...(item?.confidence ? { confidence: normalizeConfidence(item.confidence) } : {}),
       ...(item?.fromUserNotes === true ? { fromUserNotes: true } : {}),
     } as NoteBullet;
-  }).filter((b: NoteBullet) => b.text).slice(0, max);
+  }).filter((b: NoteBullet) => b.text && !isEmptyPlaceholder(b.text)).slice(0, max);
 }
 
 function sanitizeSections(value: unknown, max: number): MeetingNoteSection[] {

@@ -12,7 +12,7 @@
 // section bullets) — NEVER the raw transcript. Scope-gated by the caller on post_call_summary.
 
 import type { LLMHelper } from '../../LLMHelper';
-import { MEETING_TITLE_RULE, type ActionItem, type DecisionItem, type MeetingNoteSection, type RiskItem } from './MeetingSummaryV3';
+import { MEETING_TITLE_RULE, isEmptyListPlaceholder, isEmptyPlaceholder, isEmptySessionTitle, type ActionItem, type DecisionItem, type MeetingNoteSection, type RiskItem } from './MeetingSummaryV3';
 import { generateStructured, NOTE_CALL_TIMEOUT_MS } from './generateStructured';
 import { INCLUDE_NEXT_STEPS, getOverviewBand } from './MeetingSummaryReducer';
 import { renderNotesPromptContext, type NotesPromptContext } from './meetingNotesContext';
@@ -97,8 +97,11 @@ ${grounded}`;
       validate: (raw) => {
         const arr = (raw && typeof raw === 'object' && Array.isArray((raw as any).summary)) ? (raw as any).summary : null;
         if (!arr) return { ok: false, errors: ['missing summary array'], repaired: false };
-        const lines = arr.map((s: any) => String(s || '').replace(/\s+/g, ' ').trim()).filter(Boolean).slice(0, 5);
-        if (lines.length === 0) return { ok: false, errors: ['empty summary'], repaired: false };
+        const lines = arr.map((s: any) => String(s || '').replace(/\s+/g, ' ').trim()).filter((s: string) => !isEmptyListPlaceholder(s)).slice(0, 5);
+        // Nothing to say is the answer the prompt asks for, not a failure: a repair
+        // retry (which sees neither the notes nor that rule) would push the model to
+        // write filler. "empty summary array." counts as nothing (GitHub #662).
+        if (lines.length === 0) return { ok: true, data: { summary: [] }, errors: [], repaired: false };
         // HARD GATE: no new significant tokens vs the grounded input.
         const offending = newSignificantTokens(lines.join(' '), grounded);
         if (offending.length > 0) return { ok: false, errors: [`introduced new tokens: ${offending.slice(0, 5).join(', ')}`], repaired: false };
@@ -107,6 +110,10 @@ ${grounded}`;
     });
 
     if (result.ok && result.data && result.data.summary.length > 0) return result.data.summary;
+    if (result.ok) {
+      console.log('[SummaryPolisher] Summary polish found nothing to say; keeping deterministic version');
+      return null;
+    }
     // A rejected polish means the user silently receives the mechanical deterministic
     // summary. That failure was invisible for the entire life of this feature — log it.
     console.warn(`[SummaryPolisher] Summary polish rejected, keeping deterministic version: ${result.errors.join('; ') || 'unknown'}`);
@@ -191,21 +198,27 @@ ${grounded}`;
       // polish (a writing task), not the benchmarked structured-extraction route.
       callOpts: { timeoutMs: NOTE_CALL_TIMEOUT_MS },
       validate: (raw) => {
-        const proposed = (raw && typeof raw === 'object' && typeof (raw as any).title === 'string')
-          ? (raw as any).title.replace(/\s+/g, ' ').trim()
-          : '';
+        const reply = raw && typeof raw === 'object' ? raw as { title?: unknown; overview?: unknown } : null;
+        const proposed = typeof reply?.title === 'string' ? reply.title.replace(/\s+/g, ' ').trim() : '';
+        const hasTitle = proposed !== '' && !isEmptySessionTitle(proposed);
         // Collapse only HORIZONTAL whitespace and normalize runs of blank lines to a single
         // paragraph break (\n\n) — a plain `\s+ -> ' '` collapse (used elsewhere in this file
         // for single-line fields) would flatten every paragraph break the medium/long bands
         // just asked the model for, making that instruction a no-op.
-        const text = (raw && typeof raw === 'object')
-          ? String((raw as any).overview || '').replace(/\r\n/g, '\n').replace(/[ \t]+/g, ' ').replace(/\n{3,}/g, '\n\n').trim()
+        const text = reply
+          ? String(reply.overview || '').replace(/\r\n/g, '\n').replace(/[ \t]+/g, ' ').replace(/\n{3,}/g, '\n\n').trim()
           : '';
         const keepTitle = (inventions: string[]) => {
-          const clean = proposed && inventedTitleFacts(proposed, reference, inventions).length === 0 ? proposed : null;
+          const clean = hasTitle && inventedTitleFacts(proposed, reference, inventions).length === 0 ? proposed : null;
           if (title === null) title = clean;
           return clean;
         };
+        // An empty overview is the answer the prompt asks for when there is nothing
+        // to say; accepted as is, so no repair retry pushes the model into filler.
+        if (typeof reply?.overview === 'string' && isEmptyPlaceholder(text)) {
+          acceptedTitle = keepTitle([]);
+          return { ok: true, data: { overview: '' }, errors: [], repaired: false };
+        }
         if (!text || text.length < 20) {
           keepTitle([]);
           return { ok: false, errors: ['missing/short overview'], repaired: false };
@@ -223,6 +236,10 @@ ${grounded}`;
     });
 
     if (result.ok && result.data && result.data.overview) return { overview: result.data.overview, title: acceptedTitle ?? title };
+    if (result.ok) {
+      console.log('[SummaryPolisher] Overview polish found nothing to say; keeping deterministic version');
+      return { overview: null, title: acceptedTitle };
+    }
     // A rejected polish means the user silently receives the mechanical deterministic
     // overview. That failure was invisible for the entire life of this feature — log it.
     console.warn(`[SummaryPolisher] Overview polish rejected, keeping deterministic version: ${result.errors.join('; ') || 'unknown'}`);
@@ -264,10 +281,11 @@ ${grounded}`;
       llmHelper: this.llmHelper,
       callOpts: { timeoutMs: NOTE_CALL_TIMEOUT_MS },
       validate: (raw) => {
-        const proposed = (raw && typeof raw === 'object' && typeof (raw as any).title === 'string')
-          ? (raw as any).title.replace(/\s+/g, ' ').trim()
-          : '';
-        if (!proposed) return { ok: false, errors: ['missing title'], repaired: false };
+        const rawTitle = raw && typeof raw === 'object' && typeof (raw as any).title === 'string' ? (raw as any).title as string : null;
+        if (rawTitle === null) return { ok: false, errors: ['missing title'], repaired: false };
+        const proposed = rawTitle.replace(/\s+/g, ' ').trim();
+        // An empty title is the answer the prompt asks for: no repair retry.
+        if (proposed === '' || isEmptySessionTitle(proposed)) return { ok: true, data: { title: '' }, errors: [], repaired: false };
         const invented = inventedTitleFacts(proposed, reference, []);
         if (invented.length > 0) return { ok: false, errors: [`title introduced: ${invented.join(', ')}`], repaired: false };
         title = proposed;

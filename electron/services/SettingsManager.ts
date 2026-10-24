@@ -6,6 +6,9 @@ export interface AppSettings {
     /** The Calendar account name whose full-name mentions in saved notes were carried
      *  to the first name (calendarNameMigration); set once per name. */
     calendarFirstNameMigratedFor?: string;
+    /** Saved notes were cleaned of models' "empty" placeholders (GitHub #662,
+     *  placeholderNotesMigration); set once. */
+    placeholderNotesCleaned?: boolean;
     // Only boot-critical or non-encrypted settings should live here.
     // In the future, other non-secret data like 'language' or 'theme'
     // can be moved here from CredentialsManager to allow early boot access.

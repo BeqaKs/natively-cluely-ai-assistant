@@ -12,7 +12,7 @@
 // Pure. No Electron, no database, no platform branches.
 
 import type { MeetingModeSectionInput } from './types';
-import { MEETING_TITLE_RULE } from './MeetingSummaryV3';
+import { MEETING_TITLE_RULE, isEmptyListPlaceholder, isEmptyPlaceholder } from './MeetingSummaryV3';
 import { headingBudgetForTranscript, renderNotesPromptContext, userNoteHeadings, type NotesPromptContext } from './meetingNotesContext';
 
 const BASE_RULES = `RULES:
@@ -103,12 +103,14 @@ Return ONLY valid JSON (no markdown code blocks):
   return { summaryPrompt, groqSummaryPrompt };
 }
 
-function stringList(value: unknown, max: number = 50): string[] {
+function stringList(value: unknown, max: number = 50, isPlaceholder: (text: string) => boolean = isEmptyPlaceholder): string[] {
   if (!Array.isArray(value)) return [];
   return value
     .map(v => (typeof v === 'string' ? v : (v && typeof v === 'object' && typeof (v as any).text === 'string' ? (v as any).text : '')))
     .map(v => v.replace(/\s+/g, ' ').trim())
-    .filter(Boolean)
+    // "If absolutely none found, return empty array" comes back as ["None"] or
+    // ["empty array"] from some models; that is no bullet (GitHub #662).
+    .filter(v => !isPlaceholder(v))
     .slice(0, max);
 }
 
@@ -148,10 +150,12 @@ export function parseV2SummaryResponse(raw: string, modeNoteSections: MeetingMod
   }
   if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) return null;
 
-  const overviewRaw = typeof parsed.overview === 'string' && parsed.overview.trim()
-    ? parsed.overview
-    : (typeof parsed.summary === 'string' ? parsed.summary : (Array.isArray(parsed.summary) ? stringList(parsed.summary).join(' ') : ''));
-  const overview = String(overviewRaw || '').trim();
+  // The first of overview / summary that says something: a placeholder overview
+  // ("None") must not hide a real summary.
+  const overview = [
+    typeof parsed.overview === 'string' ? parsed.overview : '',
+    typeof parsed.summary === 'string' ? parsed.summary : (Array.isArray(parsed.summary) ? stringList(parsed.summary).join(' ') : ''),
+  ].map((v) => v.trim()).find((v) => v && !isEmptyPlaceholder(v)) ?? '';
   // Unvetted; MeetingPersistence vets it. Absent when the model gave none.
   const title = typeof parsed.title === 'string' ? parsed.title.replace(/\s+/g, ' ').trim() : '';
   const titlePart = title ? { title } : {};
@@ -174,12 +178,12 @@ export function parseV2SummaryResponse(raw: string, modeNoteSections: MeetingMod
   }
 
   const sections = freeFormSections(parsed.sections);
-  const decisions = stringList(parsed.decisions);
+  const decisions = stringList(parsed.decisions, 50, isEmptyListPlaceholder);
   return {
     ...titlePart,
     overview,
     keyPoints: stringList(parsed.keyPoints),
-    actionItems: stringList(parsed.actionItems),
+    actionItems: stringList(parsed.actionItems, 50, isEmptyListPlaceholder),
     ...(decisions.length ? { decisions } : {}),
     ...(sections.length ? { sections } : {}),
   };
