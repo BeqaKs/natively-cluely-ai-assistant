@@ -1401,7 +1401,8 @@ import { buildTelemetrySinks } from "./services/telemetry/telemetrySinks"
 import { PhoneMirrorService, shouldStartPhoneMirrorOnBoot } from "./services/PhoneMirrorService"
 import { PHONE_IMAGE_PREFIX } from "./utils/phoneImage"
 import { renderPhoneAnswer } from "./services/phoneMirrorMarkdown"
-import { describePageCaptureFallback, describeDoubleCaptureFailure, PAGE_CAPTURE_FALLBACK_CHANNEL, PAGE_CAPTURE_STARTED_CHANNEL } from "./services/pageCaptureFallback"
+import { describeFormulaImage, describePageCaptureFallback, describeDoubleCaptureFailure, describeUnreadableFormulas, PAGE_CAPTURE_FALLBACK_CHANNEL, PAGE_CAPTURE_STARTED_CHANNEL } from "./services/pageCaptureFallback"
+import { FormulaScreenshotHandoff, markMissingFormulas, type FormulaShot } from "./services/formulaScreenshotHandoff"
 import { setVerboseLoggingFlag } from "./verboseLog"
 import { ReleaseNotesManager } from "./update/ReleaseNotesManager"
 import { OllamaManager } from './services/OllamaManager'
@@ -2121,6 +2122,9 @@ export class AppState {
           // the gesture always does something. See natively-browser/README.md.
           let captured = false;
           let domFailureReason = '';
+          // Open before the request: in the ⌘Y→Enter motion the answer request
+          // can arrive before the ack does (withFormulaScreenshot).
+          const formulaShot = this.formulaScreenshots.open();
           // Announce the in-flight capture so a fast follow-up ⌘Enter (the
           // one-motion ⌘Y→Enter flow) waits for delivery instead of racing it.
           this.sendToWindow(
@@ -2145,6 +2149,13 @@ export class AppState {
                 // the overlay has already received the page context (it surfaces a
                 // "Page context" pill and uses it on the next answer).
                 console.log('[Main] DOM capture delivered to overlay');
+                // The extension's own image of the formulas comes with the
+                // text; a screenshot only when it could not draw them.
+                if (result.formulaImages?.length) {
+                  await this.attachFormulaImages(result.formulaImages, result.unreadableFormulas ?? 0, formulaShot);
+                } else if (result.unreadableFormulas) {
+                  await this.attachScreenshotForFormulas(result.unreadableFormulas, formulaShot);
+                }
               } else {
                 domFailureReason = String(result.reason || 'unknown');
                 console.log('[Main] DOM capture unavailable (', result.reason, ') — falling back to screenshot');
@@ -2156,6 +2167,8 @@ export class AppState {
             domFailureReason = String(e?.message || e);
             console.warn('[Main] DOM capture error — falling back to screenshot:', e?.message || e);
           }
+          // No formulas, or no page text: nothing for an answer to wait for.
+          formulaShot.settle(null);
           if (!captured) {
             // Tell the overlay WHY the page capture became a screenshot. The
             // fallback is by design, but doing it silently made the hotkey look
@@ -9012,6 +9025,88 @@ export class AppState {
     });
   }
 
+  /** ⌘/Ctrl+Y formula screenshots for answers already on their way (#645). */
+  private readonly formulaScreenshots = new FormulaScreenshotHandoff();
+
+  /**
+   * The ⌘/Ctrl+Y page text arrived without `count` formulas the page draws only
+   * as SVG (issue #645: HackerRank's MathJax output has no text at all). Take a
+   * screenshot of the page for them, without starting an answer: attached in
+   * the overlay, or handed to the answer request that already claimed it.
+   */
+  private async attachScreenshotForFormulas(count: number, shot: FormulaShot): Promise<void> {
+    const overlay = () => this.windowHelper?.getOverlayWindow?.() ?? this.getMainWindow();
+    try {
+      const screenshotPath = await this.takeScreenshot(false);
+      const preview = shot.claimed ? '' : await this.getImagePreview(screenshotPath);
+      // Decided after the last await: a claim can arrive during either one.
+      const inOverlay = shot.deliverToOverlay();
+      if (inOverlay) {
+        // No preview yet when a claim was made and then released by its timeout.
+        this.sendToWindow(overlay(), 'screenshot-attached', {
+          path: screenshotPath,
+          preview: preview || await this.getImagePreview(screenshotPath),
+        });
+      }
+      shot.settle([screenshotPath]);
+      this.sendToWindow(overlay(), PAGE_CAPTURE_FALLBACK_CHANNEL, describeUnreadableFormulas(count));
+      console.log(`[Main] Page had ${count} unreadable formula(s) — screenshot ${inOverlay ? 'attached in the overlay' : 'handed to the waiting answer'}`);
+    } catch (err: any) {
+      shot.settle(null);
+      this.sendToWindow(overlay(), PAGE_CAPTURE_FALLBACK_CHANNEL, describeUnreadableFormulas(count, 'failed', process.platform));
+      console.warn('[Main] Screenshot for unreadable formulas failed:', err?.message || err);
+    }
+  }
+
+  /**
+   * Save the images the extension drew of the page's formulas with no text
+   * and attach them: in the overlay, or handed to the answer request that
+   * already claimed them (⌘/Ctrl+Y). A popup capture has no `shot`.
+   */
+  public async attachFormulaImages(
+    images: Array<{ data: Buffer; ext: 'jpg' | 'png' | 'webp'; formulas?: [number, number] }>,
+    unreadable: number,
+    shot?: FormulaShot,
+  ): Promise<void> {
+    const overlay = () => this.windowHelper?.getOverlayWindow?.() ?? this.getMainWindow();
+    try {
+      // Kept apart from the screenshot queue, so these never push out the user's own.
+      const paths = await this.screenshotHelper.addFormulaImages(images);
+      // Decided after the last await: a claim can arrive during the writes.
+      const inOverlay = shot ? shot.deliverToOverlay() : true;
+      shot?.settle(paths);
+      if (inOverlay) {
+        // The overlay replaces an earlier capture's formula images with these.
+        const formulaCapture = crypto.randomUUID();
+        for (const imagePath of paths) {
+          let preview = '';
+          try {
+            preview = await this.getImagePreview(imagePath);
+          } catch {
+            // Only the thumbnail; the answer reads the file.
+          }
+          this.sendToWindow(overlay(), 'screenshot-attached', { path: imagePath, preview, formulaCapture });
+        }
+      }
+      this.sendToWindow(overlay(), PAGE_CAPTURE_FALLBACK_CHANNEL, describeFormulaImage(unreadable));
+      console.log(`[Main] Formula image(s) from the extension: ${paths.length}, ${inOverlay ? 'attached in the overlay' : 'handed to the waiting answer'}`);
+    } catch (err: any) {
+      shot?.settle(null);
+      this.sendToWindow(overlay(), PAGE_CAPTURE_FALLBACK_CHANNEL, describeUnreadableFormulas(Math.max(1, unreadable), 'not-taken'));
+      console.warn('[Main] Saving the formula image failed:', err?.message || err);
+    }
+  }
+
+  /** `imagePaths` for an answer request carrying `pageText`, with its capture's formula screenshot when needed. */
+  public withFormulaScreenshot(pageText: string | undefined, imagePaths: string[] | undefined): Promise<string[] | undefined> {
+    return this.formulaScreenshots.addTo(pageText, imagePaths);
+  }
+
+  /** `pageText` with each formula marker no image in `imagePaths` shows made [formula not captured]. */
+  public formulaTextFor(pageText: string, imagePaths: string[] | undefined): string {
+    return markMissingFormulas(pageText, imagePaths, (p) => this.screenshotHelper.formulaRangeOf(p));
+  }
+
   public async takeSelectiveScreenshot(restoreFocus: boolean = true): Promise<string> {
     return this.withScreenshotCaptureSession('selective', restoreFocus, async () => {
       let captureArea: Electron.Rectangle | undefined;
@@ -10890,6 +10985,10 @@ if (process.env.THINKING_MATRIX === '1') {
   // Photos and screenshots sent from the phone join the screenshot queue and
   // attach to the next answer, like a capture taken on this machine.
   PhoneMirrorService.getInstance().setPhoneImageHandler((image) => appState.receivePhoneImage(image));
+  // A popup capture's formula images (#645); ⌘/Ctrl+Y gets them from its request.
+  PhoneMirrorService.getInstance().setFormulaImageHandler((images, unreadable) => {
+    void appState.attachFormulaImages(images, unreadable);
+  });
   // Answers reach the phone rendered as the overlay renders them: markdown,
   // tables, math and the [[GIST]] chip.
   PhoneMirrorService.getInstance().setAnswerRenderer(renderPhoneAnswer);

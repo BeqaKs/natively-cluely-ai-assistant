@@ -9,6 +9,8 @@
  * JSON is read with JSON.parse only. Nothing here runs page code.
  */
 
+import { inlineFormulas } from '../../math-text';
+
 /** Collapse whitespace but preserve paragraph breaks. */
 export function collapseWhitespace(s: string): string {
   return s
@@ -17,6 +19,35 @@ export function collapseWhitespace(s: string): string {
     .replace(/\n[ \t]+/g, '\n')
     .replace(/\n{3,}/g, '\n\n')
     .trim();
+}
+
+/**
+ * textContent of `el` with rendered formulas replaced by their text, or by the
+ * UNREADABLE_FORMULA marker when the page has none (#645). Reads a clone, so
+ * the live page is untouched.
+ */
+function textOf(el: Node | null | undefined): string {
+  if (!el) return '';
+  try {
+    const clone = el.cloneNode(true);
+    inlineFormulas(clone as never);
+    return clone.textContent || '';
+  } catch {
+    return el.textContent || '';
+  }
+}
+
+/**
+ * `nodes` without the ones inside another of them. HackerRank nests one
+ * `.problem-statement` in another, which read as the statement twice.
+ */
+export function outermost<T extends Node>(nodes: ArrayLike<T>): T[] {
+  const list = Array.from(nodes);
+  const set = new Set<Node>(list);
+  return list.filter((n) => {
+    for (let p = n.parentNode; p; p = p.parentNode) if (set.has(p)) return false;
+    return true;
+  });
 }
 
 /** Trimmed textContent of the first element matching any selector, or ''. */
@@ -29,7 +60,7 @@ export function firstText(doc: ParentNode, selectors: string[] | undefined): str
     } catch {
       continue;
     }
-    const t = (el?.textContent || '').trim();
+    const t = textOf(el).trim();
     if (t) return collapseWhitespace(t);
   }
   return '';
@@ -46,10 +77,10 @@ export function allText(doc: ParentNode, selectors: string[] | undefined, cap = 
     } catch {
       continue;
     }
-    nodes?.forEach((n) => {
-      const t = (n.textContent || '').trim();
+    for (const n of outermost(nodes ?? [])) {
+      const t = textOf(n).trim();
       if (t) parts.push(t);
-    });
+    }
     if (parts.length) break; // first selector that yields content wins
   }
   const joined = collapseWhitespace(parts.join('\n'));
@@ -156,6 +187,8 @@ export function bodyInnerText(doc: Document, cap = 12000): string {
   const body = doc.body;
   if (!body) return '';
   const clone = body.cloneNode(true) as HTMLElement;
+  // Formulas first: MathJax 2 keeps each TeX source in a <script> dropped below.
+  inlineFormulas(clone as never);
   try {
     clone.querySelectorAll('script, style, noscript, template').forEach((n) => n.parentNode?.removeChild(n));
   } catch {

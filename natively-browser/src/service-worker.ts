@@ -20,6 +20,7 @@ import { originPatternFromUrl } from './capture/originPattern';
 // throws "must be called during a user gesture" (verified live, Chrome 148).
 import { requestOriginPermission, requestAllSitesPermission, hasAllSitesPermission } from './capture/permissions';
 import { meetingTabsReport } from './meeting-tabs';
+import { formulaImageLimitsOf, type FormulaImageLimits } from './formula-sheet';
 
 const STORAGE_KEY = 'pairing';
 const PAIR_PROBE_DOM = '__pair_probe__';
@@ -59,6 +60,8 @@ export interface CaptureMeta {
   source?: string;
   pageType?: string;
   firstLine?: string;
+  /** Formulas the text could not carry (drawn only as SVG) and no image shows; the desktop adds a screenshot. */
+  unreadableFormulas?: number;
 }
 
 /**
@@ -71,12 +74,17 @@ export async function postDomToDesktop(
   pairing: Pairing,
   dom: string,
   fetchImpl: FetchLike,
-  extras?: { reqId?: string; meta?: CaptureMeta; probe?: boolean; envelope?: unknown },
+  extras?: { reqId?: string; meta?: CaptureMeta; probe?: boolean; envelope?: unknown; formulaImages?: string[]; formulaImageRanges?: Array<[number, number]> },
 ): Promise<DomPostOutcome> {
   const url = `http://127.0.0.1:${pairing.port}/dom?t=${encodeURIComponent(pairing.token)}`;
   const payload: Record<string, unknown> = { dom };
   if (extras?.reqId) payload.reqId = extras.reqId;
   if (extras?.meta) payload.meta = extras.meta;
+  // The formulas the page draws with no text, as image data URLs (#645).
+  if (extras?.formulaImages?.length) {
+    payload.formulaImages = extras.formulaImages;
+    if (extras.formulaImageRanges?.length) payload.formulaImageRanges = extras.formulaImageRanges;
+  }
   // Smart Browser Context v2: the structured envelope rides alongside the legacy
   // `dom` string. The desktop treats it as an ADDED field (back-compatible).
   if (extras?.envelope) payload.envelope = extras.envelope;
@@ -317,6 +325,9 @@ interface ExtractedTab {
   title?: string;
   pageType?: string;
   firstLine?: string;
+  unreadableFormulas?: number;
+  formulaImages?: string[];
+  formulaImageRanges?: Array<[number, number]>;
 }
 
 /** Run the content script in a tab and ask it to extract clean text + meta. */
@@ -325,8 +336,11 @@ async function extractFromTab(tabId: number): Promise<ExtractedTab> {
     target: { tabId },
     files: ['content-script.js'],
   });
-  const response = (await chrome.tabs.sendMessage(tabId, { type: 'natively:extract' })) as
-    | { ok: true; result: { text: string; source?: string; title?: string; pageType?: string; firstLine?: string } }
+  const response = (await chrome.tabs.sendMessage(tabId, {
+    type: 'natively:extract',
+    ...(desktopFormulaImages ? { formulaImages: desktopFormulaImages } : {}),
+  })) as
+    | { ok: true; result: ExtractedTab }
     | { ok: false; error: string }
     | undefined;
   if (!response) throw new Error('No response from page');
@@ -352,7 +366,7 @@ async function sendDom(
   token: string,
   hintPort: number | undefined,
   dom: string,
-  extras?: { reqId?: string; meta?: CaptureMeta; probe?: boolean; envelope?: unknown },
+  extras?: { reqId?: string; meta?: CaptureMeta; probe?: boolean; envelope?: unknown; formulaImages?: string[]; formulaImageRanges?: Array<[number, number]> },
 ): Promise<DomPostOutcome> {
   const attempt = async (port: number): Promise<DomPostOutcome> =>
     postDomToDesktop({ port, token }, dom, fetch, extras);
@@ -472,6 +486,7 @@ async function captureActiveTab(opts?: { reqId?: string; tabId?: number }): Prom
     return { outcome: { kind: 'error', message: 'Cannot capture browser/internal pages' } };
   }
 
+  if (!opts?.reqId) await waitForDesktopFeatures(1500);
   let extracted: ExtractedTab;
   try {
     extracted = await extractFromTab(tab.id);
@@ -497,8 +512,17 @@ async function captureActiveTab(opts?: { reqId?: string; tabId?: number }): Prom
     source: extracted.source,
     pageType: extracted.pageType,
     firstLine: extracted.firstLine,
+    ...(extracted.unreadableFormulas ? { unreadableFormulas: extracted.unreadableFormulas } : {}),
   };
-  const outcome = await sendDom(pairing.token, pairing.port, extracted.text, { reqId: opts?.reqId, meta });
+  // The desktop's deadline restarts on each progress ack: extraction (and any
+  // formula images it drew) is done, and the upload gets its own window.
+  if (opts?.reqId) wsSend({ type: 'capture-ack', reqId: opts.reqId, status: 'posting' });
+  const outcome = await sendDom(pairing.token, pairing.port, extracted.text, {
+    reqId: opts?.reqId,
+    meta,
+    formulaImages: extracted.formulaImages,
+    formulaImageRanges: extracted.formulaImageRanges,
+  });
   return { outcome, chars: extracted.text.length };
 }
 
@@ -746,6 +770,38 @@ async function connectionStatus(): Promise<DomPostOutcome | { kind: 'unpaired' }
 
 let ws: WebSocket | null = null;
 let wsConnecting = false;
+/**
+ * The formula images (#645) the connected desktop takes, from its
+ * `desktop-features` frame. Null until it says: an older desktop would drop
+ * the images and keep text that points at them.
+ */
+let desktopFormulaImages: FormulaImageLimits | null = null;
+const desktopFeatureWaiters = new Set<() => void>();
+
+function flushDesktopFeatureWaiters(): void {
+  for (const done of [...desktopFeatureWaiters]) done();
+}
+
+/**
+ * Resolves once the desktop has said what it takes, or when it will not: a
+ * desktop answers `hello` at once, so one that has not 200 ms after the
+ * socket opened is too old to. Only a capture from a just-woken worker
+ * (the popup) waits; ⌘/Ctrl+Y comes over a socket that already said hello.
+ */
+function waitForDesktopFeatures(maxMs: number): Promise<void> {
+  if (desktopFormulaImages) return Promise.resolve();
+  if (ws && ws.readyState === WebSocket.OPEN) maxMs = Math.min(maxMs, 200);
+  void ensureWsConnected();
+  return new Promise((resolve) => {
+    const done = () => {
+      clearTimeout(timer);
+      desktopFeatureWaiters.delete(done);
+      resolve();
+    };
+    const timer = setTimeout(done, maxMs);
+    desktopFeatureWaiters.add(done);
+  });
+}
 let wsBackoffMs = 1000;
 const WS_BACKOFF_MAX = 15000;
 
@@ -914,9 +970,9 @@ async function ensureWsConnected(): Promise<void> {
   if (ws && (ws.readyState === WebSocket.OPEN || ws.readyState === WebSocket.CONNECTING)) return;
   if (wsConnecting) return;
   const pairing = await getPairing();
-  if (!pairing) return; // not paired → nothing to connect to
+  if (!pairing) return flushDesktopFeatureWaiters(); // not paired → nothing to connect to
   const port = await resolveLivePort(fetch, pairing.port);
-  if (port == null) return; // desktop not running
+  if (port == null) return flushDesktopFeatureWaiters(); // desktop not running
 
   wsConnecting = true;
   try {
@@ -926,6 +982,7 @@ async function ensureWsConnected(): Promise<void> {
       wsConnecting = false;
       wsBackoffMs = 1000;
       wsSend({ type: 'hello', role: 'extension', v: 1 });
+      setTimeout(flushDesktopFeatureWaiters, 200);
     };
     sock.onmessage = (ev) => {
       let msg: any;
@@ -945,6 +1002,9 @@ async function ensureWsConnected(): Promise<void> {
         });
       } else if (msg.type === 'list-tabs' && typeof msg.reqId === 'string') {
         void handleListTabs(msg.reqId);
+      } else if (msg.type === 'desktop-features') {
+        desktopFormulaImages = formulaImageLimitsOf(msg.formulaImages);
+        flushDesktopFeatureWaiters();
       } else if (msg.type === 'meeting-tabs-subscribe') {
         meetingTabsOn = msg.on === true;
         meetingTabsLast = '';
@@ -955,7 +1015,11 @@ async function ensureWsConnected(): Promise<void> {
     };
     sock.onclose = () => {
       wsConnecting = false;
-      if (ws === sock) ws = null;
+      if (ws === sock) {
+        ws = null;
+        desktopFormulaImages = null;
+        flushDesktopFeatureWaiters();
+      }
       // The desktop forgets this socket's tabs; the next hello asks again.
       meetingTabsOn = false;
       // Reconnect with backoff (only matters while the SW is alive; the alarm

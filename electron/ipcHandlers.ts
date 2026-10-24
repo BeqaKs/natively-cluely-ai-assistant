@@ -8060,8 +8060,23 @@ export function initializeIpcHandlers(appState: AppState): void {
     return { success: true };
   });
 
+  // A ⌘/Ctrl+Y capture's screenshot for formulas its page text could not
+  // carry, when it was still being taken as this request started (#645). Added
+  // before validation, which checks it like any other attachment.
+  const withPageFormulaScreenshot = async (raw: unknown): Promise<unknown> => {
+    if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return raw;
+    const r = raw as Record<string, unknown>;
+    const page = r.pageContext;
+    const dom = page && typeof page === 'object' ? (page as Record<string, unknown>).dom : undefined;
+    if (typeof dom !== 'string' || (r.imagePaths !== undefined && !Array.isArray(r.imagePaths))) return raw;
+    const merged = await appState.withFormulaScreenshot(dom, r.imagePaths as string[] | undefined);
+    const text = appState.formulaTextFor(dom, merged);
+    if (merged === r.imagePaths && text === dom) return raw;
+    return { ...r, imagePaths: merged, pageContext: { ...(page as Record<string, unknown>), dom: text } };
+  };
+
   safeHandle('direct-assist-stream', async (event, rawRequest: unknown) => {
-    const normalized = normalizeDirectAssistRequest(rawRequest);
+    const normalized = normalizeDirectAssistRequest(await withPageFormulaScreenshot(rawRequest));
     if (normalized.error || !normalized.request) {
       return rejectDirectAssist(
         event.sender,
@@ -15822,6 +15837,16 @@ export function initializeIpcHandlers(appState: AppState): void {
         let visionModelUsed: string | undefined;
         let visionAttempts: number | undefined;
         let visionFailureReason: string | undefined;
+
+        // A ⌘/Ctrl+Y capture's screenshot for formulas its page text could not
+        // carry, when it was still being taken as this answer started (#645).
+        if (imagePaths === undefined || Array.isArray(imagePaths)) {
+          imagePaths = await appState.withFormulaScreenshot(options?.domContext, imagePaths);
+          // Formula images that did not fit in this request: its text must not point at them.
+          if (typeof options?.domContext === 'string') {
+            options = { ...options, domContext: appState.formulaTextFor(options.domContext, imagePaths) };
+          }
+        }
 
         const validatedImagePaths: string[] | undefined = imagePaths?.length ? [] : undefined;
 

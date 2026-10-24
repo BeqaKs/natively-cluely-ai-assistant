@@ -341,6 +341,7 @@ import {
   type DirectAssistFallbackHop,
   type DirectAssistFallbackNotice,
 } from '../lib/directAssistFailure.mjs';
+import { addAttachment, withoutFormulaImages } from '../lib/attachmentTray.mjs';
 import {
   applyFirstStreamingToken,
   commitStreamingFlush,
@@ -1670,6 +1671,8 @@ const NativelyInterface: React.FC<NativelyInterfaceProps> = ({
           // A page context arrived — retire any stale "fell back to screenshot"
           // notice so the pills can't contradict each other.
           setCaptureFallback(null);
+          // An earlier capture's formula images number another page's formulas.
+          setAttachedContext((prev) => withoutFormulaImages(prev));
           setPageContext({
             title: meta?.title?.trim() || hostnameFromUrl(meta?.url) || 'Captured page',
             url: meta?.url,
@@ -2141,9 +2144,9 @@ const NativelyInterface: React.FC<NativelyInterfaceProps> = ({
   const pendingCaptureRef = useRef<{ path: string; preview: string } | null>(null);
 
   // Latent Context State (Screenshots attached but not sent)
-  const [attachedContext, setAttachedContext] = useState<Array<{ path: string; preview: string }>>(
-    [],
-  );
+  const [attachedContext, setAttachedContext] = useState<
+    Array<{ path: string; preview: string; formulaCapture?: string }>
+  >([]);
   // Phone Mirror: preview → path of every screenshot the tray held lately, so a
   // sent question card (which keeps only previews) can name its screenshots.
   const phoneShotPathsRef = useRef(new Map<string, string>());
@@ -5538,14 +5541,9 @@ const NativelyInterface: React.FC<NativelyInterfaceProps> = ({
     return () => unsubscribe();
   }, []);
 
-  const handleScreenshotAttach = (data: { path: string; preview: string }) => {
+  const handleScreenshotAttach = (data: { path: string; preview: string; formulaCapture?: string }) => {
     setIsExpanded(true);
-    setAttachedContext((prev) => {
-      // Prevent duplicates and cap at 5
-      if (prev.some((s) => s.path === data.path)) return prev;
-      const updated = [...prev, data];
-      return updated.slice(-5); // Keep last 5
-    });
+    setAttachedContext((prev) => addAttachment(prev, data));
   };
 
   // STT Status listener — must survive isExpanded changes.
@@ -8113,7 +8111,7 @@ const NativelyInterface: React.FC<NativelyInterfaceProps> = ({
     const questionCardId = genMessageId();
     let currentAttachments = attachedContext;
     if (pending && !currentAttachments.some((s) => s.path === pending.path)) {
-      currentAttachments = [...currentAttachments, pending].slice(-5);
+      currentAttachments = addAttachment(currentAttachments, pending);
     }
 
     if (currentAttachments.length > 0) {
@@ -10606,10 +10604,7 @@ Provide only the answer, nothing else.`;
       // The answer can start before the tray effect records this one.
       phoneShotPathsRef.current.set(data.preview, data.path);
 
-      setAttachedContext((prev) => {
-        if (prev.some((s) => s.path === data.path)) return prev;
-        return [...prev, data].slice(-5);
-      });
+      setAttachedContext((prev) => addAttachment(prev, data));
 
       // Use requestAnimationFrame so we wait for at least one paint cycle —
       // more reliable than setTimeout(0) under React 18 concurrent scheduling.

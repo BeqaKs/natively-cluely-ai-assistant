@@ -17,6 +17,10 @@ const rootDir = path.dirname(fileURLToPath(import.meta.url));
 await build({
   entryPoints: [
     path.join(rootDir, 'src', 'extract.ts'),
+    // Rendered formulas -> text (issue #645).
+    path.join(rootDir, 'src', 'math-text.ts'),
+    // Formulas with no text -> an image with the capture (issue #645).
+    path.join(rootDir, 'src', 'formula-sheet.ts'),
     path.join(rootDir, 'src', 'service-worker.ts'),
     // Smart Browser Context v2 pure modules (registry + classifier + extractors).
     path.join(rootDir, 'src', 'capture', 'registry', 'registry.ts'),

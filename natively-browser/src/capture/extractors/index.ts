@@ -35,6 +35,7 @@ import {
   firstText,
   sliceSection,
 } from './dom-helpers';
+import { FORMULAS_NOTE, inlineFormulas, UNREADABLE_FORMULA } from '../../math-text';
 
 const MAX_PAYLOAD_FIELD = 8000;
 
@@ -92,6 +93,7 @@ function readableText(deps: ExtractDeps): { title: string; text: string } {
   if (!deps.readabilityFactory) return { title: '', text: '' };
   try {
     const clone = deps.document.cloneNode(true) as Document;
+    inlineFormulas(clone as never);
     const r = deps.readabilityFactory(clone).parse();
     if (r && typeof r.textContent === 'string' && r.textContent.trim()) {
       return { title: (r.title || '').trim(), text: collapseWhitespace(r.textContent) };
@@ -348,6 +350,9 @@ function buildCodingDom(p: CodingProblemPayload): string {
   if (p.selectedText) parts.push(`SELECTED TEXT:\n${p.selectedText}`);
   if (p.starterCode || p.visibleCode) {
     parts.push(`CODE ON PAGE (verbatim — use this exact structure, names, and signature):\n${p.visibleCode || p.starterCode}`);
+  }
+  if ([p.problemStatement, p.examples, p.constraints].some((t) => t?.includes(UNREADABLE_FORMULA))) {
+    parts.push(FORMULAS_NOTE);
   }
   if (p.problemStatement) parts.push(`PROBLEM:\n${p.problemStatement}`);
   if (p.examples) parts.push(`EXAMPLES:\n${p.examples}`);

@@ -192,7 +192,8 @@ export interface ElectronAPI {
     callback: (data: { path: string; preview: string }) => void
   ) => () => void
   onScreenshotAttached: (
-    callback: (data: { path: string; preview: string }) => void
+    /** `formulaCapture`: a page capture's formula images (#645), which replace an earlier capture's. */
+    callback: (data: { path: string; preview: string; formulaCapture?: string }) => void
   ) => () => void
   onCaptureAndProcess: (
     callback: (data: { path: string; preview: string }) => void
@@ -1388,7 +1389,7 @@ export interface ElectronAPI {
  * electron/services/pageCaptureFallback.ts (main is the canonical source).
  */
 export interface PageCaptureFallbackNotice {
-  kind: 'not-connected' | 'needs-host-permission' | 'timeout' | 'no-tab' | 'error';
+  kind: 'not-connected' | 'needs-host-permission' | 'timeout' | 'no-tab' | 'error' | 'formulas';
   label: string;
   detail: string;
   reason: string;

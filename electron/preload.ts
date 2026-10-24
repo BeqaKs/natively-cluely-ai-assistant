@@ -135,7 +135,7 @@ interface ElectronAPI {
   getScreenshots: () => Promise<Array<{ path: string; preview: string }>>;
   deleteScreenshot: (path: string) => Promise<{ success: boolean; error?: string }>;
   onScreenshotTaken: (callback: (data: { path: string; preview: string }) => void) => () => void;
-  onScreenshotAttached: (callback: (data: { path: string; preview: string }) => void) => () => void;
+  onScreenshotAttached: (callback: (data: { path: string; preview: string; formulaCapture?: string }) => void) => () => void;
   onCaptureAndProcess: (callback: (data: { path: string; preview: string }) => void) => () => void;
   onSolutionsReady: (callback: (solutions: string) => void) => () => void;
   onResetView: (callback: () => void) => () => void;
@@ -1606,8 +1606,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
       ipcRenderer.removeListener('screenshot-taken', subscription);
     };
   },
-  onScreenshotAttached: (callback: (data: { path: string; preview: string }) => void) => {
-    const subscription = (_: any, data: { path: string; preview: string }) => callback(data);
+  onScreenshotAttached: (callback: (data: { path: string; preview: string; formulaCapture?: string }) => void) => {
+    const subscription = (_: any, data: { path: string; preview: string; formulaCapture?: string }) => callback(data);
     ipcRenderer.on('screenshot-attached', subscription);
     return () => {
       ipcRenderer.removeListener('screenshot-attached', subscription);
