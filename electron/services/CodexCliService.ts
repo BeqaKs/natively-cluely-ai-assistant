@@ -317,6 +317,13 @@ class TransientStreamError extends Error {
   }
 }
 
+// The backend's answer when a model does not offer the requested tier, e.g.
+// gpt-6-sol under Fast: "Unsupported service_tier: fast". The tier is a
+// speed/price preference, so a refusal must cost the answer nothing.
+export function isUnsupportedServiceTierMessage(msg: string): boolean {
+  return /service[_\s-]?tier/i.test(msg) && /unsupported|invalid|not (?:supported|allowed|available)/i.test(msg);
+}
+
 function isTransientStreamMessage(msg: string): boolean {
   const lower = msg.toLowerCase();
   return lower.includes('overloaded') || lower.includes('try again') || lower.includes('service unavailable') || lower.includes('capacity');
@@ -337,6 +344,14 @@ export class CodexCliService {
    */
   public static readonly SESSION_ID: string =
     `natively-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`;
+
+  /**
+   * `model:tier` pairs the backend refused this run. The first refusal is
+   * retried without the tier (fetchDeltas); later requests leave it out from
+   * the start instead of paying a failed round trip each time. Per process, so
+   * a model that gains the tier picks it up again after a restart.
+   */
+  private static readonly rejectedServiceTiers = new Set<string>();
 
   /**
    * @deprecated The HTTP-direct implementation does not use a CLI binary
@@ -625,7 +640,11 @@ export class CodexCliService {
       }
     }
 
-    if (options.serviceTier && options.serviceTier !== 'default') {
+    if (
+      options.serviceTier
+      && options.serviceTier !== 'default'
+      && !CodexCliService.rejectedServiceTiers.has(`${options.model}:${options.serviceTier}`)
+    ) {
       body.service_tier = options.serviceTier;
     }
 
@@ -696,6 +715,15 @@ export class CodexCliService {
   ): AsyncGenerator<string, void, unknown> {
     let attempt = 0;
     let refreshedOnce = false;
+    // Drop a refused service tier once and send the same request again.
+    const retryWithoutServiceTier = (message: string): boolean => {
+      if (body.service_tier === undefined || !isUnsupportedServiceTierMessage(message)) return false;
+      const tier = String(body.service_tier);
+      delete body.service_tier;
+      CodexCliService.rejectedServiceTiers.add(`${body.model}:${tier}`);
+      console.warn(`[CodexCliService] ${body.model} refused service_tier "${tier}"; sending without it. (${message})`);
+      return true;
+    };
 
     while (true) {
       if (signal.aborted) {
@@ -786,17 +814,25 @@ export class CodexCliService {
         // a ChatGPT account" instead of the canned fallback.
         const text = await safeReadText(response);
         const message = extractResponsesErrorMessage(text) || `Codex upstream ${response.status}`;
+        if (retryWithoutServiceTier(message)) continue;
         throw new Error(message);
       }
 
       // Happy path: stream SSE.
       // parseSseStream may throw TransientStreamError for mid-stream
       // "overloaded" responses. Catch here to retry with backoff.
+      let yielded = false;
       try {
-        yield* this.parseSseStream(response, signal);
+        for await (const delta of this.parseSseStream(response, signal)) {
+          yielded = true;
+          yield delta;
+        }
         attempt = 0; // reset for the next request in a long-lived session
         return;
       } catch (e: any) {
+        // The same refusal can arrive as a stream error event instead of a
+        // 4xx. Only before any text: a retry after that would repeat it.
+        if (!yielded && retryWithoutServiceTier(String(e?.message ?? ''))) continue;
         if (e instanceof TransientStreamError) {
           if (attempt >= TRANSIENT_RETRY_MAX) {
             throw new Error(e.message);
