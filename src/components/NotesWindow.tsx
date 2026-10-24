@@ -137,6 +137,8 @@ const NotesWindow: React.FC<{ preview?: NotesWindowPreview }> = ({ preview }) =>
     const [level, setLevel] = useState<number | null>(null);
     const [stopsAt, setStopsAt] = useState<number | null>(null);
     const [problems, setProblems] = useState<Record<string, string>>({});
+    // Ambient AI Chat left this meeting with no audio (main: isMeetingWithoutAudio).
+    const [withoutAudio, setWithoutAudio] = useState(false);
     const [editingTitle, setEditingTitle] = useState(false);
     const [titleDraft, setTitleDraftState] = useState('');
     const [attendeeDraft, setAttendeeDraftState] = useState('');
@@ -280,7 +282,9 @@ const NotesWindow: React.FC<{ preview?: NotesWindowPreview }> = ({ preview }) =>
         const api = window.electronAPI;
         if (preview || !api) return;
         api.getTranscriptionPaused?.().then((p) => setPaused(!!p)).catch(() => {});
+        api.getMeetingAudioCapture?.().then((state) => setWithoutAudio(state?.withoutAudio === true)).catch(() => {});
         const offs = [
+            api.onMeetingAudioCapture?.((state) => setWithoutAudio(state?.withoutAudio === true)),
             api.onTranscriptionPaused?.(({ paused: p }) => setPaused(p)),
             api.onMeetingAudioLevel?.((l) => setLevel(l)),
             api.onMeetingAutoStopNotice?.((d) => setStopsAt(typeof d?.stopsAt === 'number' ? d.stopsAt : null)),
@@ -682,7 +686,9 @@ const NotesWindow: React.FC<{ preview?: NotesWindowPreview }> = ({ preview }) =>
         hits.forEach((h, i) => { const list = m.get(h.at) ?? []; list.push({ ...h, current: i === currentHit }); m.set(h.at, list); });
         return m;
     }, [hits, currentHit]);
-    const problem = Object.values(problems)[0] ?? null;
+    // No audio at all says so first: every other line is about audio that is on.
+    const problem = (withoutAudio ? 'Audio is off because Ambient AI Chat is on. Turn it off in Settings › General.' : null)
+        ?? Object.values(problems)[0] ?? null;
     // Ask open (Granola's): focused, or typed into through the hook. Closed, the answers wait behind "Continue chat".
     const askOpen = phase === 'live' && askEngaged;
     const bars = useMemo(() => (level === null || paused ? null : listeningBarHeights(level * 3.2)), [level, paused]);

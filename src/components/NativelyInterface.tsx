@@ -432,7 +432,8 @@ import ChromeFold from './overlay/ChromeFold';
 import { useOverlayTrial } from './overlay/useOverlayTrial';
 import { TrialChip, TrialNoticeBanner } from './overlay/TrialNotice';
 import { AutoStopNoticeBanner, useMeetingAutoStopNotice } from './overlay/AutoStopNotice';
-import { AmbientChatNoticeBanner, useAmbientChatMeeting } from './overlay/AmbientChatNotice';
+import { useAmbientChatMeeting } from './overlay/AmbientChatNotice';
+import { AmbientChip } from './overlay/AmbientChip';
 import { LastTimeRecapBanner, useLastTimeRecap } from './overlay/LastTimeRecapNotice';
 import type { LiveHelperAction } from '../types/assist';
 import { useMeetingMute } from './overlay/useMeetingMute';
@@ -11762,12 +11763,6 @@ Provide only the answer, nothing else.`;
               {autoStop.stopsAt !== null && <AutoStopNoticeBanner notice={autoStop} />}
               </ChromeFold>
 
-              {/* Ambient AI Chat is on: this meeting captures no audio, so
-                  nothing is transcribed (issue #679). */}
-              <ChromeFold show={ambientChat.on && !ambientChat.dismissed} overlayVisible={isExpanded} requestHeightMotion={requestChromeHeightMotion} innerClassName="pt-3 pb-1" testId="fold-ambient-chat">
-              {ambientChat.on && !ambientChat.dismissed && <AmbientChatNoticeBanner ambientChat={ambientChat} />}
-              </ChromeFold>
-
               {/* PR #173: STT Not Configured Warning Banner */}
               <ChromeFold show={sttNotConfigured && !trialExplainsNoStt} overlayVisible={isExpanded} requestHeightMotion={requestChromeHeightMotion} innerClassName="pt-3 pb-1" testId="fold-stt-not-configured">
               {sttNotConfigured && !trialExplainsNoStt && (
@@ -12752,6 +12747,13 @@ Provide only the answer, nothing else.`;
                         <SlidersHorizontal className="w-3.5 h-3.5" />
                       </button>
                     </div>
+
+                    {/* Ambient AI Chat is on: this meeting captures no audio, so
+                        nothing is transcribed (issue #679). A small pill beside
+                        settings, asked for instead of a banner. */}
+                    {ambientChat.on && (
+                      <AmbientChip title={t('Ambient AI Chat is on, so this meeting is not being heard or transcribed.')} />
+                    )}
 
                     {/* Notes: the notes window, where the user types their own notes for
                         this meeting; they go into the meeting notes at Stop. */}

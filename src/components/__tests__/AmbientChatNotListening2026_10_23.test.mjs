@@ -10,9 +10,11 @@
 //    engine change mid-meeting) and at the end, pushed on every change;
 //  - the overlay follows that, not the live setting, read on mount and at
 //    every meeting start;
-//  - while it holds, a banner says so with the way out, and Answer does not
-//    open a recording. It goes straight to What to Answer, which is where a
-//    Stop with nothing heard already goes (issue #540);
+//  - while it holds, a clear glass "Ambient" pill beside the settings button
+//    says so (a banner was turned down, 2026-10-24), the notepad's status line
+//    says so, and Answer does not open a recording. It goes straight to What
+//    to Answer, which is where a Stop with nothing heard already goes (issue
+//    #540);
 //  - main does not open the mic in such a meeting from the notepad's mic
 //    picker or on wake from sleep (both used to record the meeting anyway).
 
@@ -90,20 +92,43 @@ test('the notice follows main, not the setting: read on mount and at every meeti
   const notice = read(NOTICE);
   assert.doesNotMatch(notice, /getAmbientChatEnabled/, 'the notice reads the live setting, which can differ from this meeting');
   assert.match(notice, /getMeetingAudioCapture\?\.\(\)/, 'never read on mount');
-  const reset = between(notice, 'onSessionReset?.(', '});');
-  assert.match(reset, /read\(\)/, 'a meeting start does not re-read');
-  assert.match(reset, /setDismissed\(false\)/, 'a closed notice stays closed into the next meeting');
+  const reset = between(notice, 'onSessionReset?.(', ');');
+  assert.match(reset, /read/, 'a meeting start does not re-read');
   assert.match(notice, /onMeetingAudioCapture\?\.\(/, 'changes are not followed');
   // A read already in flight when a push lands must not overwrite the push.
   assert.match(notice, /pushes === pushesAtRead/);
   assert.match(notice, /unsubPush\?\.\(\)/, 'the push listener is never removed');
 });
 
-test('the overlay draws the notice in a fold, like the other meeting banners', () => {
+const PILL_TITLE = 'Ambient AI Chat is on, so this meeting is not being heard or transcribed.';
+
+test('the overlay shows a clear glass "Ambient" pill right after the settings button, not a banner', () => {
   const ui = read('components/NativelyInterface.tsx');
   assert.match(ui, /useAmbientChatMeeting\(\)/, 'the overlay does not use the hook');
-  assert.match(ui, /testId="fold-ambient-chat"/, 'no fold for the notice');
-  assert.match(ui, /<AmbientChatNoticeBanner\b/, 'the banner is never drawn');
+  assert.doesNotMatch(ui, /fold-ambient-chat|AmbientChatNoticeBanner/, 'the banner is back above the input');
+  const settingsIcon = ui.indexOf('<SlidersHorizontal className="w-3.5 h-3.5" />');
+  const pill = ui.indexOf('<AmbientChip ');
+  const notesIcon = ui.indexOf('<NotebookPen className="w-3.5 h-3.5" />');
+  assert.ok(settingsIcon >= 0 && pill > settingsIcon && pill < notesIcon, 'not between the settings and notes buttons');
+  assert.match(ui, /\{ambientChat\.on && \(\s*<AmbientChip title=\{t\('Ambient AI Chat is on, so this meeting is not being heard or transcribed\.'\)\} \/>\s*\)\}/);
+
+  // Clear Liquid Glass from the kit (picked over lavender glass and a dark
+  // tag): the overlay's text colour plus a small amber dot, at the toolbar's
+  // 28px.
+  const chip = read('components/overlay/AmbientChip.tsx');
+  const css = read('components/overlay/AmbientChip.css');
+  assert.match(chip, /className="ov-tone-scope lg-button lg-clear lg-sm amb-chip"/);
+  assert.match(chip, /<span className="amb-chip-dot" aria-hidden="true" \/>/);
+  assert.match(chip, /<span className="lg-label">Ambient<\/span>/);
+  assert.match(css, /\.amb-chip-dot \{[^}]*background: var\(--ovb-warning/);
+  assert.match(css, /\.lg-button\.lg-sm\.amb-chip \{[^}]*--lg-pill-h: 28px;/);
+});
+
+test('the notepad says it too, before any other audio line (the overlay is hidden there)', () => {
+  const notes = read('components/NotesWindow.tsx');
+  assert.match(notes, /api\.getMeetingAudioCapture\?\.\(\)\.then\(\(state\) => setWithoutAudio\(state\?\.withoutAudio === true\)\)/);
+  assert.match(notes, /api\.onMeetingAudioCapture\?\.\(\(state\) => setWithoutAudio\(state\?\.withoutAudio === true\)\)/);
+  assert.match(notes, /const problem = \(withoutAudio \? 'Audio is off because Ambient AI Chat is on\. Turn it off in Settings › General\.' : null\)\s*\?\? Object\.values\(problems\)\[0\] \?\? null;/);
 });
 
 test('with Ambient AI Chat on, Answer goes to What to Answer instead of recording', () => {
@@ -123,16 +148,9 @@ test('with Ambient AI Chat on, Answer goes to What to Answer instead of recordin
   assert.match(gated, /return;/, 'with Ambient AI Chat on, the recording still opens');
 });
 
-test('every string in the notice has a row in every language, and no row is left over', async () => {
-  const notice = read(NOTICE);
-  const used = [...notice.matchAll(/\bt\(\s*(?:'((?:[^'\\]|\\.)*)'|"((?:[^"\\]|\\.)*)")\s*\)/g)]
-    .map((m) => (m[1] ?? m[2]).replace(/\\'/g, "'"));
-  // The overlay's existing words, with rows of their own.
-  const own = [...new Set(used)].filter((s) => s !== 'Dismiss' && s !== 'Open Settings');
-  assert.ok(own.length >= 2, `found only ${own.length} strings: the scan is broken`);
-  for (const prop of ['title', 'message', 'dismissLabel']) {
-    assert.ok(!new RegExp(`${prop}="[A-Za-z]`).test(notice), `${prop} is a bare string`);
-  }
+test('the pill\'s tooltip has a row in every language, and no row is left over', async () => {
+  // "Ambient" itself is the setting's name, which Settings does not translate.
+  const own = [PILL_TITLE];
   const mod = await import(path.join(SRC, TABLE));
   assert.deepEqual([...mod.AMBIENT_CHAT_EN].sort(), own.sort());
   for (const [lang, table] of Object.entries({ ru: mod.AMBIENT_CHAT_RU, zh: mod.AMBIENT_CHAT_ZH, ja: mod.AMBIENT_CHAT_JA, es: mod.AMBIENT_CHAT_ES })) {
