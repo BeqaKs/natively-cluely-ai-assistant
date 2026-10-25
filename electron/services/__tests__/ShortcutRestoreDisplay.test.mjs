@@ -260,7 +260,7 @@ test(`overlay stays centered through the real show path after width and height l
   const onTop = calls.filter(call => call[0] === 'always-on-top');
   if (platform === 'win32') {
     assert.deepEqual(onTop, [['always-on-top', true, 'screen-saver']]);
-    assert.ok(calls.indexOf(onTop[0]) < calls.length - 1);
+    assert.ok(calls.indexOf(onTop[0]) < calls.findLastIndex(call => call[0] === 'native-show'));
   } else {
     assert.deepEqual(onTop, []);
   }
