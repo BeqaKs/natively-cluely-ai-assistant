@@ -517,7 +517,8 @@ const NotesWindow: React.FC<{ preview?: NotesWindowPreview }> = ({ preview }) =>
                 if (letter === 'v') {
                     api.stealthReadClipboard?.()
                         .then((text) => {
-                            if (!text || fieldRef.current !== f) return;
+                            // Not after the session ended or moved to another field.
+                            if (!text || !hookTypingRef.current || fieldRef.current !== f) return;
                             if (f === 'notes') editorRef.current?.pasteText(text);
                             else if (tf) tf.set(paste({ value: tf.get(), allSelected: false }, text).value);
                         })

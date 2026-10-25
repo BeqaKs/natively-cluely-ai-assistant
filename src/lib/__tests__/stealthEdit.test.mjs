@@ -12,7 +12,10 @@ test('recognises the four shortcuts under Cmd (macOS) and Ctrl (Windows)', () =>
   assert.equal(EDIT_MODIFIER_FLAGS, CMD | CTRL);
   for (const c of ['v', 'a', 'c', 'x', 'V']) {
     assert.equal(editShortcutLetter(key(c, CMD)), c.toLowerCase());
-    assert.equal(editShortcutLetter(key(c, CTRL | SHIFT)), c.toLowerCase());
+    assert.equal(editShortcutLetter(key(c, CTRL)), c.toLowerCase());
+    // The hooks leave Shift chords to the meeting app; the renderer agrees.
+    assert.equal(editShortcutLetter(key(c, CTRL | SHIFT)), null);
+    assert.equal(editShortcutLetter(key(c, CMD | SHIFT)), null);
   }
 });
 

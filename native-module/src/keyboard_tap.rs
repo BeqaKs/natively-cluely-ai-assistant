@@ -74,7 +74,7 @@ use napi::bindgen_prelude::*;
 
 use crate::app_chord::AppChordInput;
 use crate::edit_shortcut::{
-    edit_letter, mac_is_edit_chord, mac_is_word_delete_chord, FLAG_CMD as EDIT_FLAG_CMD,
+    mac_edit_letter, mac_is_edit_chord, mac_is_word_delete_chord, FLAG_CMD as EDIT_FLAG_CMD,
     FLAG_OPT as EDIT_FLAG_OPT,
 };
 use napi::threadsafe_function::{ThreadsafeFunction, ThreadsafeFunctionCallMode};
@@ -384,11 +384,10 @@ fn tap_callback_inner(
     // the foreground app while non-modified character keys still get routed
     // into Natively's input.
     //
-    // Trade-off: Cmd+Backspace / Cmd+A / Cmd+Enter no longer reach the
-    // renderer's switch statement. Plain Enter still submits (case 36),
-    // plain Backspace still deletes (case 51), so the typing UX is intact.
-    // Cmd+Enter as alternate submit is dropped in favor of system-shortcut
-    // sanity — net win.
+    // Trade-off: Cmd+Backspace / Cmd+Enter no longer reach the renderer.
+    // Plain Enter still submits (case 36), plain Backspace still deletes
+    // (case 51), so the typing UX is intact. The exceptions, taken below
+    // ahead of the filter: Cmd+V/A/C/X (tagged CMD) and Option+Backspace (tagged OPT).
     const CMD: u32 = 1 << 20;
     const OPT: u32 = 1 << 19;
     const CTRL: u32 = 1 << 18;
@@ -401,10 +400,10 @@ fn tap_callback_inner(
     // Keep just these four: deliver them tagged with the Cmd flag (the renderer
     // runs paste/select-all/copy/cut) and swallow the down and its up. Matched
     // on the character the layout produces, so it follows AZERTY, Dvorak and
-    // the like. Cmd alone: with Option, Control or Shift it is another
+    // the like (the ANSI position when that character is not Latin). Cmd alone: with Option, Control or Shift it is another
     // shortcut (Zoom's Cmd+Shift+A mute, Cmd+Shift+V video).
     if mac_is_edit_chord(flags) && (event_type == 10 || event_type == 11) {
-        if let Some(letter) = edit_letter(&event_unicode_string(event)) {
+        if let Some(letter) = mac_edit_letter(&event_unicode_string(event), key_code as u16) {
             send_payload_to_js(&state, CapturedKey {
                 key_code,
                 chars: letter.to_string(),

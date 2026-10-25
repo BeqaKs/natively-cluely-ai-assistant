@@ -49,13 +49,32 @@ test('the notes window runs the shortcuts before any key is typed', () => {
 test('the editor pastes through ProseMirror and acts on its drawn selection', () => {
   const editor = read('src/components/notes/NotesEditor.tsx');
   assert.match(editor, /editor\.view\.pasteText\(text\)/, 'a real paste: lines become paragraphs, no HTML parsing');
-  assert.match(editor, /editor\.commands\.selectAll\(\)/);
   assert.match(editor, /tr\.deleteSelection\(\)/);
   assert.match(editor, /isWordDelete\(key\)/);
 });
 
-test('main gives the clipboard to the windows that may type through the hook, and no other', () => {
+test('main gives the clipboard only to a running session, and only to the window that started it', () => {
   const main = read('electron/main.ts');
-  assert.match(main, /'stealth-edit:read-clipboard', \(event: any\) =>\s*typingTargetOf\(event\) \? clipboard\.readText\(\) : ''/);
-  assert.match(main, /'stealth-edit:write-clipboard', \(event: any, text: unknown\) => \{\s*if \(typingTargetOf\(event\) && typeof text === 'string'\) clipboard\.writeText\(text\);/);
+  assert.match(main, /const typingSessionOf = \(event: any\): boolean => \{\s*const target = typingTargetOf\(event\);\s*return !!target && stealth\.isActive\(\) && stealth\.getTarget\(\) === target;/);
+  assert.match(main, /'stealth-edit:read-clipboard', \(event: any\) =>\s*typingSessionOf\(event\) \? clipboard\.readText\(\) : ''/);
+  assert.match(main, /'stealth-edit:write-clipboard', \(event: any, text: unknown\) => \{\s*if \(typingSessionOf\(event\) && typeof text === 'string'\) clipboard\.writeText\(text\);/);
+});
+
+test('select all is a text selection, so a key typed over it replaces it once', () => {
+  const editor = read('src/components/notes/NotesEditor.tsx');
+  assert.match(editor, /TextSelection\.between\(Selection\.atStart\(doc\)\.\$from, Selection\.atEnd\(doc\)\.\$to\)/);
+  assert.doesNotMatch(editor, /commands\.selectAll\(\)/, 'an AllSelection stays "everything" after each edit');
+});
+
+test('word delete measures inline atoms as one character each', () => {
+  const editor = read('src/components/notes/NotesEditor.tsx');
+  assert.match(editor, /textBetween\(0, selection\.\$from\.parentOffset, undefined, '\\n'\)/);
+});
+
+test('a late paste lands only in a live session, on top of what was typed meanwhile', () => {
+  const overlay = read('src/components/NativelyInterface.tsx');
+  assert.match(overlay, /if \(!stealthTapActiveRef\.current \|\| escSuppressUntilNextActive \|\| !pastedText\(text\)\) return;/);
+  assert.match(overlay, /setInputValue\(\(prev\) => paste\(\{ value: prev, allSelected \}, text \?\? ''\)\.value\)/);
+  const page = read('src/components/NotesWindow.tsx');
+  assert.match(page, /if \(!text \|\| !hookTypingRef\.current \|\| fieldRef\.current !== f\) return;/);
 });

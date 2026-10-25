@@ -5,7 +5,7 @@ import { TaskItem, TaskList } from '@tiptap/extension-list';
 import { Placeholder } from '@tiptap/extensions';
 import { Markdown } from '@tiptap/markdown';
 import { Extension } from '@tiptap/core';
-import { Plugin, PluginKey } from '@tiptap/pm/state';
+import { Plugin, PluginKey, Selection, TextSelection } from '@tiptap/pm/state';
 import type { Node as PMNode } from '@tiptap/pm/model';
 import { Decoration, DecorationSet } from '@tiptap/pm/view';
 import { FileText, Heading1, LayoutGrid, List, ListChecks, ListOrdered, Heading2, type LucideIcon } from 'lucide-react';
@@ -311,7 +311,11 @@ export const NotesEditor = forwardRef<NotesEditorHandle, {
                     const text = selection.$from.parent.textBetween(0, selection.$from.parentOffset, '￼');
                     // Ctrl+Backspace / Ctrl+Delete (Windows), Option+Backspace (macOS):
                     // the word before the caret and the space before it, within the line.
-                    const word = isWordDelete(key) ? /\s*\S+\s*$/.exec(text) : null;
+                    // Measured with each inline atom (a line break) as one whitespace
+                    // character, so the length is the span's document size.
+                    const word = isWordDelete(key)
+                        ? /\s*\S+\s*$/.exec(selection.$from.parent.textBetween(0, selection.$from.parentOffset, undefined, '\n'))
+                        : null;
                     if (word) {
                         view.dispatch(view.state.tr.delete(end - word[0].length, end).scrollIntoView());
                         return true;
@@ -339,15 +343,20 @@ export const NotesEditor = forwardRef<NotesEditorHandle, {
             return true;
         },
         editShortcut: (letter) => {
-            if (!editor || !editor.isEditable) return null;
+            if (!editor) return null;
+            const { selection, doc } = editor.state;
             if (letter === 'a') {
-                editor.commands.selectAll();
+                // A text selection over the whole page, not an AllSelection: that
+                // one stays "everything" after an edit, so each key typed over it
+                // would replace the whole page again.
+                const all = TextSelection.between(Selection.atStart(doc).$from, Selection.atEnd(doc).$to);
+                editor.view.dispatch(editor.state.tr.setSelection(all));
                 return null;
             }
-            const { selection, doc } = editor.state;
             if (selection.empty) return null;
             const text = doc.textBetween(selection.from, selection.to, '\n');
-            if (letter === 'x') editor.view.dispatch(editor.state.tr.deleteSelection().scrollIntoView());
+            // Copy works on a read-only page too; cut needs an editable one.
+            if (letter === 'x' && editor.isEditable) editor.view.dispatch(editor.state.tr.deleteSelection().scrollIntoView());
             return text;
         },
         pasteText: (text) => {

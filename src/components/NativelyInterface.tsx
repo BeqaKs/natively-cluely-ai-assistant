@@ -259,7 +259,7 @@ import {
 import { decideStreamingHeightCommit } from '../lib/streamingHeightDecision.mjs';
 import { mergeTranscriptChunks } from '../lib/transcriptMerge.mjs';
 import { createTranscriptTailWaiter } from '../lib/answerTailWait.mjs';
-import { backspace, deleteWord, editCommand, editShortcutLetter, isWordDelete, paste, typed } from '../lib/stealthEdit.mjs';
+import { backspace, deleteWord, editCommand, editShortcutLetter, isWordDelete, paste, pastedText, typed } from '../lib/stealthEdit.mjs';
 import {
   applyWhatToAnswerNullFeedbackMessages,
   finalizeStreamingByIntentMessages,
@@ -2027,14 +2027,19 @@ const NativelyInterface: React.FC<NativelyInterfaceProps> = ({
   // "everything" is the only selection); the next keystroke replaces it. Ref for
   // the mount-only key listener, state to paint the highlight.
   const stealthAllSelectedRef = useRef(false);
+  const stealthSelectedValueRef = useRef('');
   const [stealthAllSelected, setStealthAllSelectedState] = useState(false);
   const markStealthAllSelected = useCallback((on: boolean) => {
     stealthAllSelectedRef.current = on;
+    stealthSelectedValueRef.current = on ? inputValueRef.current : '';
     setStealthAllSelectedState(on);
   }, []);
-  // A selection ends with the session, and with the text (Esc, a submit).
+  // A selection ends with the session, and with the text it covered: Esc, a
+  // submit, or any other path that puts new text in the box.
   useEffect(() => {
-    if ((!stealthTapActive || !inputValue) && stealthAllSelectedRef.current) markStealthAllSelected(false);
+    if (stealthAllSelectedRef.current && (!stealthTapActive || inputValue !== stealthSelectedValueRef.current)) {
+      markStealthAllSelected(false);
+    }
   }, [stealthTapActive, inputValue, markStealthAllSelected]);
   const stealthTapActiveRef = useRef<boolean>(false);
   const caretMirrorRef = useRef<HTMLDivElement>(null);
@@ -10880,14 +10885,12 @@ Provide only the answer, nothing else.`;
       // CONTRACT WITH RUST: keyboard_tap.rs pass-through filter (R3)
       // returns the event unmodified for ANY system-modifier key
       // (Cmd / Ctrl / Option / Fn) and for ALL F-keys, so the OS
-      // routes those normally to the foreground app. Consequence:
-      // (ev.flags & CMD) is NEVER true here, neither is OPT or CTRL.
-      // The previous round had Cmd+Enter / Cmd+Backspace / Cmd+A /
-      // Option+Backspace branches — all dead code under R3. Removed
-      // to prevent a false sense of feature support; if Rust ever
-      // changes the filter to deliver Cmd events, those branches
-      // need to be REINTRODUCED with explicit testing, not
-      // resurrected from a TODO.
+      // routes those normally to the foreground app. The exceptions
+      // (native-module/src/edit_shortcut.rs, both hooks): Cmd/Ctrl+V/A/C/X
+      // arrive tagged CMD (macOS) or CTRL (Windows), and word delete
+      // arrives as Backspace tagged OPT (macOS) or CTRL (Windows).
+      // Nothing else with a modifier reaches this listener, so there is
+      // no Cmd+Enter or Cmd+Backspace branch.
 
       // Esc handled regardless of active state (main process broadcasts
       // it BEFORE stopping the tap, so we get here while still active;
@@ -10923,9 +10926,12 @@ Provide only the answer, nothing else.`;
       if (editLetter === 'v') {
         window.electronAPI.stealthReadClipboard?.()
           .then((text) => {
-            const next = paste({ value: inputValueRef.current, allSelected: stealthAllSelectedRef.current }, text ?? '');
-            markStealthAllSelected(next.allSelected);
-            setInputValue(next.value);
+            // Not after the session ended (Esc, a submit on macOS), and on top
+            // of any keys typed while the clipboard was read.
+            if (!stealthTapActiveRef.current || escSuppressUntilNextActive || !pastedText(text)) return;
+            const allSelected = stealthAllSelectedRef.current;
+            if (allSelected) markStealthAllSelected(false);
+            setInputValue((prev) => paste({ value: prev, allSelected }, text ?? '').value);
           })
           .catch(() => {});
         return;

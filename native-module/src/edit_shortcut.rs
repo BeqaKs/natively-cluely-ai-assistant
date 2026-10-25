@@ -63,6 +63,26 @@ pub fn edit_letter(chars: &str) -> Option<&'static str> {
     }
 }
 
+/// macOS: the command letter for a keystroke, from the character the layout
+/// produces (so AZERTY and Dvorak follow their labels). When that character is
+/// not ASCII (Russian, Greek, Hebrew, Arabic layouts can give their own letter
+/// under Cmd), fall back to the ANSI key position, as Windows does through VKs:
+/// kVK_ANSI_A = 0, X = 7, C = 8, V = 9. An ASCII character never falls back, so
+/// Dvorak's "." on the V position is not taken for V; nor does a key with no
+/// character at all.
+pub fn mac_edit_letter(chars: &str, key_code: u16) -> Option<&'static str> {
+    if chars.is_ascii() {
+        return edit_letter(chars);
+    }
+    match key_code {
+        0 => Some("a"),
+        7 => Some("x"),
+        8 => Some("c"),
+        9 => Some("v"),
+        _ => None,
+    }
+}
+
 /// Windows: the command letter for a virtual-key code. Letter VKs are the
 /// uppercase ASCII codes and are already mapped through the active layout, so
 /// on AZERTY the key labelled A is VK_A wherever it sits.
@@ -86,6 +106,20 @@ mod tests {
         for c in ["b", "z", "1", "", "vv", "\u{16}", "é"] {
             assert_eq!(edit_letter(c), None, "{c:?}");
         }
+    }
+
+    #[test]
+    fn mac_letters_follow_the_layout_then_the_ansi_position() {
+        assert_eq!(mac_edit_letter("v", 9), Some("v"));
+        assert_eq!(mac_edit_letter("v", 47), Some("v"), "Dvorak: V is where QWERTY has '.'");
+        assert_eq!(mac_edit_letter(".", 9), None, "Dvorak: an ASCII character never falls back");
+        assert_eq!(mac_edit_letter("q", 0), None, "AZERTY: the A position types q");
+        assert_eq!(mac_edit_letter("\u{43c}", 9), Some("v"), "Russian: Cmd+V gives м");
+        assert_eq!(mac_edit_letter("\u{3c6}", 8), Some("c"), "Greek");
+        assert_eq!(mac_edit_letter("\u{5d4}", 7), Some("x"), "Hebrew");
+        assert_eq!(mac_edit_letter("\u{436}", 0), Some("a"));
+        assert_eq!(mac_edit_letter("\u{434}", 2), None, "a non-Latin letter elsewhere is not a shortcut");
+        assert_eq!(mac_edit_letter("", 9), None, "no character at all: not swallowed on a guess");
     }
 
     #[test]

@@ -16,9 +16,13 @@
 /** CGEventFlags bits both hooks use: Cmd (macOS), Ctrl (Windows). */
 export const EDIT_MODIFIER_FLAGS = (1 << 20) | (1 << 18);
 
+/** Shift, which the hooks leave to the meeting app (Zoom's Cmd+Shift+A / V). */
+const SHIFT_FLAG = 1 << 17;
+
 /** The command letter ('a' | 'c' | 'v' | 'x') of an editing shortcut, else null. */
 export function editShortcutLetter(ev) {
-  if (!ev || !ev.isKeyDown || !(Number(ev.flags) & EDIT_MODIFIER_FLAGS)) return null;
+  const flags = Number(ev?.flags);
+  if (!ev || !ev.isKeyDown || !(flags & EDIT_MODIFIER_FLAGS) || flags & SHIFT_FLAG) return null;
   const c = typeof ev.chars === 'string' ? ev.chars.toLowerCase() : '';
   return c === 'a' || c === 'c' || c === 'v' || c === 'x' ? c : null;
 }

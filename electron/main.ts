@@ -2038,13 +2038,18 @@ export class AppState {
       // Paste / copy / cut while typing through the hook (the hooks deliver
       // Ctrl/Cmd+V/C/X to the window being typed in). That window is never
       // focused, so the renderer's navigator.clipboard refuses; go through main.
-      // The overlay and the notes window only, the same gate as start: the
-      // clipboard can hold anything the user copied.
+      // The overlay and the notes window only, and only while a session that
+      // window started is running: the clipboard can hold anything the user
+      // copied, and a paste only ever comes from a key typed in that session.
+      const typingSessionOf = (event: any): boolean => {
+        const target = typingTargetOf(event);
+        return !!target && stealth.isActive() && stealth.getTarget() === target;
+      };
       registerStealthHandler('stealth-edit:read-clipboard', (event: any) =>
-        typingTargetOf(event) ? clipboard.readText() : '',
+        typingSessionOf(event) ? clipboard.readText() : '',
       );
       registerStealthHandler('stealth-edit:write-clipboard', (event: any, text: unknown) => {
-        if (typingTargetOf(event) && typeof text === 'string') clipboard.writeText(text);
+        if (typingSessionOf(event) && typeof text === 'string') clipboard.writeText(text);
       });
       if (process.platform === 'darwin') {
         // IME users (Pinyin, Hangul, Kanji, …) cannot compose under the tap
