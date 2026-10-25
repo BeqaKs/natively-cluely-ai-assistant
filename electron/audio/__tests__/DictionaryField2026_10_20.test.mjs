@@ -6,12 +6,12 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const REPO = path.resolve(__dirname, '../../..');
 const read = (rel) => fs.readFileSync(path.join(REPO, rel), 'utf8');
-const { isListPaste, splitEntries, mergeEntries, pasteIntoDraft } = await import(path.join(REPO, 'src/lib/dictionaryField.mjs'));
+const { isListPaste, splitEntries, mergeEntries, pasteIntoDraft } = await import(pathToFileURL(path.join(REPO, 'src/lib/dictionaryField.mjs')).href);
 
 test('splitEntries: lines, commas and semicolons; whitespace collapsed; empties dropped', () => {
     assert.deepEqual(splitEntries(' Acme ,\n\nPriya   Raman; Node.js ,, '), ['Acme', 'Priya Raman', 'Node.js']);

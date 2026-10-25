@@ -157,7 +157,7 @@ export interface AppSettings {
     // setting to disable that floor.
     browserAutoDetectCoding?: boolean;        // default true
     browserAutoAttachCoding?: boolean;        // default true
-    browserAskBeforeUnknown?: boolean;        // default true
+    browserAskBeforeUnknown?: boolean;        // default true ("Hold back unsure pages")
     browserAiClassifierEnabled?: boolean;     // default false (opt-in)
     browserAutoDetectJobDescriptions?: boolean; // default false
     browserAutoDetectDeveloperDocs?: boolean; // default false

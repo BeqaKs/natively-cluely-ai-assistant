@@ -9,7 +9,7 @@ import assert from 'node:assert/strict';
 import { createRequire } from 'node:module';
 import fs from 'node:fs';
 import path from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 
 const require = createRequire(import.meta.url);
 const HERE = path.dirname(fileURLToPath(import.meta.url));
@@ -242,7 +242,7 @@ test('calendar reminder lead time: 1, 2 or 5 minutes, 2 when unset or invalid', 
 });
 
 test('the launcher notice shows the event title or "<App> call", and whole seconds left', async () => {
-    const { offerHeadline, offerSecondsLeft } = await import(path.join(REPO, 'src/lib/meetingOfferView.mjs'));
+    const { offerHeadline, offerSecondsLeft } = await import(pathToFileURL(path.join(REPO, 'src/lib/meetingOfferView.mjs')).href);
     assert.equal(offerHeadline({ title: 'Weekly sync', app: 'Zoom' }), 'Weekly sync');
     assert.equal(offerHeadline({ title: null, app: 'Zoom' }), 'Zoom call');
     assert.equal(offerHeadline({ title: '  ', app: 'Google Meet' }), 'Google Meet call');

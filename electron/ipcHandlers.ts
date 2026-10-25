@@ -34,7 +34,8 @@ import { PHONE_THUMB_MAX_CHARS, PhoneMirrorService } from './services/PhoneMirro
 import { sanitizeContextEnvelope } from './services/browser-context/sanitize';
 import { formatEnvelopeForPrompt } from './services/browser-context/formatEnvelopeForPrompt';
 import { BrowserMetadataClassifierService } from './services/browser-context/BrowserMetadataClassifierService';
-import type { BrowserContextCategory, SafeWebsiteMetadata } from './services/browser-context/types';
+import { autoContextVerdict, buildAutoContextRequest, codingAutoAttachEnabled } from './services/browser-context/autoContextRequest';
+import type { SafeWebsiteMetadata } from './services/browser-context/types';
 import { SettingsManager } from './services/SettingsManager';
 import { RERANK_CANDIDATE_POOL, resolveRerankPoolSize } from './services/modes/rerankPool';
 import { buildRerankProbe } from './services/reranking/rerankProbe';
@@ -19953,7 +19954,13 @@ export function initializeIpcHandlers(appState: AppState): void {
         safeMeta,
         safeMeta?.hasSensitiveSignals === true,
       );
-      return { autoPolicy: decision.autoPolicy, category: decision.category };
+      // The coding switches and "Hold back unsure pages" apply to the AI path too.
+      const settings = SettingsManager.getInstance().getBrowserContextSettings();
+      const autoPolicy = autoContextVerdict(decision, {
+        codingEnabled: codingAutoAttachEnabled(settings),
+        holdBackUnsure: settings.askBeforeUnknown,
+      });
+      return { autoPolicy, category: decision.category };
     });
   }
 
@@ -20210,39 +20217,15 @@ export function initializeIpcHandlers(appState: AppState): void {
   // Smart Browser Context v2 — pre-answer auto-context pull. The renderer calls
   // this just before generating an answer; the extension auto-attaches a coding
   // page if one is in front, otherwise resolves attached:false and the answer
-  // proceeds without browser context. Honors the user's auto-attach setting.
+  // proceeds without browser context. Honors the user's auto-detect and
+  // auto-attach settings (see buildAutoContextRequest).
   safeHandle('phone-mirror:request-auto-context', async () => {
     try {
-      const settings = SettingsManager.getInstance().getBrowserContextSettings();
-      // Opted-in extra categories that should auto-attach beyond coding (their
-      // registry policy is 'ask'). The extension treats these as eligible locally
-      // (no AI needed) when their toggle is on.
-      const extraCategories: BrowserContextCategory[] = [];
-      if (settings.autoDetectJobDescriptions) extraCategories.push('job_description');
-      if (settings.autoDetectDeveloperDocs) extraCategories.push('developer_docs');
-
-      // Proceed when ANY auto path is enabled: coding auto-attach, an extra
-      // category, the opt-in AI classifier, or experimental full-page mode. All
-      // of them relax only the coding-only gate — NEVER the sensitive floor
-      // (email/chat/banking/auth stay blocked in the extension).
-      const anyEnabled =
-        settings.autoAttachCoding ||
-        settings.experimentalFullPageCapture ||
-        settings.aiClassifierEnabled ||
-        extraCategories.length > 0;
-      if (!anyEnabled) {
+      const request = buildAutoContextRequest(SettingsManager.getInstance().getBrowserContextSettings());
+      if (!request) {
         return { attached: false, reason: 'disabled' };
       }
-      return await PhoneMirrorService.getInstance().requestAutoContext({
-        // When "auto-attach coding" is OFF, tell the extension to NOT treat a
-        // high-confidence coding page as eligible — otherwise a coding page would
-        // still be captured whenever any OTHER auto path (JD/docs/AI/full-page) is
-        // on. The other paths are independent and unaffected.
-        codingEnabled: settings.autoAttachCoding,
-        fullPage: settings.experimentalFullPageCapture,
-        aiClassify: settings.aiClassifierEnabled,
-        extraCategories: extraCategories.length ? extraCategories : undefined,
-      });
+      return await PhoneMirrorService.getInstance().requestAutoContext(request);
     } catch (e: any) {
       console.error('[IPC] phone-mirror:request-auto-context error:', e);
       return { attached: false, reason: e?.message || 'failed to request auto context' };

@@ -66,6 +66,14 @@ test('the writer takes older notes, the page shows the button for them, and the 
   assert.match(persistence, /detailed\.schemaVersion !== 3 \? followUpSourceFromLegacyNotes\(detailed, details\?\.title\)/);
   const page = fs.readFileSync(path.join(REPO, 'src/components/MeetingDetails.tsx'), 'utf8');
   assert.match(page, /\{meeting\.detailedSummary && \(\s*<div className="shrink-0">\s*<LiquidGlassButton[\s\S]{0,200}onClick=\{openFollowUp\}/);
-  assert.match(page, /\{meeting\.detailedSummary && \(\(\) => \{[\s\S]{0,3000}<DialogPrimitive\.Root/);
+  // The compose sheet is rendered inside that block. Slice the block to its
+  // close rather than guess a distance: the sheet's motion and tone menu sit
+  // between its opening and the dialog, and grew past any fixed window.
+  const sheetStart = page.indexOf('{meeting.detailedSummary && (() => {');
+  assert.ok(sheetStart >= 0, 'the follow-up sheet block is still gated on detailedSummary');
+  const sheetEnd = page.indexOf('})()}', sheetStart);
+  assert.ok(sheetEnd > sheetStart, 'the follow-up sheet block closes');
+  const sheet = page.slice(sheetStart, sheetEnd);
+  assert.match(sheet, /<DialogPrimitive\.Root/);
   assert.doesNotMatch(page, /t\('Follow-up Draft'\)/);
 });
