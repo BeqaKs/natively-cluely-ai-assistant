@@ -3544,7 +3544,7 @@ export const AIProvidersSettings: React.FC<AIProvidersSettingsProps> = ({
     };
 
     // --- Local (Codex CLI) ---
-    const [codexCliConfig, setCodexCliConfig] = useState({ enabled: false, path: 'codex', model: 'gpt-5.5', timeoutMs: 60000, sandboxMode: 'read-only' as string, serviceTier: 'default', modelReasoningEffort: undefined as string | undefined });
+    const [codexCliConfig, setCodexCliConfig] = useState({ enabled: false, path: 'codex', model: 'gpt-5.6-luna', timeoutMs: 60000, sandboxMode: 'read-only' as string, serviceTier: 'default', modelReasoningEffort: undefined as string | undefined });
     // The installed Codex CLI's model list (models_cache.json); null until read.
     const [codexModelCatalog, setCodexModelCatalog] = useState<CodexModelCatalogResult | null>(null);
     const [codexModelsRefreshing, setCodexModelsRefreshing] = useState(false);

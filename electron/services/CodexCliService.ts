@@ -265,13 +265,15 @@ export interface CodexCliRunOptions {
 
 // Defaults must work with a ChatGPT sign-in (issue #558: the previous
 // gpt-5.4 / gpt-5.3-codex pair is now rejected — see
-// CHATGPT_UNSUPPORTED_CODEX_MODELS). gpt-5.5: live on 2026-09-11 it had
-// the lowest and steadiest time-to-first-token of the models that work
-// (~1.7-2.0s vs 3-10s for gpt-5.6-terra / gpt-5.6-luna).
+// CHATGPT_UNSUPPORTED_CODEX_MODELS). gpt-5.6-luna: live on 2026-10-25, after
+// the backend stopped accepting gpt-5.5 for a ChatGPT account, it had the
+// lowest and steadiest time-to-first-token of the preset models that work
+// (median 0.91 s over 3 runs vs 1.13-1.60 s for gpt-5.6-sol / gpt-5.6-terra /
+// gpt-6-astra), and the Codex CLI's own catalogue lists it.
 export const DEFAULT_CODEX_CLI_CONFIG: CodexCliConfig = {
   enabled: false,
   path: 'codex', // deprecated — kept so older settings round-trip without resetting
-  model: 'gpt-5.5',
+  model: 'gpt-5.6-luna',
   timeoutMs: 60_000,
   sandboxMode: 'read-only', // deprecated
   serviceTier: 'default',

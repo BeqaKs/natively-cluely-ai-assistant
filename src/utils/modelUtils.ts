@@ -182,22 +182,21 @@ export const CODEX_CLI_MODEL = {
  * the CLI. Also the name source for surfaces that only have a selector id
  * (getCodexCliModelDisplayName).
  *
- * gpt-5.5 / gpt-5.6-terra / gpt-5.6-luna answered a live request with a ChatGPT
- * sign-in on 2026-09-11. gpt-6-astra and gpt-5.6-sol were added for issue #573
- * (PR #591) from the provider's current list-visible models. The previous
- * gpt-5.4 / gpt-5.3-codex / gpt-5.3-codex-spark presets are rejected for a
- * ChatGPT account (CHATGPT_UNSUPPORTED_CODEX_MODELS in
+ * All five answered a live request with a ChatGPT sign-in on 2026-10-25.
+ * gpt-6-astra and gpt-5.6-sol were added for issue #573 (PR #591) from the
+ * provider's current list-visible models. gpt-5.5 (the default until then) and
+ * the earlier gpt-5.4 / gpt-5.3-codex / gpt-5.3-codex-spark presets are
+ * rejected for a ChatGPT account (CHATGPT_UNSUPPORTED_CODEX_MODELS in
  * electron/services/CodexModelCatalog.ts); a test keeps the two apart.
  *
- * Order is the list order in the picker; ChatGPT 5.5 stays first because
- * it is the default (fastest measured TTFT).
+ * Order is the list order in the picker; GPT-5.6 Luna is first because it is
+ * the default (fastest measured TTFT).
  */
 export const CODEX_CLI_MODEL_PRESETS = [
-    { id: 'gpt-5.5', name: 'ChatGPT 5.5' },
+    { id: 'gpt-5.6-luna', name: 'GPT-5.6 Luna' },
     { id: 'gpt-6-astra', name: 'GPT-6 Astra' },
     { id: 'gpt-5.6-sol', name: 'GPT-5.6 Sol' },
     { id: 'gpt-5.6-terra', name: 'GPT-5.6 Terra' },
-    { id: 'gpt-5.6-luna', name: 'GPT-5.6 Luna' },
 ];
 
 /** Result of the `codex-cli:models` IPC — CodexModelCatalog in the main process. */

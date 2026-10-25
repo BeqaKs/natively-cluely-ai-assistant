@@ -230,8 +230,9 @@ const LAST_JUDGE_RUNG_TIMEOUT_MS = 2300
 export const GEMINI_TEXT_TTFT_MS = Object.freeze({ flashLite: 2_500, flash: 5_000, pro: 10_000 })
 // Ceiling for a fast call made with no caller signal (the preferFast callers).
 const FAST_MODEL_DEFAULT_TIMEOUT_MS = 8000
-// Codex's measured first token is 1.7-2.0 s (gpt-5.5; see DEFAULT_CODEX_CLI_CONFIG),
-// before a single token of reply. A fast rung with a smaller budget cannot be
+// Codex's measured first token was 1.7-2.0 s (gpt-5.5, 2026-09-11). gpt-5.6-luna,
+// the default since gpt-5.5 was refused (see DEFAULT_CODEX_CLI_CONFIG), measured
+// 0.9-1.1 s on a one-line prompt; a real answer prompt is far longer. A fast rung with a smaller budget cannot be
 // met on Codex — the judge rung (1.8 s) and the query rewrite (1.5 s) would
 // spend their whole budget and then fall through anyway — so a Codex
 // Background Model skips them and they run their own ladders at once.
