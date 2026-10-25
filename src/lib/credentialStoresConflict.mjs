@@ -77,6 +77,7 @@ export const CREDENTIAL_KEY_LABELS = {
   azureApiKey: 'Azure Speech',
   ibmWatsonApiKey: 'IBM Watson',
   sonioxApiKey: 'Soniox',
+  qwenAsrApiKey: 'Qwen ASR',
 };
 const SPEECH_KEY_OF = { groqSttApiKey: 'Groq', openAiSttApiKey: 'OpenAI' };
 const DESCRIBED_KEY = { customEmbeddingApiKey: PHRASE.customEmbeddings, customRerankerApiKey: PHRASE.customReranker };

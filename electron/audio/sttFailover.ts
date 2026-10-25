@@ -106,6 +106,7 @@ export interface SttFailoverOptions {
 export const STT_PROVIDER_NAMES: Record<string, string> = {
     deepgram: 'Deepgram',
     soniox: 'Soniox',
+    qwen: 'Qwen ASR',
     elevenlabs: 'ElevenLabs',
     openai: 'OpenAI',
     groq: 'Groq',
