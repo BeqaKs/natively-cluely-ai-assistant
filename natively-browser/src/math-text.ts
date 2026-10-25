@@ -10,9 +10,10 @@
  *
  * `inlineFormulas` runs on a CLONE of the page before text extraction and
  * replaces each formula with the best text the page offers for it: the TeX
- * source, a TeX annotation, MathML text, or an accessible label. A formula
- * with no text at all becomes UNREADABLE_FORMULA, so the gap is visible to the
- * model and countable by the caller. The manual capture draws those formulas
+ * source, a TeX annotation or data-latex/data-tex attribute, MathML text, or
+ * an accessible label. A formula with no text at all becomes
+ * UNREADABLE_FORMULA, so the gap is visible to the model and countable by the
+ * caller. The manual capture draws those formulas
  * into an image instead (formula-sheet.ts) and marks each one with
  * formulaInImage(n), its number in that image.
  *
@@ -103,9 +104,26 @@ function oneLine(s: string | null | undefined): string {
   return (s || '').replace(/\s+/g, ' ').trim();
 }
 
+// TeX source some renderers and editors keep on the formula's element
+// (data-latex, data-tex). data-math / data-formula are also flags on some
+// sites ("true"), so they are read only on an element already known to be a
+// formula, and never make one.
+const TEX_SOURCE_ATTRS = ['data-latex', 'data-tex'];
+const TEX_SOURCE_ATTRS_IN_FORMULA = [...TEX_SOURCE_ATTRS, 'data-math', 'data-formula'];
+
+/** An attribute value that is TeX, not an on/off flag. */
+function texSource(el: MathNode, names: string[]): string {
+  for (const name of names) {
+    const v = oneLine(attr(el, name));
+    if (v && !/^(true|false|yes|no|on|off|[01])$/i.test(v)) return v;
+  }
+  return '';
+}
+
 function isContainer(el: MathNode): boolean {
   const t = tag(el);
   if (t === 'math' || t === 'mjx-container') return true;
+  if (texSource(el, TEX_SOURCE_ATTRS)) return true;
   const cls = attr(el, 'class');
   if (!cls) return false;
   return cls.split(/\s+/).some((c) => CONTAINER_CLASSES.has(c));
@@ -266,6 +284,9 @@ function formulaText(el: MathNode, sources: Map<string, { type: string; text: st
   );
   const annotated = oneLine(annotation?.textContent);
   if (annotated) return tex(annotated);
+
+  const withSource = find(el, (n) => !!texSource(n, TEX_SOURCE_ATTRS_IN_FORMULA));
+  if (withSource) return tex(texSource(withSource, TEX_SOURCE_ATTRS_IN_FORMULA));
 
   const alt = find(el, (n) => tag(n) === 'math' && !!attr(n, 'alttext'));
   if (alt) return tex(attr(alt, 'alttext'));

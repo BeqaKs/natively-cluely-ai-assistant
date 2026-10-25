@@ -228,6 +228,29 @@ describe('formulas whose text the page does provide', () => {
     assert.match(r.text, /Area \$\{\\displaystyle \\pi r\^\{2\}\}\$\./);
   });
 
+  // From PR #678 (nero-harsh): formula source kept in data attributes.
+  test('data-latex / data-tex on the formula element → the TeX', () => {
+    const r = extractBody(
+      `<p>Bounds <span data-latex="1 \\le n \\le 10^5"><svg><path d="M1"></path></svg></span> and ` +
+        `<span data-tex="k &lt; n"><svg><path d="M1"></path></svg></span>.</p>`,
+    );
+    assert.match(r.text, /Bounds \$1 \\le n \\le 10\^5\$ and \$k < n\$\./);
+    assert.equal(r.unreadableFormulas, 0);
+  });
+
+  test('data-math / data-formula are read inside a formula, never as a formula of their own', () => {
+    const r = extractBody(
+      `<p>A <span class="MathJax_SVG" data-math="x^2"><svg><path d="M1"></path></svg></span>.</p>` +
+        `<div data-math="true"><p>Given an array of n integers, return the sum.</p></div>` +
+        `<div data-formula="a + b"><p>Read two numbers.</p></div>` +
+        `<p>B <span data-latex="true"><svg><path d="M1"></path></svg></span>.</p>`,
+    );
+    assert.match(r.text, /A \$x\^2\$\./);
+    assert.match(r.text, /Given an array of n integers, return the sum\./);
+    assert.match(r.text, /Read two numbers\./);
+    assert.doesNotMatch(r.text, /\$true\$|a \+ b/);
+  });
+
   test('MathJax 3 CommonHTML with nothing readable → marked unreadable', () => {
     const r = extractBody(`<p>Then <mjx-container class="MathJax" jax="CHTML"><mjx-math><mjx-mi><mjx-c class="mjx-c1D45B"></mjx-c></mjx-mi></mjx-math></mjx-container>.</p>`);
     assert.match(r.text, /Then \[formula not captured\]\./);
