@@ -130,16 +130,23 @@ export class QwenRealtimeSTT extends EventEmitter {
         this.socket = ws;
         this.ready = false;
 
+        // terminate() below raises a second, generic error for the same refusal;
+        // reported, it would turn main's 'failed' back into 'reconnecting'.
+        let refused = false;
         ws.on('unexpected-response', (_request, response) => {
-            if (response.statusCode === 401 || response.statusCode === 403) {
-                this.terminalFailure = true;
-            }
+            refused = true;
+            const status = response.statusCode ?? 0;
+            const keyRefused = status === 401 || status === 403;
+            if (keyRefused) this.terminalFailure = true;
             if (this.active && this.socket === ws) {
-                // response.status lets sttFailover's isTerminalSttError see a refused key.
-                const error = Object.assign(new Error(`Qwen ASR returned HTTP ${response.statusCode}`), {
-                    response: { status: response.statusCode },
-                });
-                this.emit('error', error);
+                // main.ts shows `${status} ${statusText}`; "authentication" makes a
+                // 403 terminal too, in main and in sttFailover's isTerminalSttError.
+                const message = keyRefused
+                    ? `Qwen ASR authentication failed (HTTP ${status})`
+                    : `Qwen ASR returned HTTP ${status}`;
+                this.emit('error', Object.assign(new Error(message), {
+                    response: { status, statusText: response.statusMessage ?? '' },
+                }));
             }
             ws.terminate();
         });
@@ -184,7 +191,7 @@ export class QwenRealtimeSTT extends EventEmitter {
         });
 
         ws.on('error', (error) => {
-            if (this.active) this.emit('error', error);
+            if (this.active && !refused) this.emit('error', error);
         });
 
         ws.on('close', () => {

@@ -68,6 +68,9 @@ test('language: auto and unsupported languages send no hint; French sends fr', (
   assert.equal(stt.language, undefined);
   stt.setRecognitionLanguage('french');
   assert.equal(stt.language, 'fr');
+  stt.setRecognitionLanguage('greek'); // a real key, but not one Qwen transcribes
+  assert.equal(stt.language, undefined);
+  stt.setRecognitionLanguage('french');
   stt.setRecognitionLanguage('no-such-language');
   assert.equal(stt.language, undefined);
 });
