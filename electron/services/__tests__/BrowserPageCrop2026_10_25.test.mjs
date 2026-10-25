@@ -149,8 +149,10 @@ describe('computePageCrop', () => {
 
 describe('croppedImagePathFor', () => {
   test('a sibling -page path that keeps the extension', () => {
-    assert.equal(croppedImagePathFor('/a/b/shot.png'), '/a/b/shot-page.png');
-    assert.equal(croppedImagePathFor('/a/b/shot'), '/a/b/shot-page.png');
+    // path.join uses the platform separator (`\` on Windows).
+    const dir = path.join(path.sep, 'a', 'b');
+    assert.equal(croppedImagePathFor(path.join(dir, 'shot.png')), path.join(dir, 'shot-page.png'));
+    assert.equal(croppedImagePathFor(path.join(dir, 'shot')), path.join(dir, 'shot-page.png'));
   });
 });
 

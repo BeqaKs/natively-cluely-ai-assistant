@@ -19,7 +19,8 @@ const REPO = path.resolve(__dirname, '../../..');
 const require = createRequire(import.meta.url);
 const Module = require('node:module');
 const dist = (p) => path.join(REPO, 'dist-electron/electron', p);
-const src = (p) => fs.readFileSync(path.join(REPO, p), 'utf8');
+// LF everywhere: premium/ has no .gitattributes, so Windows checks it out CRLF.
+const src = (p) => fs.readFileSync(path.join(REPO, p), 'utf8').replace(/\r\n/g, '\n');
 
 // A stand-in `electron` so the bundle loads outside an app (it only needs these at import).
 const realLoad = Module._load;

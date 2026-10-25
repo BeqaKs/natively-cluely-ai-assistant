@@ -116,6 +116,24 @@ export const localLanguageAvailable = async (language: VerifyLanguage): Promise<
 
 interface RawRun { stdout: string; stderr: string; code: number | null; signal: NodeJS.Signals | null; timedOut: boolean; oversized: boolean; ms: number; }
 
+/**
+ * Minimal, scrubbed environment: keep only PATH, and point every per-user and
+ * temp dir at the throwaway `cwd`, so no secret/API key the main process holds
+ * reaches model code and nothing it writes outlives the run.
+ *   POSIX: HOME + TMPDIR.
+ *   Windows: tools read USERPROFILE / LOCALAPPDATA / APPDATA and TEMP / TMP
+ *          instead (Go puts its build cache in %LocalAppData% and refuses to
+ *          build without it).
+ */
+export const sandboxEnv = (cwd: string, platform: NodeJS.Platform = process.platform): NodeJS.ProcessEnv => ({
+  PATH: process.env.PATH,
+  HOME: cwd,
+  TMPDIR: cwd,
+  ...(platform === 'win32'
+    ? { USERPROFILE: cwd, LOCALAPPDATA: cwd, APPDATA: cwd, TEMP: cwd, TMP: cwd }
+    : {}),
+});
+
 // Spawn the interpreter (`argv` = [cmd, ...prefixArgs]) on `scriptPath`, feeding
 // the case via the TC env var.
 const spawnOnce = (argv: string[], scriptPath: string, cwd: string, tcJson: string): Promise<RawRun> =>
@@ -127,12 +145,8 @@ const spawnOnce = (argv: string[], scriptPath: string, cwd: string, tcJson: stri
     let oversized = false;
     let settled = false;
 
-    // Minimal, scrubbed environment: keep only PATH + a temp dir, drop every
-    // secret/API key the main process holds.
     const env: NodeJS.ProcessEnv = {
-      PATH: process.env.PATH,
-      HOME: cwd,
-      TMPDIR: cwd,
+      ...sandboxEnv(cwd),
       [TC_ENV]: tcJson,
       // Python: don't write .pyc, force UTF-8; Node: cap old-space modestly.
       PYTHONDONTWRITEBYTECODE: '1',
@@ -264,7 +278,7 @@ const spawnCmd = (cmd: string, args: string[], cwd: string, timeoutMs: number, s
   new Promise<RawRun>(resolve => {
     const start = Date.now();
     let stdout = '', stderr = '', timedOut = false, oversized = false, settled = false;
-    const env: NodeJS.ProcessEnv = { PATH: process.env.PATH, HOME: cwd, TMPDIR: cwd };
+    const env = sandboxEnv(cwd);
     let stdinFd: number | undefined;
     if (stdinPath) { try { stdinFd = fs.openSync(stdinPath, 'r'); } catch { /* fall back to ignore */ } }
     let child: ReturnType<typeof spawn>;
@@ -468,7 +482,8 @@ const runGoCase = async (code: string, entry: string, tc: TestCase): Promise<Run
     tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'natively-verify-'));
     const srcPath = path.join(tmpDir, 'main.go');
     fs.writeFileSync(srcPath, program, { encoding: 'utf8' });
-    // GOCACHE/HOME land in the throwaway temp dir (spawnCmd sets HOME/TMPDIR=cwd);
+    // GOCACHE/HOME land in the throwaway temp dir (sandboxEnv: HOME, or
+    // LOCALAPPDATA on Windows);
     // `go run` compiles + runs in one process we group-kill on timeout.
     const run = await spawnCmd('go', ['run', srcPath], tmpDir, GO_RUN_TIMEOUT_MS);
     if (run.timedOut) return { case: tc, status: 'error', stdout: trunc(run.stdout), error: `timed out after ${GO_RUN_TIMEOUT_MS}ms`, ms: run.ms };
