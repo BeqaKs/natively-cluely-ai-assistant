@@ -7,6 +7,7 @@ import {
   Code,
   Copy,
   Check,
+  Crop,
   Globe,
   HelpCircle,
   History,
@@ -1512,6 +1513,16 @@ const NativelyInterface: React.FC<NativelyInterfaceProps> = ({
   // looked broken ("Screenshot attached" with no explanation, 2026-08-18).
   const [captureFallback, setCaptureFallback] = useState<
     import('../types/electron').PageCaptureFallbackNotice & { at: number } | null
+  >(null);
+
+  // #647 Problem A: the last screenshot answer came back as an assessment
+  // refusal and was retried with the capture cropped to the browser's page
+  // area. `refusalRetry.cropped` says a crop was made and the banner below
+  // suggests a selective screenshot; `improved` says the retry answered and
+  // the banner's "Answer re-asked" line tells the user the answer they see
+  // is the retried one.
+  const [refusalRetryNotice, setRefusalRetryNotice] = useState<
+    { at: number; cropped: boolean; improved: boolean } | null
   >(null);
 
   // The structured capture (Smart Browser Context v2) that arrived with the last
@@ -8304,6 +8315,11 @@ const NativelyInterface: React.FC<NativelyInterfaceProps> = ({
       setLatestVisionProviderUsed(result.visionProviderUsed);
       setLatestVisionModelUsed(result.visionModelUsed);
       setLatestVisionFailureReason(result.visionFailureReason);
+      // #647 Problem A: an assessment refusal was retried with the capture
+      // cropped to the browser's page area. The banner says what happened
+      // and suggests the selective screenshot for next time; the retried
+      // answer has already replaced the refusal in `result.answer`.
+      setRefusalRetryNotice(result.refusalRetry ? { ...result.refusalRetry, at: Date.now() } : null);
       if (result.answer == null) {
         // A quiet note, not a sentence at reading size where an answer would
         // be: main's own reason when it gives one, ours otherwise.
@@ -11754,6 +11770,27 @@ Provide only the answer, nothing else.`;
                   message={captureFallback.detail}
                   onDismiss={() => setCaptureFallback(null)}
                   dismissLabel={t('Dismiss page capture notice')}
+                />
+              )}
+              </ChromeFold>
+
+              {/* #647 Problem A: the screenshot answer came back as an
+                  assessment refusal and was retried with the capture cropped
+                  to the browser's page area. Warning tone: the answer the
+                  user sees is degraded, and the selective screenshot
+                  (⌘/Ctrl+Shift+H) is the way around it. */}
+              <ChromeFold show={!!refusalRetryNotice} overlayVisible={isExpanded} requestHeightMotion={requestChromeHeightMotion} innerClassName="pt-3 pb-1" testId="fold-refusal-retry">
+              {refusalRetryNotice && (
+                <OverlayBanner
+                  className="mx-4"
+                  tone="warning"
+                  icon={<Crop strokeWidth={2.2} />}
+                  title={t('Answer was retried without the browser border')}
+                  message={refusalRetryNotice.improved
+                    ? t('The screenshot included the browser border, which can read as a live test. Answer re-asked with just the page. Next time, crop out the browser with a selective screenshot.')
+                    : t('The screenshot included the browser border, which can read as a live test. Next time, crop out the browser with a selective screenshot.')}
+                  onDismiss={() => setRefusalRetryNotice(null)}
+                  dismissLabel={t('Dismiss')}
                 />
               )}
               </ChromeFold>

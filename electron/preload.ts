@@ -533,6 +533,8 @@ interface ElectronAPI {
     ocrTextLength?: number;
     imageCount?: number;
     usedImageInput?: boolean;
+    /** #647 Problem A: the screenshot answer was an assessment refusal that was retried with the capture cropped to the browser's page area. */
+    refusalRetry?: { cropped: boolean; improved: boolean };
   }>;
   startDirectAssist: (
     request: DirectAssistRequest,
