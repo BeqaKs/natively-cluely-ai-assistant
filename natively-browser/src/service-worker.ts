@@ -2,8 +2,10 @@
  * Background service worker — the ONLY component that holds the pairing token
  * and talks to the desktop loopback `/dom` endpoint.
  *
- * Flow per capture (one user gesture = one POST; the desktop read-and-clears,
- * so we must never auto-push or stream):
+ * Flow per capture (one intent = one POST; the desktop read-and-clears, so we
+ * never push on navigation or stream). An intent is a hotkey, a popup click, or
+ * the desktop's `request-auto-context` for What to answer, which posts only an
+ * eligible page (see captureAutoContext):
  *
  *   hotkey / popup button
  *        -> ensure pairing exists

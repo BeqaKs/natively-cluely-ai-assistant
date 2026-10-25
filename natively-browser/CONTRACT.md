@@ -99,7 +99,7 @@ The `/dom` POST body gains optional `reqId` (correlation) and `meta:{title,url,s
 - **The desktop READS-AND-CLEARS** `window.lastCapturedDOM` on each "What to say".
   Therefore the extension pushes **exactly once per user intent**: one hotkey
   press, one popup "Capture" click, or one `request-auto-context` the desktop
-  sends when the user asks for an answer (eligible pages only, see the README's
+  sends when the user asks What to answer (eligible pages only, see the README's
   "Automatic context"; coding auto-attach is on by default). It NEVER pushes page
   content on navigation and NEVER streams it. The other thing sent without a click
   is the `meeting-tabs` list above (meeting keys and tab titles, no content), and
