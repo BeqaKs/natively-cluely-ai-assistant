@@ -15,6 +15,28 @@
 pub const FLAG_CTRL: u32 = 1 << 18;
 pub const FLAG_OPT: u32 = 1 << 19;
 pub const FLAG_CMD: u32 = 1 << 20;
+pub const FLAG_SHIFT: u32 = 1 << 17;
+
+const MAC_CHORD_MASK: u32 = FLAG_CMD | FLAG_OPT | FLAG_CTRL | FLAG_SHIFT;
+
+/// macOS: the editing letters are taken with Cmd alone. With Shift they belong
+/// to the meeting app: Zoom's Cmd+Shift+A mutes and Cmd+Shift+V starts video,
+/// and the tap has no app-chord match ahead of this to keep them.
+pub fn mac_is_edit_chord(flags: u32) -> bool {
+    flags & MAC_CHORD_MASK == FLAG_CMD
+}
+
+/// macOS: word delete is Option+Backspace, Option alone.
+pub fn mac_is_word_delete_chord(flags: u32) -> bool {
+    flags & MAC_CHORD_MASK == FLAG_OPT
+}
+
+/// Windows: the editing letters and word delete are taken with Ctrl alone.
+/// Not with Alt (AltGr text is Ctrl+Alt) and not with Shift, which leaves
+/// Ctrl+Shift shortcuts to the meeting app as before.
+pub fn windows_is_edit_chord(ctrl: bool, alt: bool, shift: bool) -> bool {
+    ctrl && !alt && !shift
+}
 
 /// Windows word-delete trigger VKs: Backspace (0x08) and Delete (0x2E). Both map
 /// to the overlay's single backward "delete last word" because the box has no
@@ -82,6 +104,32 @@ mod tests {
         assert_eq!(FLAG_CTRL, 0x40000);
         assert_eq!(FLAG_OPT, 0x80000);
         assert_eq!(FLAG_CMD, 0x100000);
+        assert_eq!(FLAG_SHIFT, 0x20000);
+    }
+
+    #[test]
+    fn mac_chords_take_the_modifier_alone() {
+        const CAPS: u32 = 1 << 16;
+        const FN: u32 = 1 << 23;
+        assert!(mac_is_edit_chord(FLAG_CMD));
+        assert!(mac_is_edit_chord(FLAG_CMD | CAPS), "Caps Lock does not count");
+        assert!(mac_is_edit_chord(FLAG_CMD | FN));
+        assert!(!mac_is_edit_chord(FLAG_CMD | FLAG_SHIFT), "Cmd+Shift+A/V are Zoom's mute and video");
+        assert!(!mac_is_edit_chord(FLAG_CMD | FLAG_OPT));
+        assert!(!mac_is_edit_chord(FLAG_CMD | FLAG_CTRL));
+        assert!(!mac_is_edit_chord(0));
+        assert!(mac_is_word_delete_chord(FLAG_OPT));
+        assert!(!mac_is_word_delete_chord(FLAG_OPT | FLAG_SHIFT));
+        assert!(!mac_is_word_delete_chord(FLAG_CMD), "Cmd+Backspace is delete-to-line-start");
+        assert!(!mac_is_word_delete_chord(FLAG_OPT | FLAG_CTRL));
+    }
+
+    #[test]
+    fn windows_chords_take_ctrl_alone() {
+        assert!(windows_is_edit_chord(true, false, false));
+        assert!(!windows_is_edit_chord(true, false, true), "Ctrl+Shift stays with the meeting app");
+        assert!(!windows_is_edit_chord(true, true, false), "AltGr (Ctrl+Alt) is text");
+        assert!(!windows_is_edit_chord(false, false, false));
     }
 
     #[test]

@@ -11,6 +11,7 @@ import { Decoration, DecorationSet } from '@tiptap/pm/view';
 import { FileText, Heading1, LayoutGrid, List, ListChecks, ListOrdered, Heading2, type LucideIcon } from 'lucide-react';
 import { SLASH_ITEMS, findMatchRanges, slashEntries, slashQuery, stepMatch, type SlashCommand, type SlashEntry } from './notesEditorModel';
 import { NOTE_TEMPLATES, quickNoteTemplates } from '../../../electron/services/meeting/noteTemplates';
+import { isWordDelete } from '../../lib/stealthEdit.mjs';
 
 /**
  * The notepad's page (2026-10-20), on Granola's editor: Tiptap with headings,
@@ -27,14 +28,19 @@ import { NOTE_TEMPLATES, quickNoteTemplates } from '../../../electron/services/m
  * each key at the selection, through the same input rules and Enter /
  * Backspace keymaps a focused editor uses; a click sets the selection (and a
  * drag extends it) without taking focus, and a drawn caret and selection show
- * where the keys go, since the page has no focus to draw its own.
+ * where the keys go, since the page has no focus to draw its own. Ctrl/Cmd+V,
+ * A, C and X act on that selection through `editShortcut` and `pasteText`.
  */
 
-export interface TypedKey { keyCode: number; chars: string; isKeyDown: boolean }
+export interface TypedKey { keyCode: number; chars: string; isKeyDown: boolean; flags?: number }
 
 export interface NotesEditorHandle {
     /** One key from the keyboard hook. Returns whether it was used. */
     typeKey: (key: TypedKey) => boolean;
+    /** Ctrl/Cmd+A, C or X from the hook: the text to put on the clipboard, if any. */
+    editShortcut: (letter: 'a' | 'c' | 'x') => string | null;
+    /** Ctrl/Cmd+V from the hook: paste plain text at the selection, as a real paste does. */
+    pasteText: (text: string) => boolean;
     /** The selection's text, else the line the caret is on, with its range. */
     shortenTarget: () => { text: string; from: number; to: number } | null;
     /** Replace a range with plain text, if it still reads `expected`. */
@@ -303,6 +309,13 @@ export const NotesEditor = forwardRef<NotesEditorHandle, {
                 if (selection.empty && selection.$from.parentOffset > 0) {
                     const end = selection.from;
                     const text = selection.$from.parent.textBetween(0, selection.$from.parentOffset, '￼');
+                    // Ctrl+Backspace / Ctrl+Delete (Windows), Option+Backspace (macOS):
+                    // the word before the caret and the space before it, within the line.
+                    const word = isWordDelete(key) ? /\s*\S+\s*$/.exec(text) : null;
+                    if (word) {
+                        view.dispatch(view.state.tr.delete(end - word[0].length, end).scrollIntoView());
+                        return true;
+                    }
                     // One character, a whole surrogate pair included.
                     const width = /[\uDC00-\uDFFF]$/.test(text) && text.length > 1 ? 2 : 1;
                     view.dispatch(view.state.tr.delete(end - width, end).scrollIntoView());
@@ -324,6 +337,22 @@ export const NotesEditor = forwardRef<NotesEditorHandle, {
             const handled = view.someProp('handleTextInput', (f) => f(view, from, to, chars, () => view.state.tr.insertText(chars, from, to)));
             if (!handled) view.dispatch(view.state.tr.insertText(chars, from, to).scrollIntoView());
             return true;
+        },
+        editShortcut: (letter) => {
+            if (!editor || !editor.isEditable) return null;
+            if (letter === 'a') {
+                editor.commands.selectAll();
+                return null;
+            }
+            const { selection, doc } = editor.state;
+            if (selection.empty) return null;
+            const text = doc.textBetween(selection.from, selection.to, '\n');
+            if (letter === 'x') editor.view.dispatch(editor.state.tr.deleteSelection().scrollIntoView());
+            return text;
+        },
+        pasteText: (text) => {
+            if (!editor || !editor.isEditable || !text) return false;
+            return editor.view.pasteText(text);
         },
         shortenTarget: () => {
             if (!editor) return null;

@@ -9,6 +9,8 @@
   - The notes window: "- " lines continue on Enter.
 */
 
+import { deleteWord, editShortcutLetter, isWordDelete } from '../../lib/stealthEdit.mjs';
+
 export interface SourceLine {
     speaker: string;
     text: string;
@@ -211,17 +213,25 @@ export function continueListOnEnter(value: string, selStart: number, selEnd: num
  * which types without the window ever taking focus, as the overlay's input
  * does. The page has no caret then, so text goes at the end: Return is a new
  * line (continuing a point, as typed Enter does), Backspace takes the last
- * character, anything with characters is added. Keys use the hook's macOS
+ * character (the last word with Ctrl, or Option on macOS), anything with
+ * characters is added. Keys use the hook's macOS
  * codes on both platforms (36 Return, 76 numpad Enter, 51 Backspace); Esc and
  * the arrows never get here as text (main ends the session on Esc; the hook
  * passes arrows to the meeting app). Returns null when the key changes nothing.
  */
-export function applyTypedKeyAtEnd(value: string, key: { keyCode: number; chars: string; isKeyDown: boolean }): string | null {
+export function applyTypedKeyAtEnd(value: string, key: { keyCode: number; chars: string; isKeyDown: boolean; flags?: number }): string | null {
     if (!key.isKeyDown) return null;
+    // Ctrl/Cmd+V/A/C/X arrive as their letter with the modifier flag; they are
+    // commands (NotesWindow.tsx runs paste), never text.
+    if (editShortcutLetter(key)) return null;
     if (key.keyCode === 36 || key.keyCode === 76) {
         return continueListOnEnter(value, value.length, value.length)?.value ?? `${value}\n`;
     }
-    if (key.keyCode === 51) return value.length > 0 ? value.slice(0, -1) : null;
+    if (key.keyCode === 51) {
+        if (value.length === 0) return null;
+        // Ctrl+Backspace / Ctrl+Delete (Windows), Option+Backspace (macOS).
+        return isWordDelete(key) ? deleteWord({ value, allSelected: false }).value : value.slice(0, -1);
+    }
     if (key.keyCode === 53) return null;
     const chars = key.chars;
     if (!chars || chars === '\r' || chars === '\n' || chars === '\t') return null;

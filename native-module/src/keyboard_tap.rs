@@ -73,7 +73,10 @@ use std::thread;
 use napi::bindgen_prelude::*;
 
 use crate::app_chord::AppChordInput;
-use crate::edit_shortcut::{edit_letter, FLAG_CMD as EDIT_FLAG_CMD, FLAG_OPT as EDIT_FLAG_OPT};
+use crate::edit_shortcut::{
+    edit_letter, mac_is_edit_chord, mac_is_word_delete_chord, FLAG_CMD as EDIT_FLAG_CMD,
+    FLAG_OPT as EDIT_FLAG_OPT,
+};
 use napi::threadsafe_function::{ThreadsafeFunction, ThreadsafeFunctionCallMode};
 
 use core_foundation::base::CFRelease;
@@ -398,8 +401,9 @@ fn tap_callback_inner(
     // Keep just these four: deliver them tagged with the Cmd flag (the renderer
     // runs paste/select-all/copy/cut) and swallow the down and its up. Matched
     // on the character the layout produces, so it follows AZERTY, Dvorak and
-    // the like. Not with Option or Control, which are other shortcuts.
-    if (flags & CMD) != 0 && (flags & (OPT | CTRL)) == 0 && (event_type == 10 || event_type == 11) {
+    // the like. Cmd alone: with Option, Control or Shift it is another
+    // shortcut (Zoom's Cmd+Shift+A mute, Cmd+Shift+V video).
+    if mac_is_edit_chord(flags) && (event_type == 10 || event_type == 11) {
         if let Some(letter) = edit_letter(&event_unicode_string(event)) {
             send_payload_to_js(&state, CapturedKey {
                 key_code,
@@ -417,10 +421,10 @@ fn tap_callback_inner(
     // Option+Backspace deletes the previous word in the overlay box — the macOS
     // idiom (Cmd+Backspace is delete-to-line-start, a different action). Deliver
     // the Backspace keycode (51 = kVK_Delete) tagged with the Option flag so the
-    // renderer runs deleteWord() instead of a one-char backspace. Only Option,
-    // never Cmd/Ctrl, so it cannot shadow another shortcut. Swallow down and up
+    // renderer runs deleteWord() instead of a one-char backspace. Option alone,
+    // never with Cmd/Ctrl/Shift, so it cannot shadow another shortcut. Swallow down and up
     // (return null) so the foreground app never sees it, like the Cmd edit keys.
-    if key_code == 51 && (flags & OPT) != 0 && (flags & (CMD | CTRL)) == 0 && (event_type == 10 || event_type == 11) {
+    if key_code == 51 && mac_is_word_delete_chord(flags) && (event_type == 10 || event_type == 11) {
         send_payload_to_js(&state, CapturedKey {
             key_code: 51,
             chars: String::new(),

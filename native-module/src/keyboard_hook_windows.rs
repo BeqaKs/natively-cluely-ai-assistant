@@ -62,7 +62,9 @@ use std::sync::{Arc, Mutex};
 use std::thread;
 use std::time::Duration;
 
-use crate::edit_shortcut::{windows_vk_is_word_delete, windows_vk_letter, FLAG_CTRL as EDIT_FLAG_CTRL};
+use crate::edit_shortcut::{
+    windows_is_edit_chord, windows_vk_is_word_delete, windows_vk_letter, FLAG_CTRL as EDIT_FLAG_CTRL,
+};
 use crate::app_chord::{
     app_chords_from_inputs, match_app_chord, AppChord, AppChordInput, MOD_ALT, MOD_CTRL, MOD_SHIFT,
 };
@@ -369,9 +371,10 @@ unsafe fn keyboard_hook_inner(code: i32, wparam: WPARAM, lparam: LPARAM) -> LRES
     // made Ctrl+V paste into the meeting app instead of the overlay being typed
     // in. Keep just these four: deliver them tagged with the Ctrl flag (the
     // renderer runs paste/select-all/copy/cut) and swallow the down and its up,
-    // like an app chord. App chords matched above still win. Not with Alt, so
-    // AltGr text is untouched.
-    if is_key_down && ctrl && !alt {
+    // like an app chord. App chords matched above still win. Ctrl alone: not
+    // with Alt, so AltGr text is untouched, and not with Shift, so Ctrl+Shift
+    // shortcuts still reach the meeting app.
+    if is_key_down && windows_is_edit_chord(ctrl, alt, modifier_held(VK_SHIFT)) {
         // Ctrl+Backspace / Ctrl+Delete → delete the previous word in the overlay
         // box. Delivered as Backspace (mac keycode 51, which the renderer's
         // switch keys off) tagged with the Ctrl flag so the renderer runs

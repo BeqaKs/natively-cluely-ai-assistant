@@ -5,6 +5,7 @@ import { useResolvedTheme } from '../hooks/useResolvedTheme';
 import { applyTypedKeyAtEnd, plainAnswerText } from './meeting/notesView';
 import { useLastTimeRecap } from './assist/useLastTimeRecap';
 import { shouldBlockFocus, shouldFireStealthTapStart } from '../lib/overlayStealthFocusGuards.mjs';
+import { editShortcutLetter, paste } from '../lib/stealthEdit.mjs';
 import { NotesEditor, type NotesEditorHandle } from './notes/NotesEditor';
 import { NotesHeading, type FolderChoice, type HeadingInfo } from './notes/NotesHeading';
 import { NotesEnhanced, type NotesEnhancedHandle } from './notes/NotesEnhanced';
@@ -506,6 +507,27 @@ const NotesWindow: React.FC<{ preview?: NotesWindowPreview }> = ({ preview }) =>
         const offKey = api.onStealthKeyCaptured((ev) => {
             if (!hookTypingRef.current) return;
             const f = fieldRef.current;
+            // Ctrl/Cmd+V/A/C/X: the hooks keep these from the meeting app and
+            // deliver them here as their letter; never typed as text. The notes
+            // have a selection to act on; the one-line fields have no caret, so
+            // they only take a paste, at the end.
+            const letter = editShortcutLetter(ev);
+            if (letter) {
+                const tf = f === 'notes' ? null : textFields.current[f];
+                if (letter === 'v') {
+                    api.stealthReadClipboard?.()
+                        .then((text) => {
+                            if (!text || fieldRef.current !== f) return;
+                            if (f === 'notes') editorRef.current?.pasteText(text);
+                            else if (tf) tf.set(paste({ value: tf.get(), allSelected: false }, text).value);
+                        })
+                        .catch(() => {});
+                } else if (f === 'notes') {
+                    const copied = editorRef.current?.editShortcut(letter);
+                    if (copied) api.stealthWriteClipboard?.(copied).catch(() => {});
+                }
+                return;
+            }
             if (f === 'notes') {
                 editorRef.current?.typeKey(ev);
                 return;
