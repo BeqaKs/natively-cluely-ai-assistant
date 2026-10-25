@@ -47,19 +47,22 @@ is already waiting. Typed chat messages and the other quick actions do not ask.
 The extension classifies the page inside the tab and only extracts and sends its
 content when the page is eligible:
 
-- a coding problem page it recognises with high confidence (**Auto-attach coding
-  context**, on by default);
+- a coding problem page it recognises with high confidence (**Auto-detect coding
+  problems** and **Auto-attach coding context**, both on by default);
 - a job description or developer docs page, if you turned those categories on
   (off by default);
 - a page the optional AI page classifier approves from its title and URL metadata
-  (off by default);
+  (off by default). It follows the two coding switches above, and with **Hold back
+  unsure pages** on (the default) a page it is not sure is a coding problem is left
+  for you to capture;
 - any page that is not sensitive, if you turned on the experimental **Full page
   context** (off by default).
 
 Pages classified as sensitive are never extracted or sent in any of these paths.
-To stop automatic capture, turn off **Auto-attach coding context** in Natively
-**Settings → Companion**, along with any of the optional switches above you turned
-on. Explicit captures keep working either way.
+To stop automatic capture, turn off **Auto-detect coding problems** or
+**Auto-attach coding context** in Natively **Settings → Companion**, along with any
+of the optional switches above you turned on. Explicit captures keep working
+either way.
 
 The **service worker is the only component that holds the pairing token** and the
 only one that touches the network. The content script (which runs inside an

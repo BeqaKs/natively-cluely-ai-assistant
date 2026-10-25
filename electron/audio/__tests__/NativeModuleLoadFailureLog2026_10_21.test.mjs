@@ -9,11 +9,11 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const loaderPath = path.join(__dirname, '..', 'nativeModuleLoader.ts');
-const { describeLoadFailure } = await import(loaderPath);
+const { describeLoadFailure } = await import(pathToFileURL(loaderPath).href);
 
 test('macOS: keeps dlopen reason, drops the Require stack, redacts the home directory', () => {
   const line = describeLoadFailure(

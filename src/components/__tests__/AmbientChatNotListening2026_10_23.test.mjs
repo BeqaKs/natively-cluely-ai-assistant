@@ -22,7 +22,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 
 const dirname = path.dirname(fileURLToPath(import.meta.url));
 const SRC = path.resolve(dirname, '../..');
@@ -151,7 +151,7 @@ test('with Ambient AI Chat on, Answer goes to What to Answer instead of recordin
 test('the pill\'s tooltip has a row in every language, and no row is left over', async () => {
   // "Ambient" itself is the setting's name, which Settings does not translate.
   const own = [PILL_TITLE];
-  const mod = await import(path.join(SRC, TABLE));
+  const mod = await import(pathToFileURL(path.join(SRC, TABLE)).href);
   assert.deepEqual([...mod.AMBIENT_CHAT_EN].sort(), own.sort());
   for (const [lang, table] of Object.entries({ ru: mod.AMBIENT_CHAT_RU, zh: mod.AMBIENT_CHAT_ZH, ja: mod.AMBIENT_CHAT_JA, es: mod.AMBIENT_CHAT_ES })) {
     for (const en of own) {
