@@ -4747,7 +4747,12 @@ export class IntelligenceEngine extends EventEmitter {
                 inputTokens: estimateTokens(`${preparedTranscript ?? ''}${candidateProfile ?? ''}`),
                 isUserCancelled: () => whatToAnswerCancellationToken.signal.aborted || isWtaSuperseded(),
                 onDiagnostics: (record) => {
-                    if (record.terminationReason === 'done') return;
+                    if (record.terminationReason === 'done') {
+                        // A held answer that completed only because the transport
+                        // was still alive is worth a line (#680).
+                        if (record.heldPastStallMs > 0) console.log('[Perf] wta answer held past the stall budget', record);
+                        return;
+                    }
                     // Only the failures are logged. A line per healthy turn would
                     // bury the one case this record exists to explain.
                     console.log('[Perf] wta turn ended early', record);

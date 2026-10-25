@@ -5112,7 +5112,10 @@ export function initializeIpcHandlers(appState: AppState): void {
             inputTokens: _estimatePerfTokens(`${message ?? ''}${context ?? ''}`),
             isUserCancelled: () => manualSuperseded || myController?.signal.aborted === true,
             onDiagnostics: (record) => {
-              if (record.terminationReason === 'done') return;
+              if (record.terminationReason === 'done') {
+                if (record.heldPastStallMs > 0) console.log('[Perf] manual chat answer held past the stall budget', record);
+                return;
+              }
               console.log('[Perf] manual chat turn ended early', record);
             },
           });
@@ -20582,7 +20585,10 @@ export function initializeIpcHandlers(appState: AppState): void {
           inputTokens: _estimatePerfTokens(`${message ?? ''}${context ?? ''}`),
           isUserCancelled: () => phoneSuperseded,
           onDiagnostics: (record) => {
-            if (record.terminationReason === 'done') return;
+            if (record.terminationReason === 'done') {
+              if (record.heldPastStallMs > 0) console.log('[Perf] phone-mirror answer held past the stall budget', record);
+              return;
+            }
             console.log('[Perf] phone-mirror turn ended early', record);
           },
         });

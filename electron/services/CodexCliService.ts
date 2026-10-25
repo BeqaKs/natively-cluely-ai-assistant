@@ -45,6 +45,7 @@ import sharp from 'sharp';
 import { CodexOAuthService } from './CodexOAuthService';
 import { isChatGptUnsupportedCodexModel } from './CodexModelCatalog';
 import { readCodexCliAuth, type CodexCliAuthState } from './CodexCliAuth';
+import { noteStreamActivity } from '../llm/streamActivity';
 
 // Extension → MIME for the RAW fallback path only (the normal path re-encodes
 // to JPEG via sharp, so its MIME is fixed). PNG/JPEG/WebP/GIF are the four
@@ -912,6 +913,11 @@ export class CodexCliService {
           sawTerminalEvent = true;
           break;
         }
+        // Any bytes count, `:` keepalive comments included: the backend can
+        // hold the rest of an answer for seconds and send only keepalives
+        // meanwhile, and the stall guard must see that the request is alive
+        // (#680; bounded there by LIVE_HELD_OUTPUT_MAX_MS).
+        noteStreamActivity();
         buffer += decoder.decode(value, { stream: true });
 
         // SSE messages are separated by a blank line ("\n\n" in
