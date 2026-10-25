@@ -15998,7 +15998,7 @@ export function initializeIpcHandlers(appState: AppState): void {
         });
 
         // Question and imagePaths are now optional - IntelligenceManager infers from transcript
-        const answer = await intelligenceManager.runWhatShouldISay(
+        let answer = await intelligenceManager.runWhatShouldISay(
           question,
           0.8,
           validatedImagePaths,
@@ -16023,6 +16023,68 @@ export function initializeIpcHandlers(appState: AppState): void {
             domContext: effectiveDomContext,
           },
         );
+        // The refusal-triggered retry of #647's Problem A. The refusal ("I
+        // can't provide a solution for a live HackerRank test") is the MODEL's
+        // judgement of a FULL-SCREEN capture: a background "Test Login" tab
+        // read as a live test. When a screenshot turn comes back refused, try
+        // ONE retry with the capture cropped to the browser's page area — the
+        // tab strip and address bar gone, the page exactly as it is. Nothing
+        // is cropped until a refusal happened, and the original image is
+        // never modified. Set NATIVELY_ASSESSMENT_RETRY=off to leave
+        // refusals unretried.
+        let refusalRetry: { cropped: boolean; improved: boolean } | undefined;
+        if (
+          answer
+          && validatedImagePaths?.length
+          && process.env.NATIVELY_ASSESSMENT_RETRY !== 'off'
+        ) {
+          const { isAssessmentRefusal } = require('./llm/AnswerValidator') as typeof import('./llm/AnswerValidator');
+          if (isAssessmentRefusal(answer)) {
+            try {
+              // Crop and retry failures leave `answer` (the refusal) as the
+              // answer: the banner alone carries the suggestion.
+              const { cropToBrowserPageArea, croppedImagePathFor } = require('./services/screen/BrowserPageCrop') as typeof import('./services/screen/BrowserPageCrop');
+              const { screen: electronScreen } = require('electron');
+              const lastImagePath = validatedImagePaths[validatedImagePaths.length - 1];
+              const croppedImagePath = croppedImagePathFor(lastImagePath);
+              const crop = await cropToBrowserPageArea(
+                lastImagePath,
+                croppedImagePath,
+                electronScreen.getAllDisplays().map(({ bounds, scaleFactor }: Electron.Display) => ({ ...bounds, scaleFactor })),
+              );
+              if (crop) {
+                const retryPaths = validatedImagePaths.slice(0, -1).concat(croppedImagePath);
+                const retryAnswer = await intelligenceManager.runWhatShouldISay(
+                  question,
+                  0.8,
+                  retryPaths,
+                  {
+                    skipCooldown: true,
+                    forceFresh: true,
+                    promptInstruction:
+                      typeof options?.promptInstruction === 'string'
+                        ? options.promptInstruction
+                        : undefined,
+                    domContext: effectiveDomContext,
+                    // No screenContext on the retry: the pre-pass described
+                    // the original capture, tab strip and all, and its text
+                    // would re-tell the model what we cropped away.
+                  },
+                );
+                if (retryAnswer) {
+                  // The retry replaces the refusal; `improved` tells the
+                  // renderer whether the retry ANSWERED (true) or refused
+                  // again (false).
+                  refusalRetry = { cropped: true, improved: !isAssessmentRefusal(retryAnswer) };
+                  if (refusalRetry.improved) answer = retryAnswer;
+                  console.log('[AssessmentRetry] retried the refused screenshot answer with the browser page area', refusalRetry);
+                }
+              }
+            } catch (retryErr: any) {
+              console.warn('[AssessmentRetry] retry with the page-area crop failed:', retryErr?.message ?? retryErr);
+            }
+          }
+        }
         if (answer) {
           // The conversation-ring write lives in IntelligenceEngine.runWhatShouldISay
           // now, not here. Placed at this IPC handler it only ever recorded a
@@ -16049,6 +16111,12 @@ export function initializeIpcHandlers(appState: AppState): void {
           visionFailureReason,
           imageCount: validatedImagePaths?.length || 0,
           usedImageInput: Boolean(validatedImagePaths?.length),
+          // #647 Problem A: the screenshot answer came back as an assessment
+          // refusal and was retried with the capture cropped to the browser's
+          // page area. `cropped`: a crop was made; `improved`: the retry
+          // answered. The renderer shows its banner on `cropped` and re-asks
+          // on `improved` only.
+          refusalRetry,
         };
       } catch (error: any) {
         console.error('[IPC] generate-what-to-say error:', error);
