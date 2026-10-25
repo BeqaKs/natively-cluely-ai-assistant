@@ -135,7 +135,11 @@ export class QwenRealtimeSTT extends EventEmitter {
                 this.terminalFailure = true;
             }
             if (this.active && this.socket === ws) {
-                this.emit('error', new Error(`Qwen ASR returned HTTP ${response.statusCode}`));
+                // response.status lets sttFailover's isTerminalSttError see a refused key.
+                const error = Object.assign(new Error(`Qwen ASR returned HTTP ${response.statusCode}`), {
+                    response: { status: response.statusCode },
+                });
+                this.emit('error', error);
             }
             ws.terminate();
         });
