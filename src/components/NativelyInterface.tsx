@@ -343,6 +343,7 @@ import {
   type DirectAssistFallbackNotice,
 } from '../lib/directAssistFailure.mjs';
 import { addAttachment, withoutFormulaImages } from '../lib/attachmentTray.mjs';
+import { imagePathsFromDropFiles } from '../lib/overlayImageDrop.mjs';
 import {
   applyFirstStreamingToken,
   commitStreamingFlush,
@@ -10936,16 +10937,27 @@ Provide only the answer, nothing else.`;
       // foreground app (native-module/src/edit_shortcut.rs). Never typed as text.
       const editLetter = editShortcutLetter(ev);
       if (editLetter === 'v') {
-        window.electronAPI.stealthReadClipboard?.()
-          .then((text) => {
+        // Issue #351: prefer a clipboard image (diagram / PDF snippet) over
+        // text. attachClipboardImage broadcasts screenshot-attached itself.
+        void (async () => {
+          try {
+            const imageResult = await window.electronAPI.attachClipboardImage?.();
+            if (imageResult && !imageResult.empty && imageResult.success) return;
+          } catch {
+            /* fall through to text paste */
+          }
+          try {
+            const text = await window.electronAPI.stealthReadClipboard?.();
             // Not after the session ended (Esc, a submit on macOS), and on top
             // of any keys typed while the clipboard was read.
             if (!stealthTapActiveRef.current || escSuppressUntilNextActive || !pastedText(text)) return;
             const allSelected = stealthAllSelectedRef.current;
             if (allSelected) markStealthAllSelected(false);
             setInputValue((prev) => paste({ value: prev, allSelected }, text ?? '').value);
-          })
-          .catch(() => {});
+          } catch {
+            /* ignore */
+          }
+        })();
         return;
       }
       if (editLetter) {
@@ -12517,13 +12529,57 @@ Provide only the answer, nothing else.`;
                                     overlay no longer accidentally engage the
                                     tap and break inputs in Settings/Model
                                     Selector windows. */}
-                <div className="relative group" data-stealth-engage="true">
+                <div
+                  className="relative group"
+                  data-stealth-engage="true"
+                  onDragOver={(e) => {
+                    // Issue #351: accept image files from Finder/Explorer.
+                    if (![...e.dataTransfer.types].includes('Files')) return;
+                    e.preventDefault();
+                    e.dataTransfer.dropEffect = 'copy';
+                  }}
+                  onDrop={(e) => {
+                    e.preventDefault();
+                    const paths = imagePathsFromDropFiles(e.dataTransfer.files);
+                    if (paths.length === 0) return;
+                    void Promise.all(
+                      paths.map((filePath) =>
+                        window.electronAPI.attachLocalImage?.(filePath).catch((err) => {
+                          console.warn('[overlay] attachLocalImage failed:', err);
+                        }),
+                      ),
+                    );
+                  }}
+                >
                   <input
                     ref={textInputRef}
                     data-testid="overlay-chat-input"
                     type="text"
                     value={inputValue}
                     onChange={(e) => { setInputValue(e.target.value); setSkillPickerIndex(0); }}
+                    onPaste={(e) => {
+                      // Issue #351: Cmd/Ctrl+V with an image on the clipboard
+                      // attaches it like a screenshot. Plain text paste stays
+                      // fully native when no image item is present.
+                      const hasImageItem = [...(e.clipboardData?.items ?? [])].some(
+                        (item) => item.type.startsWith('image/'),
+                      );
+                      if (!hasImageItem || !window.electronAPI.attachClipboardImage) return;
+                      e.preventDefault();
+                      const textFallback = e.clipboardData?.getData('text/plain') ?? '';
+                      const start = e.currentTarget.selectionStart ?? inputValue.length;
+                      const end = e.currentTarget.selectionEnd ?? inputValue.length;
+                      void (async () => {
+                        try {
+                          const imageResult = await window.electronAPI.attachClipboardImage?.();
+                          if (imageResult && !imageResult.empty && imageResult.success) return;
+                        } catch {
+                          /* fall through to text */
+                        }
+                        if (!textFallback) return;
+                        setInputValue((prev) => prev.slice(0, start) + textFallback + prev.slice(end));
+                      })();
+                    }}
                     onKeyDown={(e) => {
                       if (filteredSkills.length > 0 && skillPickerQuery !== null) {
                         if (e.key === 'ArrowUp') {

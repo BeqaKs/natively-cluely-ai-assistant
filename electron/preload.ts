@@ -151,6 +151,10 @@ interface ElectronAPI {
   onDebugError: (callback: (error: string) => void) => () => void;
   takeScreenshot: () => Promise<void>;
   takeSelectiveScreenshot: () => Promise<{ path: string; preview: string; cancelled?: boolean }>;
+  /** Paste a clipboard image into the overlay tray (issue #351). */
+  attachClipboardImage: () => Promise<{ empty?: true; success?: true; path?: string; error?: string }>;
+  /** Drag-drop a local image file into the overlay tray (issue #351). */
+  attachLocalImage: (filePath: string) => Promise<{ success?: boolean; path?: string; error?: string }>;
   moveWindowLeft: () => Promise<void>;
   moveWindowRight: () => Promise<void>;
   moveWindowUp: () => Promise<void>;
@@ -1607,6 +1611,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
   getRecognitionLanguages: () => ipcRenderer.invoke('get-recognition-languages'),
   takeScreenshot: () => ipcRenderer.invoke('take-screenshot'),
   takeSelectiveScreenshot: () => ipcRenderer.invoke('take-selective-screenshot'),
+  attachClipboardImage: () => ipcRenderer.invoke('attach-clipboard-image'),
+  attachLocalImage: (filePath: string) => ipcRenderer.invoke('attach-local-image', filePath),
   getScreenshots: () => ipcRenderer.invoke('get-screenshots'),
   deleteScreenshot: (path: string) => ipcRenderer.invoke('delete-screenshot', path),
 

@@ -1401,6 +1401,11 @@ import { SettingsManager } from "./services/SettingsManager"
 import { buildTelemetrySinks } from "./services/telemetry/telemetrySinks"
 import { PhoneMirrorService, shouldStartPhoneMirrorOnBoot } from "./services/PhoneMirrorService"
 import { PHONE_IMAGE_PREFIX } from "./utils/phoneImage"
+import {
+  imageExtFromPath,
+  OVERLAY_DROP_IMAGE_PREFIX,
+  OVERLAY_PASTE_IMAGE_PREFIX,
+} from "./utils/overlayImageAttach"
 import { renderPhoneAnswer } from "./services/phoneMirrorMarkdown"
 import { describeFormulaImage, describePageCaptureFallback, describeDoubleCaptureFailure, describeUnreadableFormulas, PAGE_CAPTURE_FALLBACK_CHANNEL, PAGE_CAPTURE_STARTED_CHANNEL } from "./services/pageCaptureFallback"
 import { FormulaScreenshotHandoff, markMissingFormulas, type FormulaShot } from "./services/formulaScreenshotHandoff"
@@ -9175,6 +9180,40 @@ export class AppState {
     })
     await this.attachImageToMeeting(imagePath)
     return imagePath
+  }
+
+  /**
+   * Attach an OS-clipboard image to the overlay tray (issue #351).
+   * Empty clipboard → `{ empty: true }`. Otherwise saves via addExternalImage
+   * and broadcasts `screenshot-attached` like a normal capture.
+   */
+  public async attachClipboardImage(): Promise<{ empty: true } | { success: true; path: string }> {
+    const img = clipboard.readImage()
+    if (!img || img.isEmpty()) return { empty: true }
+    const png = img.toPNG()
+    if (!png || png.length === 0) return { empty: true }
+    const imagePath = await this.screenshotHelper.addExternalImage(Buffer.from(png), 'png', {
+      namePrefix: OVERLAY_PASTE_IMAGE_PREFIX,
+    })
+    await this.attachImageToMeeting(imagePath)
+    return { success: true, path: imagePath }
+  }
+
+  /**
+   * Attach a local image file (Finder/Explorer drag-drop) to the overlay tray
+   * (issue #351). The path must already look like a still image; bytes are
+   * copied into the screenshot queue so the original file can move or delete.
+   */
+  public async attachLocalImageFile(filePath: string): Promise<{ success: true; path: string }> {
+    const ext = imageExtFromPath(filePath)
+    if (!ext) throw new Error('Unsupported image type')
+    const data = await fs.promises.readFile(filePath)
+    if (!data.length) throw new Error('Empty image file')
+    const imagePath = await this.screenshotHelper.addExternalImage(data, ext, {
+      namePrefix: OVERLAY_DROP_IMAGE_PREFIX,
+    })
+    await this.attachImageToMeeting(imagePath)
+    return { success: true, path: imagePath }
   }
 
   /**
