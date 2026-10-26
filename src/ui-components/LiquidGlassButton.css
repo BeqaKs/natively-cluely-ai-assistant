@@ -211,6 +211,46 @@
 }
 
 /*
+  .lg-green-light: a lighter green body (the badge's #2f7350) for the
+  permissions card's Continue, on macOS and Windows. #1b352a read as black on
+  the light card (12.7:1 against it) and all but vanished on the dark one
+  (1.4:1); this sits at 5.5:1 and 3.3:1, label 5.5:1 against the body.
+  Lit like .lg-sky, since a lighter body inverts the lighting: a bright top
+  face and specular, a darker underside and a contact shadow instead of a
+  bottom rim. At (0,3,0) it ties the hover rules below and loses to them on
+  source order, so hover still swaps the body colour and keeps the sheen.
+*/
+.lg-button.lg-green.lg-green-light {
+    background:
+        linear-gradient(180deg,
+            rgba(255, 255, 255, .24) 0%, rgba(255, 255, 255, .06) 42%,
+            rgba(255, 255, 255, 0) 60%, rgba(0, 0, 0, .06) 100%),
+        #2f7350;
+    --lg-tint-hover: #37835c;
+    --lg-lens-tint: rgba(236, 255, 244, .14);
+    --lg-lens-rim: rgba(236, 255, 244, .44);
+    --lg-lens-rim-soft: rgba(236, 255, 244, .18);
+    --lg-rim-1: rgba(236, 255, 244, .52);
+    --lg-rim-2: rgba(236, 255, 244, .22);
+    --lg-rim-3: rgba(236, 255, 244, .10);
+    box-shadow:
+        inset 0 -1px 0 rgba(4, 40, 24, .30),
+        0 1px 2px rgba(4, 40, 24, .18),
+        0 6px 16px rgba(24, 96, 60, .24);
+}
+/* specular on the top face only, as .lg-sky */
+.lg-button.lg-green.lg-green-light::before {
+    -webkit-mask-image:
+        linear-gradient(180deg, #000 0%, #000 4%, transparent 30%, transparent 100%),
+        linear-gradient(90deg, transparent var(--lg-cap-0), rgba(0, 0, 0, .82) var(--lg-cap-1), #000 var(--lg-cap-2), #000 calc(100% - var(--lg-cap-2)), rgba(0, 0, 0, .82) calc(100% - var(--lg-cap-1)), transparent calc(100% - var(--lg-cap-0)));
+    mask-image:
+        linear-gradient(180deg, #000 0%, #000 4%, transparent 30%, transparent 100%),
+        linear-gradient(90deg, transparent var(--lg-cap-0), rgba(0, 0, 0, .82) var(--lg-cap-1), #000 var(--lg-cap-2), #000 calc(100% - var(--lg-cap-2)), rgba(0, 0, 0, .82) calc(100% - var(--lg-cap-1)), transparent calc(100% - var(--lg-cap-0)));
+}
+.lg-button.lg-green.lg-green-light::after { opacity: .3; }
+.lg-green.lg-green-light .lg-content { color: #f2fff0; }
+
+/*
   .lg-action — the material in the HOST application's action colour, read from
   its own tokens, so the button still reads as that app's primary action rather
   than importing the reference's green.
@@ -1453,6 +1493,8 @@
     }
     .lg-button.lg-neutral { background-color: #4a4a4a; }
     .lg-button.lg-green   { background-color: #103425; }
+    /* outranks the light body above, so high contrast keeps the darker green */
+    .lg-button.lg-green.lg-green-light { background-color: #103425; }
     /*
       clear is the only variant with no body of its own, so high contrast is
       where it has to grow one: a 2px white border on a transparent body over
