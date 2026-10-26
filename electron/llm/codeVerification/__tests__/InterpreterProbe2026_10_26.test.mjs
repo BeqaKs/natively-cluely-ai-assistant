@@ -15,7 +15,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { createInterpreterProbe, interpreterProbeTimeoutMs } from '../../../../dist-electron/electron/llm/codeVerification/localRunner.js';
+import { createInterpreterProbe, createPythonResolver, interpreterProbeTimeoutMs } from '../../../../dist-electron/electron/llm/codeVerification/localRunner.js';
 
 const node = process.execPath;
 const wait = ms => new Promise(r => setTimeout(r, ms));
@@ -87,5 +87,48 @@ describe('Windows: no console window flashes for a verification run', () => {
     const spawns = src.match(/\bspawn\([^;]*?\{[^}]*\}/g) ?? [];
     assert.ok(spawns.length >= 4, `found ${spawns.length} spawn calls`);
     for (const call of spawns) assert.match(call, /windowsHide: true/, call);
+  });
+});
+
+// The Python lookup tried its three Windows candidates one after another, so
+// three hung probes held the first Python answer for 30s. They now run together.
+describe('Python lookup', () => {
+  // A fake probe: each command answers `ok` after `ms`, and records when it started.
+  const fakeProbe = (answers) => {
+    const started = [];
+    const t0 = Date.now();
+    const probe = (cmd) => { started.push([cmd, Date.now() - t0]); const [ok, ms] = answers[cmd]; return new Promise(r => setTimeout(() => r(ok), ms)); };
+    return { probe, started };
+  };
+  const WIN = [['python', ['--version']], ['py', ['-3', '--version']], ['python3', ['--version']]];
+
+  test('all candidates start together, so hung ones cost one wait, not one each', async () => {
+    const { probe, started } = fakeProbe({ python: [false, 300], py: [false, 300], python3: [true, 300] });
+    const t0 = Date.now();
+    assert.deepEqual(await createPythonResolver(probe, WIN)(), ['python3']);
+    assert.ok(Date.now() - t0 < 700, `took ${Date.now() - t0}ms; one after another would be ~900ms`);
+    assert.deepEqual(started.map(([c]) => c), ['python', 'py', 'python3']);
+    assert.ok(started.every(([, at]) => at < 50), 'every candidate started at once');
+  });
+
+  test('the list order still decides: a slower "python" beats a faster "py"', async () => {
+    const { probe } = fakeProbe({ python: [true, 200], py: [true, 10], python3: [true, 10] });
+    assert.deepEqual(await createPythonResolver(probe, WIN)(), ['python']);
+  });
+
+  test('the launcher keeps its -3 selector, and a found interpreter is cached', async () => {
+    const { probe, started } = fakeProbe({ python: [false, 5], py: [true, 5], python3: [false, 5] });
+    const resolve = createPythonResolver(probe, WIN);
+    assert.deepEqual(await resolve(), ['py', '-3']);
+    assert.deepEqual(await resolve(), ['py', '-3']);
+    assert.equal(started.length, 3, 'the second lookup probes nothing');
+  });
+
+  test('"none found" is not cached, so an interpreter that answers later is used', async () => {
+    let late = false;
+    const resolve = createPythonResolver(async () => late, [['python3', ['--version']]]);
+    assert.equal(await resolve(), null);
+    late = true;
+    assert.deepEqual(await resolve(), ['python3']);
   });
 });

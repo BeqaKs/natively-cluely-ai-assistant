@@ -120,26 +120,35 @@ const isInterpreterAvailable = createInterpreterProbe();
 // the python.org Windows installer ships `python.exe` plus the `py` launcher and
 // does NOT create a `python3` command (the bare `python3` on Windows usually
 // resolves to the Microsoft Store App Execution Alias, which no-ops for
-// non-interactive spawns). We probe candidates in order and cache the first that
-// works, so the availability check and the actual run use the SAME interpreter.
+// non-interactive spawns). The first candidate in this order that works is
+// cached, so the availability check and the actual run use the SAME interpreter.
 export const PYTHON_CANDIDATES: ReadonlyArray<readonly [string, string[]]> = isWin
   ? [['python', ['--version']], ['py', ['-3', '--version']], ['python3', ['--version']]]
   : [['python3', ['--version']]];
 
-// "None found" is not cached here: a candidate whose probe ran out of time may
-// answer later, and the probe cache already makes a repeat lookup cheap.
-let resolvedPythonCmd: string[] | undefined;
-const resolvePythonCmd = async (): Promise<string[] | null> => {
-  if (resolvedPythonCmd) return resolvedPythonCmd;
-  for (const [cmd, versionArgs] of PYTHON_CANDIDATES) {
-    if (await isInterpreterAvailable(cmd, versionArgs)) {
-      // Drop the trailing `--version` probe flag; keep launcher selectors like `-3`.
-      resolvedPythonCmd = [cmd, ...versionArgs.slice(0, -1)];
-      return resolvedPythonCmd;
+// The candidates are probed together, so a hung one costs one probe timeout
+// rather than one per candidate (30s on Windows); the list order still decides
+// which interpreter is used. "None found" is not cached: a candidate whose probe
+// ran out of time may answer later, and the probe cache keeps a repeat cheap.
+export const createPythonResolver = (
+  probe: (cmd: string, versionArgs: string[]) => Promise<boolean>,
+  candidates: ReadonlyArray<readonly [string, string[]]> = PYTHON_CANDIDATES,
+) => {
+  let resolved: string[] | undefined;
+  return async (): Promise<string[] | null> => {
+    if (resolved) return resolved;
+    const answers = candidates.map(([cmd, versionArgs]) => probe(cmd, versionArgs));
+    for (const [i, [cmd, versionArgs]] of candidates.entries()) {
+      if (await answers[i]) {
+        // Drop the trailing `--version` probe flag; keep launcher selectors like `-3`.
+        resolved = [cmd, ...versionArgs.slice(0, -1)];
+        return resolved;
+      }
     }
-  }
-  return null;
+    return null;
+  };
 };
+const resolvePythonCmd = createPythonResolver(isInterpreterAvailable);
 
 export const localLanguageAvailable = async (language: VerifyLanguage): Promise<boolean> => {
   // SQL is verified via sqlite3 but is NOT in LOCAL_LANGUAGES (it doesn't use the
