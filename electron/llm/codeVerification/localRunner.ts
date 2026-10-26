@@ -210,7 +210,7 @@ export const runCase = async (
 
   const driver = buildDriver(language, code, entry, hints);
   if (!driver || !driver.localCmd) {
-    return { case: tc, status: 'error', stdout: '', error: `no local driver for ${language}`, ms: 0 };
+    return unverifiable(tc, `no local driver for ${language}`);
   }
 
   // Resolve the interpreter argv. `node` is the same everywhere; Python's command
@@ -220,7 +220,7 @@ export const runCase = async (
   let argv: string[];
   if (driver.localCmd === 'python3') {
     const py = await resolvePythonCmd();
-    if (!py) return { case: tc, status: 'error', stdout: '', error: 'no python interpreter available', ms: 0 };
+    if (!py) return unverifiable(tc, 'no python interpreter available');
     argv = py;
   } else {
     argv = [driver.localCmd];
@@ -261,7 +261,7 @@ export const runCase = async (
       ms: raw.ms,
     };
   } catch (e: any) {
-    return { case: tc, status: 'error', stdout: '', error: String(e?.message || e).slice(0, 200), ms: 0 };
+    return unverifiable(tc, String(e?.message || e).slice(0, 200));
   } finally {
     if (tmpDir) { try { fs.rmSync(tmpDir, { recursive: true, force: true }); } catch { /* noop */ } }
     release();
@@ -270,15 +270,55 @@ export const runCase = async (
 
 const trunc = (s: string, max = 2000): string => (s.length > max ? s.slice(0, max) + '…' : s);
 
+/** An `error` that says nothing about the code (see RunResult.unverifiable). */
+const unverifiable = (tc: TestCase, error: string, ms = 0): RunResult =>
+  ({ case: tc, status: 'error', stdout: '', error, ms, unverifiable: true });
+
+// Linker diagnostics name the object file, not the source: GNU ld / MinGW
+// "undefined reference to", Apple ld "Undefined symbols for architecture" and
+// "symbol(s) not found", LLVM lld "undefined symbol:", plus duplicate symbols.
+const LINK_ERROR = /undefined reference to|undefined symbols? for architecture|undefined symbol:|symbol\(s\) not found|duplicate symbol|multiple definition of/i;
+
+/**
+ * Whether a failed compile is the CODE's fault: the compiler points at a line
+ * of the source file (`main.cpp:12:5`, `./main.go:4:6`, `.\main.go:4:6`,
+ * `Main.java:3: error`) or the linker reports a missing/duplicate symbol. A
+ * failure that does neither is the toolchain's own (no cache dir, broken
+ * install, unwritable temp, a file locked by antivirus even if its path is in
+ * the message); blaming the code for it would send a correct answer to be
+ * "fixed".
+ */
+export const isCodeCompileError = (stderr: string, srcName: string): boolean =>
+  new RegExp(`${srcName.replace(/\./g, '\\.')}:\\d+`).test(stderr) || LINK_ERROR.test(stderr);
+
+const compileFailure = (tc: TestCase, comp: RawRun, srcName: string, tool: string): RunResult => {
+  const detail = trunc(comp.stderr, 400) || `${tool} failed`;
+  return isCodeCompileError(comp.stderr, srcName)
+    ? { case: tc, status: 'error', stdout: '', error: `compile error: ${detail}`, ms: comp.ms }
+    : unverifiable(tc, `${tool} failed: ${detail}`, comp.ms);
+};
+
+/**
+ * Run budget for a freshly compiled program (C++/Go binary, the JVM for Java).
+ * Windows gets 10s: antivirus scans a new, unsigned executable on its first
+ * launch, and a run timeout counts against the code (it is how an infinite
+ * loop is caught), so a scan must not look like one. Elsewhere TIMEOUT_MS.
+ */
+export const compiledRunTimeoutMs = (platform: NodeJS.Platform = process.platform): number =>
+  platform === 'win32' ? 10000 : TIMEOUT_MS;
+
 // Generic spawn of an arbitrary command (no TC env; used for g++/javac compile,
 // the compiled binary, go run, and sqlite3). Same limits as spawnOnce: timeout,
 // output cap, group kill, scrubbed env. `stdinPath`, when given, is opened and
 // piped to the child's stdin (used to feed the SQL script to sqlite3).
-const spawnCmd = (cmd: string, args: string[], cwd: string, timeoutMs: number, stdinPath?: string): Promise<RawRun> =>
+// `extraEnv` adds tool settings (never secrets) on top of the sandbox env.
+const spawnCmd = (
+  cmd: string, args: string[], cwd: string, timeoutMs: number, stdinPath?: string, extraEnv?: NodeJS.ProcessEnv,
+): Promise<RawRun> =>
   new Promise<RawRun>(resolve => {
     const start = Date.now();
     let stdout = '', stderr = '', timedOut = false, oversized = false, settled = false;
-    const env = sandboxEnv(cwd);
+    const env = { ...sandboxEnv(cwd), ...extraEnv };
     let stdinFd: number | undefined;
     if (stdinPath) { try { stdinFd = fs.openSync(stdinPath, 'r'); } catch { /* fall back to ignore */ } }
     let child: ReturnType<typeof spawn>;
@@ -311,8 +351,11 @@ const spawnCmd = (cmd: string, args: string[], cwd: string, timeoutMs: number, s
   });
 
 // Compile time can exceed the run budget for C++; give the compiler its own,
-// larger window (still bounded) and the binary the standard TIMEOUT_MS.
-const CPP_COMPILE_TIMEOUT_MS = 10000;
+// larger window (still bounded) and the binary the standard TIMEOUT_MS. 30s,
+// not 10s: MinGW g++ on a slow Windows machine (antivirus scanning each new
+// file) takes 7-10s for one case. Verification runs in the background, so a
+// slow compile only delays the badge, and a timeout is unverifiable, not wrong.
+const CPP_COMPILE_TIMEOUT_MS = 30000;
 
 /** Run ONE C++ case: build per-case program → g++ compile → run binary. */
 const runCppCase = async (code: string, entry: string, tc: TestCase): Promise<RunResult> => {
@@ -321,12 +364,12 @@ const runCppCase = async (code: string, entry: string, tc: TestCase): Promise<Ru
   // buildDriver guard so a malformed entry is a clean per-case skip, never a
   // throw that aborts the whole batch and never an injection channel.
   if (!isValidEntry(entry)) {
-    return { case: tc, status: 'error', stdout: '', error: 'invalid_entry', ms: 0 };
+    return unverifiable(tc, 'invalid_entry');
   }
   const program = buildCppProgram(code, entry, tc);
   if (program === null) {
     // Signature/args not safely representable → skip (never a false verdict).
-    return { case: tc, status: 'error', stdout: '', error: 'cpp_signature_unsupported', ms: 0 };
+    return unverifiable(tc, 'cpp_signature_unsupported');
   }
   await acquire();
   let tmpDir = '';
@@ -337,13 +380,12 @@ const runCppCase = async (code: string, entry: string, tc: TestCase): Promise<Ru
     fs.writeFileSync(srcPath, program, { encoding: 'utf8' });
 
     const comp = await spawnCmd('g++', ['-std=c++17', '-O0', '-w', srcPath, '-o', binPath], tmpDir, CPP_COMPILE_TIMEOUT_MS);
-    if (comp.timedOut) return { case: tc, status: 'error', stdout: '', error: `compile timed out after ${CPP_COMPILE_TIMEOUT_MS}ms`, ms: comp.ms };
-    if (comp.code !== 0 || !fs.existsSync(binPath)) {
-      return { case: tc, status: 'error', stdout: '', error: `compile error: ${trunc(comp.stderr, 400) || 'g++ failed'}`, ms: comp.ms };
-    }
+    if (comp.timedOut) return unverifiable(tc, `compile timed out after ${CPP_COMPILE_TIMEOUT_MS}ms`, comp.ms);
+    if (comp.code !== 0 || !fs.existsSync(binPath)) return compileFailure(tc, comp, 'main.cpp', 'g++');
 
-    const run = await spawnCmd(binPath, [], tmpDir, TIMEOUT_MS);
-    if (run.timedOut) return { case: tc, status: 'error', stdout: trunc(run.stdout), error: `timed out after ${TIMEOUT_MS}ms`, ms: run.ms };
+    const runMs = compiledRunTimeoutMs();
+    const run = await spawnCmd(binPath, [], tmpDir, runMs);
+    if (run.timedOut) return { case: tc, status: 'error', stdout: trunc(run.stdout), error: `timed out after ${runMs}ms`, ms: run.ms };
     if (run.oversized) return { case: tc, status: 'error', stdout: trunc(run.stdout), error: 'output limit exceeded', ms: run.ms };
 
     const parsed = parseDriverResult(run.stdout);
@@ -361,7 +403,7 @@ const runCppCase = async (code: string, entry: string, tc: TestCase): Promise<Ru
       ms: run.ms,
     };
   } catch (e: any) {
-    return { case: tc, status: 'error', stdout: '', error: String(e?.message || e).slice(0, 200), ms: 0 };
+    return unverifiable(tc, String(e?.message || e).slice(0, 200));
   } finally {
     if (tmpDir) { try { fs.rmSync(tmpDir, { recursive: true, force: true }); } catch { /* noop */ } }
     release();
@@ -373,9 +415,9 @@ const JAVA_COMPILE_TIMEOUT_MS = 20000;
 
 /** Run ONE Java case: build Main.java → javac → java Main. Never throws. */
 const runJavaCase = async (code: string, entry: string, tc: TestCase): Promise<RunResult> => {
-  if (!isValidEntry(entry)) return { case: tc, status: 'error', stdout: '', error: 'invalid_entry', ms: 0 };
+  if (!isValidEntry(entry)) return unverifiable(tc, 'invalid_entry');
   const program = buildJavaProgram(code, entry, tc);
-  if (program === null) return { case: tc, status: 'error', stdout: '', error: 'java_signature_unsupported', ms: 0 };
+  if (program === null) return unverifiable(tc, 'java_signature_unsupported');
   await acquire();
   let tmpDir = '';
   try {
@@ -384,13 +426,12 @@ const runJavaCase = async (code: string, entry: string, tc: TestCase): Promise<R
     fs.writeFileSync(srcPath, program, { encoding: 'utf8' });
 
     const comp = await spawnCmd('javac', ['-d', tmpDir, srcPath], tmpDir, JAVA_COMPILE_TIMEOUT_MS);
-    if (comp.timedOut) return { case: tc, status: 'error', stdout: '', error: `compile timed out after ${JAVA_COMPILE_TIMEOUT_MS}ms`, ms: comp.ms };
-    if (comp.code !== 0 || !fs.existsSync(path.join(tmpDir, 'Main.class'))) {
-      return { case: tc, status: 'error', stdout: '', error: `compile error: ${trunc(comp.stderr, 400) || 'javac failed'}`, ms: comp.ms };
-    }
+    if (comp.timedOut) return unverifiable(tc, `compile timed out after ${JAVA_COMPILE_TIMEOUT_MS}ms`, comp.ms);
+    if (comp.code !== 0 || !fs.existsSync(path.join(tmpDir, 'Main.class'))) return compileFailure(tc, comp, 'Main.java', 'javac');
 
-    const run = await spawnCmd('java', ['-cp', tmpDir, 'Main'], tmpDir, TIMEOUT_MS);
-    if (run.timedOut) return { case: tc, status: 'error', stdout: trunc(run.stdout), error: `timed out after ${TIMEOUT_MS}ms`, ms: run.ms };
+    const runMs = compiledRunTimeoutMs();
+    const run = await spawnCmd('java', ['-cp', tmpDir, 'Main'], tmpDir, runMs);
+    if (run.timedOut) return { case: tc, status: 'error', stdout: trunc(run.stdout), error: `timed out after ${runMs}ms`, ms: run.ms };
     if (run.oversized) return { case: tc, status: 'error', stdout: trunc(run.stdout), error: 'output limit exceeded', ms: run.ms };
 
     const parsed = parseDriverResult(run.stdout);
@@ -408,7 +449,7 @@ const runJavaCase = async (code: string, entry: string, tc: TestCase): Promise<R
       ms: run.ms,
     };
   } catch (e: any) {
-    return { case: tc, status: 'error', stdout: '', error: String(e?.message || e).slice(0, 200), ms: 0 };
+    return unverifiable(tc, String(e?.message || e).slice(0, 200));
   } finally {
     if (tmpDir) { try { fs.rmSync(tmpDir, { recursive: true, force: true }); } catch { /* noop */ } }
     release();
@@ -461,32 +502,43 @@ export const runSqlCase = async (query: string, spec: SqlSpec): Promise<RunResul
       ms: run.ms,
     };
   } catch (e: any) {
-    return { case: tc, status: 'error', stdout: '', error: String(e?.message || e).slice(0, 200), ms: 0 };
+    return unverifiable(tc, String(e?.message || e).slice(0, 200));
   } finally {
     if (tmpDir) { try { fs.rmSync(tmpDir, { recursive: true, force: true }); } catch { /* noop */ } }
     release();
   }
 };
 
-// Go's first compile is slower than g++; `go run` does compile+run in one spawn.
-const GO_RUN_TIMEOUT_MS = 15000;
+// Go builds, then runs the binary like C++, so a cold toolchain and a slow
+// program are told apart: the build gets its own generous window, the program
+// compiledRunTimeoutMs(). The build cache is SHARED across runs (Go's cache is
+// content-addressed and safe for concurrent builds), so only the first build on
+// a machine compiles the standard library from cold. 60s covers that first
+// build on a slow Windows machine; verification is in the background, and a
+// build timeout is unverifiable, never "the code is wrong".
+const GO_BUILD_TIMEOUT_MS = 60000;
+const goBuildEnv = (): NodeJS.ProcessEnv => ({ GOCACHE: path.join(os.tmpdir(), 'natively-verify-gocache') });
 
-/** Run ONE Go case: build main.go → `go run main.go`. Never throws. */
+/** Run ONE Go case: build main.go → run the binary. Never throws. */
 const runGoCase = async (code: string, entry: string, tc: TestCase): Promise<RunResult> => {
-  if (!isValidEntry(entry)) return { case: tc, status: 'error', stdout: '', error: 'invalid_entry', ms: 0 };
+  if (!isValidEntry(entry)) return unverifiable(tc, 'invalid_entry');
   const program = buildGoProgram(code, entry, tc);
-  if (program === null) return { case: tc, status: 'error', stdout: '', error: 'go_signature_unsupported', ms: 0 };
+  if (program === null) return unverifiable(tc, 'go_signature_unsupported');
   await acquire();
   let tmpDir = '';
   try {
     tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'natively-verify-'));
     const srcPath = path.join(tmpDir, 'main.go');
+    const binPath = path.join(tmpDir, isWin ? 'main.exe' : 'main');
     fs.writeFileSync(srcPath, program, { encoding: 'utf8' });
-    // GOCACHE/HOME land in the throwaway temp dir (sandboxEnv: HOME, or
-    // LOCALAPPDATA on Windows);
-    // `go run` compiles + runs in one process we group-kill on timeout.
-    const run = await spawnCmd('go', ['run', srcPath], tmpDir, GO_RUN_TIMEOUT_MS);
-    if (run.timedOut) return { case: tc, status: 'error', stdout: trunc(run.stdout), error: `timed out after ${GO_RUN_TIMEOUT_MS}ms`, ms: run.ms };
+
+    const comp = await spawnCmd('go', ['build', '-o', binPath, srcPath], tmpDir, GO_BUILD_TIMEOUT_MS, undefined, goBuildEnv());
+    if (comp.timedOut) return unverifiable(tc, `go build timed out after ${GO_BUILD_TIMEOUT_MS}ms`, comp.ms);
+    if (comp.code !== 0 || !fs.existsSync(binPath)) return compileFailure(tc, comp, 'main.go', 'go build');
+
+    const runMs = compiledRunTimeoutMs();
+    const run = await spawnCmd(binPath, [], tmpDir, runMs);
+    if (run.timedOut) return { case: tc, status: 'error', stdout: trunc(run.stdout), error: `timed out after ${runMs}ms`, ms: run.ms };
     if (run.oversized) return { case: tc, status: 'error', stdout: trunc(run.stdout), error: 'output limit exceeded', ms: run.ms };
     const parsed = parseDriverResult(run.stdout);
     if (!parsed.found) {
@@ -503,7 +555,7 @@ const runGoCase = async (code: string, entry: string, tc: TestCase): Promise<Run
       ms: run.ms,
     };
   } catch (e: any) {
-    return { case: tc, status: 'error', stdout: '', error: String(e?.message || e).slice(0, 200), ms: 0 };
+    return unverifiable(tc, String(e?.message || e).slice(0, 200));
   } finally {
     if (tmpDir) { try { fs.rmSync(tmpDir, { recursive: true, force: true }); } catch { /* noop */ } }
     release();
