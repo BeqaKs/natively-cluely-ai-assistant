@@ -20,7 +20,6 @@ import {
   MicOff,
   NotebookPen,
   Pencil,
-  PointerOff,
   Quote,
   RefreshCw,
   SlidersHorizontal,
@@ -406,6 +405,7 @@ import { genMessageId } from '../utils/messageId';
 import { mapLanguageForPrism, isBlockCode } from '../utils/prismLanguage';
 import { registerPrismLanguages } from '../utils/registerPrismLanguages';
 import { useShortcuts } from '../hooks/useShortcuts';
+import ClickThroughToggle from './ui/ClickThroughToggle';
 import { analytics, detectProviderType, reportAnswerFailed } from '../lib/analytics/analytics.service';
 import type { MeetingInterfaceTheme } from '../lib/meetingInterfaceTheme';
 import { overlayRowOf, useOverlayButtonOrder, type OverlayButtonId } from '../lib/overlayButtonOrder';
@@ -12751,19 +12751,22 @@ Provide only the answer, nothing else.`;
                       </button>
                     </div>
 
-                    {/* Mouse Passthrough Toggle */}
+                    {/* Mouse Passthrough Toggle. Opens into a pill with the
+                        exit hotkey when turned on — once click-through is on
+                        this button can no longer be clicked, so the hotkey is
+                        the only way back (ClickThroughToggle). */}
                     <div className="relative">
-                      <button
-                        onClick={() => {
+                      <ClickThroughToggle
+                        on={isMousePassthrough}
+                        onToggle={() => {
                           const newState = !isMousePassthrough;
                           setIsMousePassthrough(newState);
                           window.electronAPI?.setOverlayMousePassthrough?.(newState);
                         }}
-                        data-state={isMousePassthrough ? 'on' : undefined}
-                        className="w-7 h-7 rounded-[9px] flex items-center justify-center interaction-base interaction-press overlay-bare-icon"
-                      >
-                        <PointerOff className="w-3.5 h-3.5" />
-                      </button>
+                        keys={shortcuts.toggleMousePassthrough || [getModifierSymbol('cmd'), 'Shift', 'B']}
+                        exitLabel={t('to exit')}
+                        ariaLabel={t('Toggle Mouse Passthrough')}
+                      />
                     </div>
                   </div>
 
