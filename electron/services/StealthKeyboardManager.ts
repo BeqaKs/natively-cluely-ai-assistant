@@ -628,18 +628,24 @@ export class StealthKeyboardManager {
     }
 
     /**
-     * The app's global shortcuts as a chord table the native hook can swallow +
-     * self-dispatch. Windows only — macOS consumes shortcuts via Carbon/IOKit
-     * before the tap, so we pass an empty table there (the macOS tap ignores it
-     * anyway). Lazy require() to avoid a KeybindManager ↔ manager import cycle,
-     * matching hideAuxWindowsForStealth's pattern.
+     * The app's global shortcuts as a chord table for the native hook. Windows:
+     * the chords it swallows + self-dispatches. macOS: the tap sees keys before
+     * the Carbon hot keys, so it gets the app's Cmd+A/C/V/X binds to leave
+     * alone (it takes those four as edits otherwise). Lazy require() to avoid a
+     * KeybindManager ↔ manager import cycle, matching hideAuxWindowsForStealth's
+     * pattern.
      */
     private getAppChordTable(): Array<{ vk: number; mods: number; id: string }> {
-        if (process.platform !== 'win32') return [];
+        if (process.platform !== 'win32' && process.platform !== 'darwin') return [];
         try {
             // eslint-disable-next-line @typescript-eslint/no-var-requires
             const { KeybindManager } = require('./KeybindManager');
-            return KeybindManager.getInstance().getGlobalChordTable();
+            // Windows: the chords the hook swallows and dispatches itself.
+            // macOS: the app's Cmd+A/C/V/X binds, which the tap leaves to the
+            // hot key instead of running them as edits (macEditChord.ts).
+            return process.platform === 'win32'
+                ? KeybindManager.getInstance().getGlobalChordTable()
+                : KeybindManager.getInstance().getMacEditChordTable();
         } catch (e) {
             console.error('[StealthKeyboardManager] getAppChordTable failed:', e);
             return [];

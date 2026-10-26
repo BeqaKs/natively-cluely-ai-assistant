@@ -72,10 +72,10 @@ use std::thread;
 
 use napi::bindgen_prelude::*;
 
-use crate::app_chord::AppChordInput;
+use crate::app_chord::{app_chords_from_inputs, AppChord, AppChordInput};
 use crate::edit_shortcut::{
-    mac_edit_letter, mac_is_edit_chord, mac_is_word_delete_chord, FLAG_CMD as EDIT_FLAG_CMD,
-    FLAG_OPT as EDIT_FLAG_OPT,
+    mac_edit_letter, mac_edit_letter_is_app_chord, mac_is_edit_chord, mac_is_word_delete_chord,
+    FLAG_CMD as EDIT_FLAG_CMD, FLAG_OPT as EDIT_FLAG_OPT,
 };
 use napi::threadsafe_function::{ThreadsafeFunction, ThreadsafeFunctionCallMode};
 
@@ -190,6 +190,9 @@ struct TapState {
     /// Latest overlay bounds in global display coordinates. Mouse-down events
     /// outside this rect stop stealth typing while passing the click through.
     overlay_bounds: Mutex<Option<OverlayBounds>>,
+    /// The app's own Cmd+A/C/V/X global shortcuts, set on start(). The tap
+    /// passes these on to the hot key instead of taking them as edits.
+    app_chords: Mutex<Vec<AppChord>>,
     /// Threadsafe callback into V8. Set on start(), cleared on stop(). The
     /// option indirection lets stop() drop the tsfn handle so JS can GC the
     /// closure without keeping the worker thread's strong ref alive past
@@ -400,10 +403,17 @@ fn tap_callback_inner(
     // Keep just these four: deliver them tagged with the Cmd flag (the renderer
     // runs paste/select-all/copy/cut) and swallow the down and its up. Matched
     // on the character the layout produces, so it follows AZERTY, Dvorak and
-    // the like (the ANSI position when that character is not Latin). Cmd alone: with Option, Control or Shift it is another
-    // shortcut (Zoom's Cmd+Shift+A mute, Cmd+Shift+V video).
+    // the like (the ANSI position when that character is not Latin). Cmd alone:
+    // with Option, Control or Shift it is another shortcut (Zoom's Cmd+Shift+A
+    // mute, Cmd+Shift+V video). Not when the user bound that chord as a
+    // Natively shortcut: the hot key runs after this tap, so the key is passed
+    // on (down and up alike) for the hot key to fire.
     if mac_is_edit_chord(flags) && (event_type == 10 || event_type == 11) {
-        if let Some(letter) = mac_edit_letter(&event_unicode_string(event), key_code as u16) {
+        let letter = mac_edit_letter(&event_unicode_string(event), key_code as u16).filter(|l| {
+            let chords = state.app_chords.lock().unwrap_or_else(|p| p.into_inner());
+            !mac_edit_letter_is_app_chord(chords.as_slice(), l)
+        });
+        if let Some(letter) = letter {
             send_payload_to_js(&state, CapturedKey {
                 key_code,
                 chars: letter.to_string(),
@@ -700,6 +710,7 @@ impl StealthKeyboardTap {
                 runloop: Mutex::new(None),
                 port: AtomicU64::new(0),
                 overlay_bounds: Mutex::new(None),
+                app_chords: Mutex::new(Vec::new()),
                 callback: Mutex::new(None),
             }),
             worker: Mutex::new(None),
@@ -720,13 +731,14 @@ impl StealthKeyboardTap {
     pub fn start(
         &self,
         callback: ThreadsafeFunction<CapturedKey>,
-        // Accepted for napi-surface parity with the Windows hook, which swallows
-        // and self-dispatches the app's own shortcuts. Unused on macOS: Carbon/
-        // IOKit hotkey processing runs BEFORE the session tap, so the app's
-        // shortcuts are already consumed and never reach this tap.
-        _app_chords: Vec<AppChordInput>,
-        // Shortcut-guard mode flag — parity with the Windows hook. No macOS
-        // analogue (shortcuts never reach this tap), so it is ignored here.
+        // The app's own Cmd+A/C/V/X global shortcuts (macEditChord.ts). The
+        // session tap sees keys BEFORE Carbon's hot keys, so the edit-key
+        // branch must leave these to the hot key. Other app shortcuts need no
+        // table: the tap passes every other Cmd combination through.
+        app_chords: Vec<AppChordInput>,
+        // Shortcut-guard mode flag — parity with the Windows hook, whose guard
+        // covers the RegisterHotKey registrations Windows drops. No macOS
+        // analogue, so it is ignored here.
         _shortcut_only: bool,
         overlay_bounds: Option<OverlayBoundsInput>,
     ) -> Result<bool> {
@@ -770,6 +782,8 @@ impl StealthKeyboardTap {
             }
         });
         *self.state.overlay_bounds.lock().unwrap_or_else(|p| p.into_inner()) = overlay_bounds;
+        *self.state.app_chords.lock().unwrap_or_else(|p| p.into_inner()) =
+            app_chords_from_inputs(app_chords);
 
         // Now safely publish the active state.
         self.state.active.store(true, Ordering::Release);

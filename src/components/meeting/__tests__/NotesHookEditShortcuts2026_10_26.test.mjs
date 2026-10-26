@@ -40,7 +40,7 @@ test('the notes window runs the shortcuts before any key is typed', () => {
   const letterAt = handler.indexOf('editShortcutLetter(ev)');
   assert.ok(letterAt > 0, 'checks for an editing shortcut');
   assert.ok(letterAt < handler.indexOf('editorRef.current?.typeKey(ev)'), 'before the editor types the key');
-  assert.ok(letterAt < handler.indexOf('applyTypedKeyAtEnd(tf.get(), ev)'), 'before a field types the key');
+  assert.ok(letterAt < handler.indexOf('applyTypedKeyAtEnd(tf.get(), ev, allSelected)'), 'before a field types the key');
   assert.match(handler, /stealthReadClipboard\?\.\(\)/);
   assert.match(handler, /editorRef\.current\?\.pasteText\(text\)/);
   assert.match(handler, /stealthWriteClipboard\?\.\(copied\)/);
@@ -77,4 +77,28 @@ test('a late paste lands only in a live session, on top of what was typed meanwh
   assert.match(overlay, /setInputValue\(\(prev\) => paste\(\{ value: prev, allSelected \}, text \?\? ''\)\.value\)/);
   const page = read('src/components/NotesWindow.tsx');
   assert.match(page, /if \(!text \|\| !hookTypingRef\.current \|\| fieldRef\.current !== f\) return;/);
+});
+
+test('a select-all in a field is replaced by the next key, cleared by Backspace', () => {
+  assert.equal(applyTypedKeyAtEnd('old query', key(0, 'n'), true), 'n');
+  assert.equal(applyTypedKeyAtEnd('old query', key(51), true), '');
+  assert.equal(applyTypedKeyAtEnd('old query', key(51, '', OPT), true), '');
+  assert.equal(applyTypedKeyAtEnd('old query', key(0, 'n', 0, false), true), null, 'a key-up changes nothing');
+  assert.equal(applyTypedKeyAtEnd('old query', key(0, 'c', CMD), true), null, 'a shortcut is still not text');
+  assert.equal(applyTypedKeyAtEnd('old query', key(0, 'n')), 'old queryn', 'no selection: appended as before');
+});
+
+test('the one-line fields run select all, copy and cut on their whole value', () => {
+  const page = read('src/components/NotesWindow.tsx');
+  const handler = page.slice(page.indexOf('api.onStealthKeyCaptured('));
+  assert.match(handler, /const next = editCommand\(\{ value: tf\.get\(\), allSelected: fieldSelected\(f\) \}, letter\);/);
+  assert.match(handler, /if \(next\.copy !== undefined\) api\.stealthWriteClipboard\?\.\(next\.copy\)/);
+  assert.match(handler, /setFieldSel\(next\.allSelected \? f : null\);/);
+  assert.match(handler, /tf\.set\(paste\(\{ value: tf\.get\(\), allSelected \}, text\)\.value\);/, 'a paste replaces the selection');
+  // The selection covers a value: it ends with the session, a field change or any other edit.
+  assert.match(page, /if \(sel && \(!hookTyping \|\| field !== sel\.field \|\| !fieldSelected\(sel\.field\)\)\) setFieldSel\(null\);/);
+  assert.match(page, /return !!sel && sel\.field === f && textFields\.current\[f\]\?\.get\(\) === sel\.value;/);
+  // Drawn, since the unfocused input's own selection does not paint.
+  assert.match(page, /input\.dataset\.hookSelected = 'true';/);
+  assert.match(read('src/index.css'), /\.notepad input\[data-hook-selected="true"\] \{ background-image: linear-gradient\(var\(--np-selection\), var\(--np-selection\)\);/);
 });

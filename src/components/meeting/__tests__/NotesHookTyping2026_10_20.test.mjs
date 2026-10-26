@@ -42,7 +42,7 @@ test('the page starts its own session on click, blocks the focus, and acts only 
   assert.match(page, /const mine = active && target === 'notes';/);
   // The page's keys go to the editor at its selection; the small fields (Ask, title, find…) at their end.
   assert.match(page, /if \(f === 'notes'\) \{\s*editorRef\.current\?\.typeKey\(ev\);/);
-  assert.match(page, /applyTypedKeyAtEnd\(tf\.get\(\), ev\)/);
+  assert.match(page, /applyTypedKeyAtEnd\(tf\.get\(\), ev, allSelected\)/);
   // The editor's mousedown runs the window's engage first; with focus blocked it sets the selection itself.
   const editor = read('src/components/notes/NotesEditor.tsx');
   assert.match(editor, /onEngage\?\.\(e\);/);
@@ -118,7 +118,7 @@ test("laid out like Granola's: serif title, Today + people chip, folder button, 
   assert.match(page, /plainAnswerText\(turn\.text\)/);
   assert.doesNotMatch(read('src/components/NativelyInterface.tsx'), /onOverlayAskFromNotes/);
   // Return in a small field (Ask among them) submits it while hook-typing.
-  assert.match(page, /ev\.isKeyDown && \(ev\.keyCode === 36 \|\| ev\.keyCode === 76\)\) \{\s*tf\.submit\(\);/);
+  assert.match(page, /ev\.isKeyDown && \(ev\.keyCode === 36 \|\| ev\.keyCode === 76\)\) \{\s*setFieldSel\(null\);\s*tf\.submit\(\);/);
   const ipc = read('electron/ipcHandlers.ts');
   assert.match(ipc, /safeHandle\('live-notes:meeting-info'/);
 });

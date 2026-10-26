@@ -10,6 +10,7 @@ import {
 } from './keybindRegistrationState';
 import { isRegisterableAccelerator, probeAccelerator } from './acceleratorValidation';
 import { buildChordTable, type Win32Chord } from './winChord';
+import { buildMacEditChordTable, type MacEditChord } from './macEditChord';
 import { SettingsManager } from './SettingsManager';
 
 export interface KeybindConfig {
@@ -208,6 +209,13 @@ export class KeybindManager {
      */
     public getGlobalChordTable(): Win32Chord[] {
         return buildChordTable(
+            Array.from(this.keybinds.values()).filter(kb => this.shouldRegister(kb.id)),
+        );
+    }
+
+    /** The macOS tap's table: the app's own Cmd+A/C/V/X binds (macEditChord.ts). */
+    public getMacEditChordTable(): MacEditChord[] {
+        return buildMacEditChordTable(
             Array.from(this.keybinds.values()).filter(kb => this.shouldRegister(kb.id)),
         );
     }

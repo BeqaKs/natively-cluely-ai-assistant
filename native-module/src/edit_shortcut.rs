@@ -11,6 +11,8 @@
 //! Pure and platform-free, so it compiles and unit-tests on every platform
 //! (like app_chord).
 
+use crate::app_chord::{AppChord, MOD_CTRL};
+
 /// Renderer flag bits, the macOS CGEventFlags layout both hooks already use.
 pub const FLAG_CTRL: u32 = 1 << 18;
 pub const FLAG_OPT: u32 = 1 << 19;
@@ -83,6 +85,18 @@ pub fn mac_edit_letter(chars: &str, key_code: u16) -> Option<&'static str> {
     }
 }
 
+/// macOS: true when Cmd+`letter` is one of the app's own global shortcuts, so
+/// the tap leaves it to the hot key rather than running it as an edit. The tap
+/// sees keys before Carbon's hot keys do, so taking it would lose the user's
+/// shortcut. `chords` comes from electron/services/macEditChord.ts: the
+/// letter's VK code ('A' = 0x41) with MOD_CTRL standing for Cmd alone.
+pub fn mac_edit_letter_is_app_chord(chords: &[AppChord], letter: &str) -> bool {
+    let Some(vk) = letter.bytes().next().map(|b| b.to_ascii_uppercase() as u32) else {
+        return false;
+    };
+    chords.iter().any(|c| c.vk == vk && c.mods == MOD_CTRL)
+}
+
 /// Windows: the command letter for a virtual-key code. Letter VKs are the
 /// uppercase ASCII codes and are already mapped through the active layout, so
 /// on AZERTY the key labelled A is VK_A wherever it sits.
@@ -92,6 +106,24 @@ pub fn windows_vk_letter(vk: u32) -> Option<&'static str> {
     } else {
         None
     }
+}
+
+/// The macOS Backspace keycode (kVK_Delete) the renderer keys word delete off.
+pub const MAC_KEYCODE_BACKSPACE: u32 = 51;
+
+/// Windows: the editing key a key-down is, as the renderer reads it
+/// (`key_code`, `chars`), or `None` when the hook should leave it alone.
+/// Ctrl alone (see `windows_is_edit_chord`). Backspace and Delete are word
+/// delete, sent as Backspace: the box has no caret, so both mean "the last
+/// word". A letter VK is one of the four commands, sent as its letter.
+pub fn windows_edit_key(vk: u32, ctrl: bool, alt: bool, shift: bool) -> Option<(u32, &'static str)> {
+    if !windows_is_edit_chord(ctrl, alt, shift) {
+        return None;
+    }
+    if windows_vk_is_word_delete(vk) {
+        return Some((MAC_KEYCODE_BACKSPACE, ""));
+    }
+    windows_vk_letter(vk).map(|letter| (0, letter))
 }
 
 #[cfg(test)]
@@ -173,5 +205,29 @@ mod tests {
         for vk in [0x56u32, 0x41, 0x0D, 0x20, 0x25, 0x2D] {
             assert!(!windows_vk_is_word_delete(vk), "{vk:#x} must not trigger word-delete");
         }
+    }
+
+    #[test]
+    fn windows_edit_keys_are_what_the_renderer_reads() {
+        assert_eq!(windows_edit_key(0x56, true, false, false), Some((0, "v")));
+        assert_eq!(windows_edit_key(0x41, true, false, false), Some((0, "a")));
+        assert_eq!(windows_edit_key(0x08, true, false, false), Some((51, "")), "Ctrl+Backspace");
+        assert_eq!(windows_edit_key(0x2E, true, false, false), Some((51, "")), "Ctrl+Delete");
+        assert_eq!(windows_edit_key(0x5A, true, false, false), None, "Ctrl+Z goes to the meeting app");
+        assert_eq!(windows_edit_key(0x56, true, false, true), None, "Ctrl+Shift+V");
+        assert_eq!(windows_edit_key(0x56, true, true, false), None, "AltGr+V is text");
+        assert_eq!(windows_edit_key(0x08, false, false, false), None, "plain Backspace");
+        assert_eq!(windows_edit_key(0x56, false, false, false), None, "plain V");
+    }
+
+    #[test]
+    fn mac_leaves_the_apps_own_cmd_letter_binds_alone() {
+        let chord = |vk: u32, mods: u32| AppChord { vk, mods, id: "x".into() };
+        let table = vec![chord(0x56, MOD_CTRL)]; // Cmd+V bound to an action
+        assert!(mac_edit_letter_is_app_chord(&table, "v"));
+        assert!(!mac_edit_letter_is_app_chord(&table, "a"), "Cmd+A is still select all");
+        assert!(!mac_edit_letter_is_app_chord(&[], "v"));
+        let shifted = vec![chord(0x56, MOD_CTRL | crate::app_chord::MOD_SHIFT)];
+        assert!(!mac_edit_letter_is_app_chord(&shifted, "v"), "Cmd+Shift+V is not Cmd+V");
     }
 }
