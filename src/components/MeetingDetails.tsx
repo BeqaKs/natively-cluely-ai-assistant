@@ -45,6 +45,7 @@ import { NotesCompare, type CompareReveal } from './meeting/NotesCompare';
 import { readableNotesMarkdown } from './notes/notesEditorModel';
 import { comparePair, shouldPromptRating, templatePickerOptions } from './meeting/notesFeedback';
 import { noteLineTime, notesContentKey, notesLabel, notesWereEdited, versionTabs, type VersionKey } from './meeting/notesView';
+import { copyText } from '../lib/copyText';
 
 registerPrismLanguages();
 
@@ -227,12 +228,7 @@ const CopyButton: React.FC<{ text: string }> = ({ text }) => {
     const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
     useEffect(() => () => { if (timer.current) clearTimeout(timer.current); }, []);
     const handle = () => {
-        // navigator.clipboard is undefined outside a secure context; the optional
-        // chain guards .writeText but the whole expression is then undefined, so
-        // guard the promise before calling .then/.catch on it.
-        const p = navigator.clipboard?.writeText(text);
-        if (!p) return;
-        p.then(() => {
+        copyText(text).then(() => {
             setCopied(true);
             if (timer.current) clearTimeout(timer.current);
             timer.current = setTimeout(() => setCopied(false), 2000);
@@ -2854,7 +2850,7 @@ ${meeting.detailedSummary.keyPoints?.map(item => `- ${item}`).join('\n') || 'Non
         if (!textToCopy) return false;
 
         try {
-            await navigator.clipboard.writeText(textToCopy);
+            await copyText(textToCopy);
             return true;
         } catch (err) {
             console.error('Failed to copy content:', err);

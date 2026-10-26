@@ -5,6 +5,7 @@ import { useT } from '../../i18n';
 import { buildReminderDraft, clipboardText, mailtoUrl, reminderGmailUrl, type ReminderDraft, type ReminderKind } from '../../lib/reminderDrafts.mjs';
 import { ASSIST_REFRESH_MS, msUntilNextLocalMidnight } from '../../lib/assistRefresh.mjs';
 import type { AssistCatchUp, AssistDailyBrief, AssistEvent, AssistMeetingBrief, AssistSender } from '../../types/assist';
+import { copyText } from '../../lib/copyText';
 
 /**
  * The launcher's assist sections (main: electron/services/assist):
@@ -378,7 +379,7 @@ const ReminderDraftPanel: React.FC<{ event: AssistEvent; kind: ReminderKind; sen
 
   const copy = async (): Promise<boolean> => {
     try {
-      await navigator.clipboard.writeText(clipboardText(draft));
+      await copyText(clipboardText(draft));
       setNote(t('Copied. Paste it into your email or chat.'));
       return true;
     } catch {

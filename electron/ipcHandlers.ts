@@ -17048,13 +17048,21 @@ export function initializeIpcHandlers(appState: AppState): void {
     if (typeof text !== 'string') return;
     appState.getLiveNotes().setText(text);
   });
-  // Copy from the notepad (transcript lines, an answer, the notes): the window
-  // never takes focus, and the page's clipboard API needs a focused document.
-  safeHandle('notes-window:copy-text', async (_event, text: unknown) => {
+  // Copy from a window that never takes focus: the notepad, and the overlay on
+  // Windows (WS_EX_NOACTIVATE). The page's clipboard API needs a focused
+  // document; main's clipboard does not. Every renderer copy button goes through
+  // 'clipboard:write-text' (src/lib/copyText.ts).
+  const writeClipboardText = (text: unknown) => {
     if (typeof text !== 'string' || !text || text.length > 2_000_000) return { success: false };
-    clipboard.writeText(text);
+    try {
+      clipboard.writeText(text);
+    } catch {
+      return { success: false };
+    }
     return { success: true };
-  });
+  };
+  safeHandle('notes-window:copy-text', async (_event, text: unknown) => writeClipboardText(text));
+  safeHandle('clipboard:write-text', async (_event, text: unknown) => writeClipboardText(text));
   // "Open meeting" in the notes window after Stop: the launcher opens that
   // meeting's page (App's launcher request, as Settings › About's demo meeting).
   safeHandle('notes-window:open-meeting', async (_event, meetingId: unknown) => {

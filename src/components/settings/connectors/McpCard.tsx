@@ -21,6 +21,7 @@ import appIconMac from '../../../assets/about/app-icon-mac.webp';
 import appIconWin from '../../../assets/about/app-icon-win.webp';
 import { isMac } from '../../../utils/platformUtils';
 import type { McpServerStatus } from '../../../types/meetingOutputs';
+import { copyText } from '../../../lib/copyText';
 
 type Snippets = NonNullable<McpServerStatus['snippets']>;
 
@@ -89,7 +90,7 @@ function useCopy(text: string): [boolean, () => void] {
     const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
     useEffect(() => () => clearTimeout(timer.current), []);
     const copy = () => {
-        navigator.clipboard.writeText(text).then(() => {
+        copyText(text).then(() => {
             setCopied(true);
             clearTimeout(timer.current);
             timer.current = setTimeout(() => setCopied(false), 1500);

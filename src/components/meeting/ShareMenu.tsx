@@ -18,6 +18,7 @@ import { SettingsSwitch } from '../settings/SettingsRow';
 import { ConnectorMark } from '../settings/ConnectorMark';
 import type { ConnectionsStatus, CrmMatchPreview, CrmService, MeetingOutputsApi } from '../../types/meetingOutputs';
 import { crmSendable, notionResultView, slackDraftStatus } from './outputsView';
+import { copyText } from '../../lib/copyText';
 
 const api = (): MeetingOutputsApi | undefined => window.electronAPI?.meetingOutputs;
 const MENU_CLOSE_MS = 150;
@@ -148,9 +149,7 @@ export const ShareMenu: React.FC<{
         setBusy(null);
         if (!res?.ok || !res.link) { showMessage(res?.message || t('The link could not be made. Try again.')); return; }
         const url = res.link.url;
-        const p = navigator.clipboard?.writeText(url);
-        if (!p) { showMessage(`${t('The link could not be copied. Here it is:')} ${url}`); return; }
-        p.then(() => flashSaved(t('Copied'))).catch(() => showMessage(`${t('The link could not be copied. Here it is:')} ${url}`));
+        copyText(url).then(() => flashSaved(t('Copied'))).catch(() => showMessage(`${t('The link could not be copied. Here it is:')} ${url}`));
     };
 
     // One column: Copy (the tab you are on), File (a PDF) and Link, a rule, then

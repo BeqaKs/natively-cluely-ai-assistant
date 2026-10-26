@@ -34,6 +34,7 @@ import { categorizeSttError } from '../lib/sttErrorMapper';
 import { splitGistLine, splitGistLineStreaming, collapseBlockGaps } from '../lib/displayMarkup';
 
 import type { SkillSummary } from '../types/electron';
+import { copyText } from '../lib/copyText';
 
 function SkillPicker({
   skills,
@@ -182,9 +183,7 @@ const CodeBlockChrome = ({ lang, code }: { lang: string; code: string }) => {
     if (timer.current) clearTimeout(timer.current);
   }, []);
   const handleCopy = () => {
-    const p = navigator.clipboard?.writeText(code);
-    if (!p) return;
-    p.then(() => {
+    copyText(code).then(() => {
       setCopied(true);
       if (timer.current) clearTimeout(timer.current);
       timer.current = setTimeout(() => setCopied(false), 2000);
@@ -11321,7 +11320,7 @@ Provide only the answer, nothing else.`;
       .filter(Boolean)
       .join('\n');
     try {
-      await navigator.clipboard.writeText(report);
+      await copyText(report);
     } catch {
       const ta = document.createElement('textarea');
       ta.value = report;

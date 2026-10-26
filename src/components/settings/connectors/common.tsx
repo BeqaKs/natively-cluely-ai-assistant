@@ -9,6 +9,7 @@ import {
 } from '../SettingsRow';
 import type { OutputResult } from '../../../types/meetingOutputs';
 import { GlassPill } from './parts';
+import { copyText } from '../../../lib/copyText';
 
 export type Flash = { tone: 'ok' | 'danger' | 'warn'; text: string } | null;
 
@@ -48,7 +49,7 @@ export const CopyField: React.FC<{ text: string; label?: string; multiline?: boo
     useEffect(() => () => clearTimeout(timer.current), []);
     const copy = useCallback(async () => {
         try {
-            await navigator.clipboard.writeText(text);
+            await copyText(text);
             setCopied(true);
             clearTimeout(timer.current);
             timer.current = setTimeout(() => setCopied(false), 1500);

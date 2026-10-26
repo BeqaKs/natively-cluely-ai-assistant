@@ -7,6 +7,7 @@ import { genMessageId } from '../utils/messageId';
 import nativelyIcon from './icon.png';
 import { useResolvedTheme } from '../hooks/useResolvedTheme';
 import { stripGistTrailer } from '../lib/displayMarkup';
+import { copyText } from '../lib/copyText';
 
 // ============================================
 // Types
@@ -71,7 +72,7 @@ const AssistantMessage: React.FC<{ content: string; isStreaming?: boolean; isLat
 
     const handleCopy = async () => {
         try {
-            await navigator.clipboard.writeText(stripGistTrailer(content));
+            await copyText(stripGistTrailer(content));
             setCopied(true);
             setTimeout(() => setCopied(false), 2000);
         } catch (err) {

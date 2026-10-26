@@ -967,6 +967,9 @@ interface ElectronAPI {
   /** The notepad's title, typed by the user (the meeting is saved under it). */
   /** Copy text from the notepad (main's clipboard: the window is never focused). */
   notesWindowCopyText: (text: string) => Promise<{ success: boolean }>;
+  /** Write the OS clipboard from main: the Windows overlay is never a focused
+   *  document, which navigator.clipboard needs (src/lib/copyText.ts). */
+  clipboardWriteText: (text: string) => Promise<{ success: boolean }>;
   liveNotesSetTitle: (title: string) => Promise<{ success: boolean; title?: string | null }>;
   /** The note template for the running (or next) meeting's notes; null clears. */
   liveNotesSetTemplate: (id: string | null) => Promise<{ success: boolean; error?: 'pro_required' | 'unknown_template' }>;
@@ -3064,6 +3067,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   liveNotesGetState: () => ipcRenderer.invoke('live-notes:get-state'),
   liveNotesMeetingInfo: () => ipcRenderer.invoke('live-notes:meeting-info'),
   notesWindowCopyText: (text: string) => ipcRenderer.invoke('notes-window:copy-text', text),
+  clipboardWriteText: (text: string) => ipcRenderer.invoke('clipboard:write-text', text),
   liveNotesSetTitle: (title: string) => ipcRenderer.invoke('live-notes:set-title', title),
   liveNotesSetTemplate: (id: string | null) => ipcRenderer.invoke('live-notes:set-template', id),
   liveNotesGetTemplate: () => ipcRenderer.invoke('live-notes:get-template'),

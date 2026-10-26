@@ -18,6 +18,7 @@ import {
   SETTINGS_WELL, SettingsDisclosureButton, SettingsMotionReady, SettingsNotice, SettingsPlaque, SettingsRow, SettingsSectionHeading,
   SettingsSwitch, useMotionReadyAfter, useSettingsTones, useSettledFlag,
 } from './SettingsRow';
+import { copyText } from '../../lib/copyText';
 
 // Label + one-line description + CATEGORY for each USER-FACING Intelligence OS flag.
 // Keyed by flag key.
@@ -186,7 +187,7 @@ const CopyBlock: React.FC<{ text: string; label?: string }> = ({ text, label }) 
   // (caught 2026-09-25 in the Intelligence harness, where clipboard access is denied).
   const handleCopy = useCallback(async () => {
     try {
-      await navigator.clipboard.writeText(text);
+      await copyText(text);
       setCopied(true);
       clearTimeout(timer.current);
       timer.current = setTimeout(() => setCopied(false), 1500);

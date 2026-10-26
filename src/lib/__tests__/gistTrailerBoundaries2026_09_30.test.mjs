@@ -63,7 +63,7 @@ describe('copy paths never copy the marker', () => {
     assert.doesNotMatch(ni, /clipboard\.writeText\(msg\.text\)/);
   });
   test('global chat: "Copy message" strips it', () => {
-    assert.match(SRC('src/components/GlobalChatOverlay.tsx'), /navigator\.clipboard\.writeText\(stripGistTrailer\(content\)\)/);
+    assert.match(SRC('src/components/GlobalChatOverlay.tsx'), /copyText\(stripGistTrailer\(content\)\)/);
   });
   test('phone: "Copy conversation" copies bodies; per-answer copy already did', () => {
     const client = SRC('electron/services/phoneMirrorClient.ts');
