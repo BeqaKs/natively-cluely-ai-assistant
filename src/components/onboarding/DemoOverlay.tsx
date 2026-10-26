@@ -20,7 +20,7 @@
 
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { motion, useReducedMotion } from 'framer-motion';
-import { ArrowRight, ChevronDown, HelpCircle, MessageSquare, Mic, Pencil, PointerOff, RefreshCw, SlidersHorizontal, X } from 'lucide-react';
+import { ArrowRight, ChevronDown, HelpCircle, MessageSquare, Mic, MousePointer2, Pencil, RefreshCw, SlidersHorizontal, X } from 'lucide-react';
 import TopPill from '../ui/TopPill';
 import { getOverlayAppearance } from '../../lib/overlayAppearance';
 import { ModelSelectorLabel } from '../ui/ModelSelectorLabel';
@@ -284,7 +284,7 @@ export const DemoOverlay: React.FC<Props> = ({ isLight, hidden, answerKey, shotK
                 <ModelSelectorLabel>{DEMO_MODEL_LABEL}</ModelSelectorLabel><ChevronDown size={12} className="shrink-0" />
               </span>
               <span className="w-7 h-7 rounded-[9px] flex items-center justify-center overlay-bare-icon"><SlidersHorizontal className="w-3.5 h-3.5" /></span>
-              <span className="w-7 h-7 rounded-[9px] flex items-center justify-center overlay-bare-icon"><PointerOff className="w-3.5 h-3.5" /></span>
+              <span className="w-7 h-7 rounded-[9px] flex items-center justify-center overlay-bare-icon"><MousePointer2 className="w-3.5 h-3.5" strokeDasharray="3 2.2" /></span>
             </div>
             <span className="w-7 h-7 rounded-full flex items-center justify-center overlay-icon-surface overlay-text-muted" style={appearance.iconStyle}><ArrowRight className="w-3.5 h-3.5" /></span>
           </div>
