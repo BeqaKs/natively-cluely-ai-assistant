@@ -7993,6 +7993,14 @@ const NativelyInterface: React.FC<NativelyInterfaceProps> = ({
           if (streamingIntentRef.current === data.mode) flushToken();
           discardEmptyPlaceholder(data.mode);
         }
+        // A follow-up's placeholder is named for its refinement ('shorten',
+        // 'rephrase', ...), not for the engine's 'follow_up' mode: it is the
+        // live stream's intent while that refinement is in flight.
+        const refining = streamingIntentRef.current;
+        if (data.mode === 'follow_up' && refining && overlayActionInFlightRef.current.has(`follow_up:${refining}`)) {
+          flushToken();
+          discardEmptyPlaceholder(refining);
+        }
         // What to Answer sometimes words its own failure: for a provider
         // failure the engine follows this event with a sentence as the answer.
         // The notice is posted regardless, so a failure is never silent, and
@@ -8411,8 +8419,12 @@ const NativelyInterface: React.FC<NativelyInterfaceProps> = ({
     analytics.trackCommandExecuted('follow_up_' + intent);
 
     try {
-      await window.electronAPI.generateFollowUp(intent);
+      const result = await window.electronAPI.generateFollowUp(intent);
+      // Nothing came back: cancelled, or overtaken by an answer (see
+      // handleClarify). A real failure arrives as onIntelligenceError.
+      if (!result?.refined) discardEmptyPlaceholder(intent);
     } catch (err) {
+      discardEmptyPlaceholder(intent);
       setMessages((prev) => [
         ...prev,
         {
