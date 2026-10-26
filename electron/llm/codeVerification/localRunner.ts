@@ -9,6 +9,8 @@
 //   - stdout/stderr capped (~256KB) -> kill (catches runaway prints)
 //   - global concurrency semaphore (max 2) so verification can't storm the box
 //   - per-language interpreter availability is detected once and cached
+//   - windowsHide on every spawn: the app has no console, so Windows would
+//     otherwise open a console window for each compiler and program run
 //
 // Mirrors the spawn-with-timeout pattern already used by CodexCliService.
 
@@ -43,7 +45,7 @@ const killTree = (child: ReturnType<typeof spawn>): void => {
   const pid = child.pid;
   if (isWin) {
     if (pid) {
-      try { spawn('taskkill', ['/pid', String(pid), '/T', '/F'], { stdio: 'ignore' }).unref?.(); } catch { /* noop */ }
+      try { spawn('taskkill', ['/pid', String(pid), '/T', '/F'], { stdio: 'ignore', windowsHide: true }).unref?.(); } catch { /* noop */ }
     }
     try { child.kill(); } catch { /* noop */ }
     return;
@@ -61,22 +63,58 @@ const acquire = (): Promise<void> => active < MAX_CONCURRENCY
 const release = (): void => { active--; const next = waiters.shift(); if (next) next(); };
 
 // ── interpreter availability (detected once, cached) ──────────────────────────
-const interpreterCache = new Map<string, boolean>();
+// The first launch of a toolchain can be slow on Windows (antivirus scans it, a
+// cold disk), so the probe waits longer there. A probe that runs out of time
+// answers "not available" for now WITHOUT caching it: the child keeps running
+// for up to PROBE_GIVE_UP_MS and a late clean exit caches "available", so the
+// next answer is checked. Only a definite answer (spawn error, exit code) is
+// cached; a child that never exits is killed and probed again next time.
+export const interpreterProbeTimeoutMs = (platform: NodeJS.Platform = process.platform): number =>
+  platform === 'win32' ? 10000 : 2000;
+const PROBE_GIVE_UP_MS = 30000;
+
 // `versionArgs` defaults to ['--version']; some tools differ (Go uses `version`).
-const isInterpreterAvailable = (cmd: string, versionArgs: string[] = ['--version']): Promise<boolean> => {
-  const cached = interpreterCache.get(cmd);
-  if (cached !== undefined) return Promise.resolve(cached);
-  return new Promise<boolean>(resolve => {
-    let settled = false;
-    const done = (ok: boolean) => { if (!settled) { settled = true; interpreterCache.set(cmd, ok); resolve(ok); } };
-    try {
-      const child = spawn(cmd, versionArgs, { stdio: ['ignore', 'ignore', 'ignore'] });
-      child.on('error', () => done(false));
-      child.on('exit', code => done(code === 0));
-      setTimeout(() => { try { child.kill('SIGKILL'); } catch { /* noop */ } done(false); }, 2000).unref?.();
-    } catch { done(false); }
-  });
+export const createInterpreterProbe = (timeoutMs = interpreterProbeTimeoutMs(), giveUpMs = PROBE_GIVE_UP_MS) => {
+  const cache = new Map<string, boolean>();
+  const inflight = new Map<string, Promise<boolean>>();
+  return (cmd: string, versionArgs: string[] = ['--version']): Promise<boolean> => {
+    const cached = cache.get(cmd);
+    if (cached !== undefined) return Promise.resolve(cached);
+    const pending = inflight.get(cmd);
+    if (pending) return pending;
+    // Settled once: after a give-up the killed child still emits exit (or
+    // error), and that must not cache "no" or drop a newer probe's entry.
+    let finished = false;
+    let probe: Promise<boolean> | undefined;
+    const settled = new Promise<boolean>(resolve => {
+      let answered = false;
+      let waitTimer: NodeJS.Timeout | undefined;
+      let giveUpTimer: NodeJS.Timeout | undefined;
+      const answer = (ok: boolean) => { if (!answered) { answered = true; resolve(ok); } };
+      const finish = (ok: boolean | undefined) => {
+        if (finished) return;
+        finished = true;
+        clearTimeout(waitTimer); clearTimeout(giveUpTimer);
+        if (ok !== undefined) cache.set(cmd, ok);
+        if (probe && inflight.get(cmd) === probe) inflight.delete(cmd);
+        answer(ok ?? false);
+      };
+      try {
+        const child = spawn(cmd, versionArgs, { stdio: ['ignore', 'ignore', 'ignore'], windowsHide: true });
+        child.on('error', () => finish(false));
+        child.on('exit', code => finish(code === 0));
+        waitTimer = setTimeout(() => answer(false), timeoutMs);
+        waitTimer.unref?.();
+        giveUpTimer = setTimeout(() => { finish(undefined); killTree(child); }, giveUpMs);
+        giveUpTimer.unref?.();
+      } catch { finish(false); }
+    });
+    probe = settled;
+    if (!finished) inflight.set(cmd, probe);
+    return probe;
+  };
 };
+const isInterpreterAvailable = createInterpreterProbe();
 
 // Python interpreter name differs by platform. POSIX installs expose `python3`;
 // the python.org Windows installer ships `python.exe` plus the `py` launcher and
@@ -88,9 +126,11 @@ export const PYTHON_CANDIDATES: ReadonlyArray<readonly [string, string[]]> = isW
   ? [['python', ['--version']], ['py', ['-3', '--version']], ['python3', ['--version']]]
   : [['python3', ['--version']]];
 
-let resolvedPythonCmd: string[] | null | undefined; // undefined=unprobed, null=none found
+// "None found" is not cached here: a candidate whose probe ran out of time may
+// answer later, and the probe cache already makes a repeat lookup cheap.
+let resolvedPythonCmd: string[] | undefined;
 const resolvePythonCmd = async (): Promise<string[] | null> => {
-  if (resolvedPythonCmd !== undefined) return resolvedPythonCmd;
+  if (resolvedPythonCmd) return resolvedPythonCmd;
   for (const [cmd, versionArgs] of PYTHON_CANDIDATES) {
     if (await isInterpreterAvailable(cmd, versionArgs)) {
       // Drop the trailing `--version` probe flag; keep launcher selectors like `-3`.
@@ -98,8 +138,7 @@ const resolvePythonCmd = async (): Promise<string[] | null> => {
       return resolvedPythonCmd;
     }
   }
-  resolvedPythonCmd = null;
-  return resolvedPythonCmd;
+  return null;
 };
 
 export const localLanguageAvailable = async (language: VerifyLanguage): Promise<boolean> => {
@@ -163,7 +202,7 @@ const spawnOnce = (argv: string[], scriptPath: string, cwd: string, tcJson: stri
       // grandchild past the 3s bound. On Windows there is no process group;
       // killTree() uses `taskkill /T` to walk the tree instead, so detaching
       // would only orphan the child from our handle without helping.
-      child = spawn(cmd, [...prefixArgs, scriptPath], { cwd, env, stdio: ['ignore', 'pipe', 'pipe'], detached: !isWin });
+      child = spawn(cmd, [...prefixArgs, scriptPath], { cwd, env, stdio: ['ignore', 'pipe', 'pipe'], detached: !isWin, windowsHide: true });
     } catch (e: any) {
       resolve({ stdout: '', stderr: String(e?.message || e), code: null, signal: null, timedOut: false, oversized: false, ms: Date.now() - start });
       return;
@@ -325,7 +364,7 @@ const spawnCmd = (
     try {
       // detached only on POSIX (own process group for negative-pid group-kill);
       // on Windows killTree() walks the tree via taskkill instead. See spawnOnce.
-      child = spawn(cmd, args, { cwd, env, stdio: [stdinFd ?? 'ignore', 'pipe', 'pipe'], detached: !isWin });
+      child = spawn(cmd, args, { cwd, env, stdio: [stdinFd ?? 'ignore', 'pipe', 'pipe'], detached: !isWin, windowsHide: true });
     } catch (e: any) {
       if (stdinFd !== undefined) { try { fs.closeSync(stdinFd); } catch { /* noop */ } }
       resolve({ stdout: '', stderr: String(e?.message || e), code: null, signal: null, timedOut: false, oversized: false, ms: Date.now() - start });
