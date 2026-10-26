@@ -15,7 +15,7 @@ import './llm/promptDebug';
 import './utils/pinUserData';
 
 import { buildEmbeddingConfig } from './rag/embeddingConfigIdentity';
-import { app, BrowserWindow, Tray, Menu, nativeImage, ipcMain, shell, systemPreferences, screen, desktopCapturer } from "electron"
+import { app, BrowserWindow, Tray, Menu, nativeImage, ipcMain, shell, systemPreferences, screen, desktopCapturer, clipboard } from "electron"
 import * as crypto from "crypto"
 import path from "path"
 import fs from "fs"
@@ -2035,6 +2035,22 @@ export class AppState {
         const target = typingTargetOf(event);
         return target ? stealth.start(target) : false;
       });
+      // Paste / copy / cut while typing through the hook (the hooks deliver
+      // Ctrl/Cmd+V/C/X to the window being typed in). That window is never
+      // focused, so the renderer's navigator.clipboard refuses; go through main.
+      // The overlay and the notes window only, and only while a session that
+      // window started is running: the clipboard can hold anything the user
+      // copied, and a paste only ever comes from a key typed in that session.
+      const typingSessionOf = (event: any): boolean => {
+        const target = typingTargetOf(event);
+        return !!target && stealth.isActive() && stealth.getTarget() === target;
+      };
+      registerStealthHandler('stealth-edit:read-clipboard', (event: any) =>
+        typingSessionOf(event) ? clipboard.readText() : '',
+      );
+      registerStealthHandler('stealth-edit:write-clipboard', (event: any, text: unknown) => {
+        if (typingSessionOf(event) && typeof text === 'string') clipboard.writeText(text);
+      });
       if (process.platform === 'darwin') {
         // IME users (Pinyin, Hangul, Kanji, …) cannot compose under the tap
         // because CGEventTap fires below TIS. Renderer consults this before
@@ -2073,6 +2089,8 @@ export class AppState {
       registerStealthHandler('stealth-tap:open-settings', () => {});
       registerStealthHandler('stealth-tap:stop', () => {});
       registerStealthHandler('stealth-tap:start', () => false);
+      registerStealthHandler('stealth-edit:read-clipboard', () => '');
+      registerStealthHandler('stealth-edit:write-clipboard', () => {});
       // Non-desktop: returns true so the renderer's stealthAutoEngageOkRef
       // stays true and the explicit isCgEventTapAvailableRef guard (added in
       // PR #250) is what actually gates blockInputFocus. Inverted relative

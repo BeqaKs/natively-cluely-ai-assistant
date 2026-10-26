@@ -12110,6 +12110,16 @@ html[data-platform="linux"][data-window="launcher"] body {
   visibility: hidden;
   flex: none;
 }
+/* Select all (Ctrl/Cmd+A while stealth typing): the input can't show its own
+   selection (never focused on Windows, readOnly under the tap), so the mirror
+   paints one: the glyph-width copy turns visible with transparent glyphs and a
+   selection-coloured fill laid over the real text. */
+.nat-caret-mirror > .nat-caret-text.nat-caret-selected {
+  visibility: visible;
+  color: transparent;
+  background: color-mix(in srgb, var(--accent-primary) 32%, transparent);
+  border-radius: 2px;
+}
 .nat-caret {
   flex: none;
   display: inline-block;
@@ -12726,6 +12736,9 @@ html[data-tooltips='off'] .t-tt {
 .notepad .notes-editor .notes-find-current { background: #f59e0b99; border-radius: 0.25rem; animation: np-beep 200ms ease-in-out; }
 .notepad .notes-editor .notes-hook-selection { background: var(--np-selection); }
 .notepad .notes-editor .notes-hook-caret { border-left-color: var(--np-caret); }
+/* Ctrl/Cmd+A in a hook-typed one-line field: the window has no focus, so the
+   input's own selection would not paint. NotesWindow sets the text's width. */
+.notepad input[data-hook-selected="true"] { background-image: linear-gradient(var(--np-selection), var(--np-selection)); background-repeat: no-repeat; background-origin: content-box; background-position: left center; background-size: var(--hook-sel-w, 0px) 1.3em; }
 /* The scroll fades under the toolbar and above the bottom bar. */
 .np-fade-top { background: linear-gradient(to bottom, var(--np-surface), transparent); }
 .np-fade-bottom { background: linear-gradient(to top, var(--np-surface) 40%, transparent); }

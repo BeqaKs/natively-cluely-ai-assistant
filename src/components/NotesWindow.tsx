@@ -1,10 +1,11 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
 import { ArrowDown, Check, ChevronDown, ChevronUp, Copy, FileText, ImagePlus, LayoutGrid, Minus, MoreHorizontal, Paperclip, Pause, Play, RotateCcw, Scissors, Search, SquarePen, X } from 'lucide-react';
 import { useResolvedTheme } from '../hooks/useResolvedTheme';
 import { applyTypedKeyAtEnd, plainAnswerText } from './meeting/notesView';
 import { useLastTimeRecap } from './assist/useLastTimeRecap';
 import { shouldBlockFocus, shouldFireStealthTapStart } from '../lib/overlayStealthFocusGuards.mjs';
+import { editCommand, editShortcutLetter, paste } from '../lib/stealthEdit.mjs';
 import { NotesEditor, type NotesEditorHandle } from './notes/NotesEditor';
 import { NotesHeading, type FolderChoice, type HeadingInfo } from './notes/NotesHeading';
 import { NotesEnhanced, type NotesEnhancedHandle } from './notes/NotesEnhanced';
@@ -487,6 +488,45 @@ const NotesWindow: React.FC<{ preview?: NotesWindowPreview }> = ({ preview }) =>
         template: { get: () => galleryQueryRef.current, set: setGalleryQuery, submit: () => {} },
     };
 
+    // Ctrl/Cmd+A in a one-line field selects all of it (typing appends, so
+    // "everything" is the only selection there); the next key replaces it, as
+    // in the overlay's box. Held with the value it covered: the selection ends
+    // with the session, a move to another field, or any change to that text.
+    const fieldSelRef = useRef<{ field: Field; value: string } | null>(null);
+    const [fieldSel, setFieldSelState] = useState<Field | null>(null);
+    const setFieldSel = useCallback((f: Field | null) => {
+        fieldSelRef.current = f ? { field: f, value: textFields.current[f]?.get() ?? '' } : null;
+        setFieldSelState(f);
+    }, []);
+    const fieldSelected = useCallback((f: Field) => {
+        const sel = fieldSelRef.current;
+        return !!sel && sel.field === f && textFields.current[f]?.get() === sel.value;
+    }, []);
+    useEffect(() => {
+        const sel = fieldSelRef.current;
+        if (sel && (!hookTyping || field !== sel.field || !fieldSelected(sel.field))) setFieldSel(null);
+    }, [hookTyping, field, ask, titleDraft, attendeeDraft, folderDraft, findQuery, search, galleryQuery, fieldSelected, setFieldSel]);
+    // The window has no focus while the hook types, so an input's own
+    // selection would not paint: draw it behind the text instead.
+    useLayoutEffect(() => {
+        if (!fieldSel) return;
+        const input = document.querySelector<HTMLInputElement>('input[data-hook-typing="true"]');
+        if (!input) return;
+        const cs = getComputedStyle(input);
+        const ctx = document.createElement('canvas').getContext('2d');
+        if (!ctx) return;
+        ctx.font = cs.font;
+        const spacing = parseFloat(cs.letterSpacing) || 0;
+        const room = input.clientWidth - (parseFloat(cs.paddingLeft) || 0) - (parseFloat(cs.paddingRight) || 0);
+        const width = Math.min(ctx.measureText(input.value).width + spacing * input.value.length, room);
+        input.dataset.hookSelected = 'true';
+        input.style.setProperty('--hook-sel-w', `${Math.max(0, Math.ceil(width))}px`);
+        return () => {
+            delete input.dataset.hookSelected;
+            input.style.removeProperty('--hook-sel-w');
+        };
+    }, [fieldSel]);
+
     useEffect(() => {
         const api = window.electronAPI;
         if (preview || !api?.stealthTapStart || !api.onStealthTapState || !api.onStealthKeyCaptured) return;
@@ -506,6 +546,38 @@ const NotesWindow: React.FC<{ preview?: NotesWindowPreview }> = ({ preview }) =>
         const offKey = api.onStealthKeyCaptured((ev) => {
             if (!hookTypingRef.current) return;
             const f = fieldRef.current;
+            // Ctrl/Cmd+V/A/C/X: the hooks keep these from the meeting app and
+            // deliver them here as their letter; never typed as text. The notes
+            // act on their drawn selection; a one-line field has no caret, so
+            // its only selection is all of it (Ctrl/Cmd+A), and a paste goes at
+            // the end or over that selection.
+            const letter = editShortcutLetter(ev);
+            if (letter) {
+                const tf = f === 'notes' ? null : textFields.current[f];
+                if (letter === 'v') {
+                    api.stealthReadClipboard?.()
+                        .then((text) => {
+                            // Not after the session ended or moved to another field.
+                            if (!text || !hookTypingRef.current || fieldRef.current !== f) return;
+                            if (f === 'notes') editorRef.current?.pasteText(text);
+                            else if (tf) {
+                                const allSelected = fieldSelected(f);
+                                if (allSelected) setFieldSel(null);
+                                tf.set(paste({ value: tf.get(), allSelected }, text).value);
+                            }
+                        })
+                        .catch(() => {});
+                } else if (f === 'notes') {
+                    const copied = editorRef.current?.editShortcut(letter);
+                    if (copied) api.stealthWriteClipboard?.(copied).catch(() => {});
+                } else if (tf) {
+                    const next = editCommand({ value: tf.get(), allSelected: fieldSelected(f) }, letter);
+                    if (next.copy !== undefined) api.stealthWriteClipboard?.(next.copy).catch(() => {});
+                    if (next.value !== tf.get()) tf.set(next.value);
+                    setFieldSel(next.allSelected ? f : null);
+                }
+                return;
+            }
             if (f === 'notes') {
                 editorRef.current?.typeKey(ev);
                 return;
@@ -513,15 +585,20 @@ const NotesWindow: React.FC<{ preview?: NotesWindowPreview }> = ({ preview }) =>
             const tf = textFields.current[f];
             if (!tf) return;
             if (f === 'template' && ev.isKeyDown && ev.keyCode === 53) {
+                setFieldSel(null);
                 closeGallery();
                 return;
             }
             if (ev.isKeyDown && (ev.keyCode === 36 || ev.keyCode === 76)) {
+                setFieldSel(null);
                 tf.submit();
                 return;
             }
-            const next = applyTypedKeyAtEnd(tf.get(), ev);
-            if (next !== null) tf.set(next);
+            const allSelected = fieldSelected(f);
+            const next = applyTypedKeyAtEnd(tf.get(), ev, allSelected);
+            if (next === null) return;
+            if (allSelected) setFieldSel(null);
+            tf.set(next);
         });
         return () => { offState(); offKey(); };
     }, []);
