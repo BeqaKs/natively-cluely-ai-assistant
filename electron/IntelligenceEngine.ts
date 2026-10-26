@@ -7581,10 +7581,14 @@ export class IntelligenceEngine extends EventEmitter {
 
         this.setMode('follow_up');
 
+        // Set once this press has a generation of its own; null before that.
+        let generationId: number | null = null;
         try {
             if (!this.followUpLLM) {
                 console.error('[IntelligenceEngine] FollowUpLLM not initialized');
                 this.setMode('idle');
+                // Said here, where the reason is known (see runClarify).
+                this.emit('error', new Error('Follow-up needs an AI model. Add one in Settings, then try again.'), 'follow_up');
                 return null;
             }
 
@@ -7631,7 +7635,7 @@ export class IntelligenceEngine extends EventEmitter {
                 } catch { return null; }
             })();
 
-            const generationId = ++this.currentGenerationId;
+            generationId = ++this.currentGenerationId;
             let fullRefined = "";
             const followUpOptions = {
                 ...(followUpContractRule ? { contractRule: followUpContractRule } : {}),
@@ -7654,6 +7658,14 @@ export class IntelligenceEngine extends EventEmitter {
                 }
                 this.emit('refined_answer_token', token, intent);
                 fullRefined += token;
+            }
+
+            // The stream ended with no words and nothing overtook it: said, not
+            // left as a press that vanishes (see runClarify).
+            if (!streamAborted && !fullRefined.trim() && this.currentGenerationId === generationId) {
+                this.setMode('idle');
+                this.emit('error', new Error('No new version came back. Try again.'), 'follow_up');
+                return null;
             }
 
             if (!streamAborted && fullRefined) {
@@ -7696,6 +7708,9 @@ export class IntelligenceEngine extends EventEmitter {
             return fullRefined;
 
         } catch (error) {
+            // Cancelled or overtaken before it broke: nothing to report, and
+            // the mode now belongs to what overtook it (see runClarify).
+            if (generationId !== null && this.currentGenerationId !== generationId) return null;
             this.emit('error', error as Error, 'follow_up');
             this.setMode('idle');
             return null;
