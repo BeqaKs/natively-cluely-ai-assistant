@@ -4,6 +4,7 @@ import "./index.css"
 import { THEME_CACHE_KEY, applyResolvedTheme } from "./lib/themeTransition.mjs"
 import { createSwitchableTooltipGuard, installNativeTooltipGuard, shouldSuppressNativeTooltips } from "./lib/nativeTooltipGuard.mjs"
 import { wireStealthTooltips } from "./lib/stealthTooltips.mjs"
+import { installOrphanReleaseClick, shouldRecoverOrphanReleases } from "./lib/orphanReleaseGuard.mjs"
 
 // ── Renderer crash/hang diagnostics ─────────────────────────────────────────
 // Surface uncaught errors and unhandled promise rejections through console.error
@@ -51,6 +52,15 @@ document.documentElement.setAttribute(
   'data-window',
   new URLSearchParams(window.location.search).get('window') || 'launcher'
 );
+
+// The overlay's popover windows can lose a click's press on Windows (the release
+// arrives, the press never does, so no click). Recover it; see orphanReleaseGuard.mjs.
+if (shouldRecoverOrphanReleases(
+  new URLSearchParams(window.location.search).get('window'),
+  window.electronAPI?.platform ?? '',
+)) {
+  installOrphanReleaseClick(window);
+}
 
 // The overlay family never shows a native tooltip: it is a separate OS window
 // outside the overlay's content protection, so it appears in screen shares.
