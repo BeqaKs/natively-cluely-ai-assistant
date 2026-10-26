@@ -2,7 +2,7 @@
 //
 // BUG (Windows): the scrubbed env the verifier spawns tools with set only the
 // POSIX HOME/TMPDIR. Windows tools read USERPROFILE/LOCALAPPDATA/APPDATA and
-// TEMP/TMP instead, so `go run` refused to build ("GOCACHE is not defined and
+// TEMP/TMP instead, so Go refused to build ("GOCACHE is not defined and
 // %LocalAppData% is not defined") and every Go answer verified as an error.
 // Both platform branches are exercised here on any host.
 
