@@ -193,8 +193,12 @@ describe('renderer typed chat', () => {
     assert.doesNotMatch(submit, /ragQueryLive/);
     assert.match(submit, /streamGeminiChat\(\s*userText \|\| 'Analyze this screenshot',[\s\S]*conversationContextForSubmit/);
   });
-  test('the voice path still queries live RAG (it is legacy-owned via skipSystemPrompt)', () => {
+  test('the voice path still queries live RAG for self-contained asks (legacy skipSystemPrompt path)', () => {
     const voice = between(ui, 'const handleAnswerNow = async () => {', 'const selectSkill = useCallback');
     assert.match(voice, /ragQueryLive\?\.\(question\)/);
+    // Issue #552: referential follow-ups skip that pre-flight so prior chat
+    // reaches the speaking prompt instead of being answered from chunks alone.
+    assert.match(voice, /shouldSkipLiveRagForChatFollowUp/);
+    assert.match(voice, /Prior conversation context/);
   });
 });

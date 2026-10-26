@@ -343,6 +343,7 @@ import {
   type DirectAssistFallbackNotice,
 } from '../lib/directAssistFailure.mjs';
 import { addAttachment, withoutFormulaImages } from '../lib/attachmentTray.mjs';
+import { shouldSkipLiveRagForChatFollowUp } from '../lib/liveRagFollowUpGate.mjs';
 import {
   applyFirstStreamingToken,
   commitStreamingFlush,
@@ -9336,18 +9337,32 @@ const NativelyInterface: React.FC<NativelyInterfaceProps> = ({
         try {
           let prompt = '';
 
+          // Prior turns only — the new user bubble was just queued via
+          // setMessages, so React state here is still the previous ring.
+          const conversationContextForSubmit = buildConversationContextFromMessages(messages);
+          // A prior user turn is enough: assistant bubbles often use role
+          // `system` with intent `chat`, but the user row is the referent.
+          const hasPriorChat = messages.some((m) => m.role === 'user' || m.role === 'assistant');
+
           if (currentAttachments.length > 0) {
             prompt = `You are a helper. The user has provided a screenshot and a spoken question/command.
 User said: "${question}"
-
+${conversationContextForSubmit ? `\nPrior conversation context:\n${conversationContextForSubmit}\n` : ''}
 Instructions:
 1. Analyze the screenshot in the context of what the user said.
 2. Provide a direct, helpful answer.
 3. Be concise.`;
           } else {
-            const ragResult = await window.electronAPI.ragQueryLive?.(question);
-            if (ragResult?.success) {
-              return;
+            // Issue #552: live RAG answers from transcript chunks alone and
+            // never sees prior chat. Skip it for referential follow-ups so the
+            // speaking prompt below can carry conversationContextForSubmit.
+            // Self-contained first questions still hit ragQueryLive.
+            const skipLiveRag = shouldSkipLiveRagForChatFollowUp(question, { hasPriorChat });
+            if (!skipLiveRag) {
+              const ragResult = await window.electronAPI.ragQueryLive?.(question);
+              if (ragResult?.success) {
+                return;
+              }
             }
 
             prompt = `You are a real-time interview assistant. The user just repeated or paraphrased a question from their interviewer.
@@ -9357,7 +9372,7 @@ Instructions:
 3. Keep the answer conversational but informative (2-4 sentences ideal)
 4. Do NOT include phrases like "The question is..." - just give the answer directly
 5. Format for speaking out loud, not for reading
-
+${conversationContextForSubmit ? `\nPrior conversation context:\n${conversationContextForSubmit}\n` : ''}
 Provide only the answer, nothing else.`;
           }
 
