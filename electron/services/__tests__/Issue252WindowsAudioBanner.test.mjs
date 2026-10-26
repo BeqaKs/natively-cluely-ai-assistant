@@ -97,6 +97,20 @@ test('issue #252: Open Settings button does not unconditionally fire x-apple.sys
   assert.equal((stripped.match(/'x-apple\.systempreferences:/g) || []).length, 0,
     'the banner JSX must not hold an x-apple URL literal; the routing helper owns them');
 
+  const { audioWarningAction } = await import(
+    new URL('../../../src/lib/audioWarningAction.mjs', import.meta.url).href
+  );
+  const kinds = ['audio-capture-failure', 'screen-recording-permission'];
+  const channels = ['mic', 'system', undefined];
+  const titles = [undefined, 'Microphone Is Silent', 'Microphone Blocked', 'Screen Recording Blocked',
+    'Input and Output Are the Same Device', 'System Audio Unavailable'];
+  for (const platform of ['win32', 'linux']) {
+    for (const kind of kinds) for (const channel of channels) for (const titleKey of titles) {
+      const action = audioWarningAction({ platform, kind, channel, titleKey, message: '' });
+      assert.notEqual(action.type, 'external', `${platform}/${kind}/${channel}/${titleKey} must not open a macOS pane`);
+    }
+  }
+
   // The banner JSX must include a JSX-level conditional keyed on the
   // warning kind so that the audio-capture-failure case renders an
   // in-app settings action instead of the macOS URL.
@@ -122,4 +136,26 @@ test('issue #252: Open Settings button does not unconditionally fire x-apple.sys
     /openMicSettings/,
     'Windows microphone warnings must open Windows mic privacy settings via openMicSettings'
   );
+});
+
+test('Windows: a keyboard hook that will not start shows its own banner, in its own fold', () => {
+  // stealth-tap-state {active:false, reason:'permission'} also fires on
+  // Windows when tap.start() fails (StealthKeyboardManager), but the
+  // Accessibility banner is macOS-only, so the failure was silent.
+  const fold = ui.match(/<ChromeFold show=\{isWindows && stealthPermissionMissing\}[\s\S]*?<\/ChromeFold>/);
+  assert.ok(fold, 'the Windows stealth banner must sit in a ChromeFold gated on isWindows');
+  assert.match(fold[0], /stealthTapStart/, 'Try Again must re-engage stealth typing');
+  assert.doesNotMatch(fold[0], /stealthTapOpenSettings|Accessibility/, 'no macOS permission advice on Windows');
+});
+
+test('page capture banner: the Companion button keys on the text main actually sends', () => {
+  // The button shows when the detail names Settings → Companion. If
+  // pageCaptureFallback.ts renames the tab again, the button would silently
+  // never show (the PR first keyed on "Settings → Sync", renamed since).
+  const fallback = read('electron/services/pageCaptureFallback.ts');
+  assert.ok(fallback.includes('Settings → Companion'), 'pageCaptureFallback.ts must still name Settings → Companion');
+  const banner = ui.match(/testId="fold-capture-fallback"[\s\S]*?<\/ChromeFold>/);
+  assert.ok(banner, 'capture fallback fold should be present');
+  assert.match(banner[0], /detail\.includes\('Settings → Companion'\)/);
+  assert.match(banner[0], /openSettingsTab\?\.\('phone-mirror'\)/);
 });

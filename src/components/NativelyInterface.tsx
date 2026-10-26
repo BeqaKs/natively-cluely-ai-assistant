@@ -11812,6 +11812,16 @@ Provide only the answer, nothing else.`;
                   message={captureFallback.detail}
                   onDismiss={() => setCaptureFallback(null)}
                   dismissLabel={t('Dismiss page capture notice')}
+                  // The detail sends the user to pair or re-pair the extension
+                  // in Settings → Companion (tab id phone-mirror); take them there.
+                  actions={captureFallback.detail.includes('Settings → Companion') ? (
+                    <OverlayBannerButton
+                      variant="primary"
+                      onClick={() => window.electronAPI?.openSettingsTab?.('phone-mirror')}
+                    >
+                      {t('Open Companion')}
+                    </OverlayBannerButton>
+                  ) : undefined}
                 />
               )}
               </ChromeFold>
@@ -11941,6 +11951,35 @@ Provide only the answer, nothing else.`;
                         {appRestarting ? t('Restarting…') : t('Restart Now')}
                       </OverlayBannerButton>
                     </>
+                  }
+                />
+              )}
+              </ChromeFold>
+
+              {/* Windows: the same failure (the keyboard hook would not
+                  start) sets this state, but the banner above is macOS-only,
+                  so stealth typing just did nothing. There is no permission
+                  to grant; the usual cause is security software blocking the
+                  low-level hook. */}
+              <ChromeFold show={isWindows && stealthPermissionMissing} overlayVisible={isExpanded} requestHeightMotion={requestChromeHeightMotion} innerClassName="pt-3 pb-1" testId="fold-stealth-hook-blocked">
+              {isWindows && stealthPermissionMissing && (
+                <OverlayBanner
+                  className="mx-4"
+                  data-stealth-ignore="true"
+                  title={t('Stealth Typing Blocked')}
+                  message={t('Windows did not let Natively capture typing. This is usually security software blocking the keyboard hook. Allow Natively there, then try again.')}
+                  onDismiss={() => setStealthPermissionMissing(false)}
+                  dismissLabel={t('Dismiss')}
+                  dismissButtonProps={{ 'data-stealth-ignore': 'true' }}
+                  actions={
+                    <OverlayBannerButton
+                      variant="primary"
+                      onClick={() => { void window.electronAPI.stealthTapStart?.(); }}
+                      title={t('Try to start stealth typing again')}
+                      data-stealth-ignore="true"
+                    >
+                      {t('Try Again')}
+                    </OverlayBannerButton>
                   }
                 />
               )}
@@ -12457,33 +12496,6 @@ Provide only the answer, nothing else.`;
                   isLightTheme={isLightTheme}
                   t={t}
                 />
-
-                {/* Windows: the same failure (the keyboard hook would not
-                    start) used to set this state behind the macOS-only banner
-                    above, so stealth typing just did nothing. There is no
-                    permission to grant; the usual cause is security software
-                    blocking the low-level hook. */}
-                {isWindows && stealthPermissionMissing && (
-                  <OverlayBanner
-                    className="mb-2"
-                    data-stealth-ignore="true"
-                    title={t('Stealth Typing Blocked')}
-                    message={t('Windows did not let Natively capture typing. This is usually security software blocking the keyboard hook. Allow Natively there, then try again.')}
-                    onDismiss={() => setStealthPermissionMissing(false)}
-                    dismissLabel={t('Dismiss')}
-                    dismissButtonProps={{ 'data-stealth-ignore': 'true' }}
-                    actions={
-                      <OverlayBannerButton
-                        variant="primary"
-                        onClick={() => { void window.electronAPI.stealthTapStart?.(); }}
-                        title={t('Try to start stealth typing again')}
-                        data-stealth-ignore="true"
-                      >
-                        {t('Try Again')}
-                      </OverlayBannerButton>
-                    }
-                  />
-                )}
 
                 {/* data-stealth-engage marks this subtree as
                                     the ONLY clickable region that engages the
