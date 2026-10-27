@@ -1,6 +1,7 @@
 // One onboarding card per launch, and `order` decides which: Natively Plans
 // (anyone not on a plan) comes first, then the Natively API offer (for someone
-// with no AI whose trial is used), then the browser extension. That only holds if neither can become ready before the other.
+// with no AI whose trial is used), then the browser extension. That only holds
+// if none of them can become ready before the one ahead of it.
 // The extension used to wait 5 s on Home against 6 s for the offers above it,
 // so it showed first and spent the launch's slot; on 2026-10-08 that kept the
 // trial card from 92% of new installs. The trial is no longer a card (it starts
