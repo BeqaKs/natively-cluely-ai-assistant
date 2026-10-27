@@ -2033,6 +2033,13 @@ export function initializeIpcHandlers(appState: AppState): void {
             try {
               PhoneMirrorService.getInstance().publishUserMessage(String(myStreamId), String(message || ''), { awaitingAnswer: true });
             } catch { /* mirror only */ }
+            // The Answer button's follow-ups come here too (issue #552), and the
+            // mic has already stored what was said. Checked now, as the legacy
+            // record site does, so the two-minute window starts from the ask.
+            try {
+              questionOnRecordAsSpeech = options?.liveQuestion === true
+                && spokenLineAlreadyInTranscript(appState.getIntelligenceManager()?.getCurrentMeetingTranscript(SPOKEN_DEDUPE_TAIL_LINES), message, Date.now());
+            } catch { /* not on record: stored as typed below */ }
             const { buildV3Prompt } = require('./context-intelligence/orchestration/engine-bridge');
             const { resolveModePolicy, isModeId, resolveModeIdOrWarn } = require('./context-intelligence/policies/mode-policy-registry');
             const { ModesManager } = require('./services/ModesManager');
@@ -2866,8 +2873,10 @@ export function initializeIpcHandlers(appState: AppState): void {
               } // end answer-side sinks
               try {
                 const im = appState.getIntelligenceManager();
-                im?.addTranscript?.({ text: String(message || ''), speaker: 'user', timestamp: Date.now(), final: true, origin: 'manual_chat' }, true);
-                if (!v3Truncated) im?.addAssistantMessage?.(finalText, undefined, 'manual_chat');
+                if (!questionOnRecordAsSpeech) {
+                  im?.addTranscript?.({ text: String(message || ''), speaker: 'user', timestamp: Date.now(), final: true, origin: 'manual_chat' }, true);
+                }
+                if (!v3Truncated) im?.addAssistantMessage?.(finalText, forThisTurn(undefined), 'manual_chat');
                 // Usage too: ai_interactions ("usage" in Meeting Notes) is
                 // populated solely from SessionTracker's usage log at
                 // saveMeeting time. Every legacy exit logs it; without this,

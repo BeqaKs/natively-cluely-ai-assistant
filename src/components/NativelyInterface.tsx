@@ -343,6 +343,7 @@ import {
   type DirectAssistFallbackNotice,
 } from '../lib/directAssistFailure.mjs';
 import { addAttachment, withoutFormulaImages } from '../lib/attachmentTray.mjs';
+import { shouldSkipLiveRagForChatFollowUp } from '../lib/liveRagFollowUpGate.mjs';
 import {
   applyFirstStreamingToken,
   commitStreamingFlush,
@@ -9347,19 +9348,38 @@ const NativelyInterface: React.FC<NativelyInterfaceProps> = ({
 
         try {
           let prompt = '';
+          // A follow-up skipped past live RAG goes the way typed chat does (V3:
+          // conversation ring + live-meeting evidence). On the caller-owned
+          // speaking prompt it kept the history but lost the transcript the
+          // previous answer came from, and disowned that answer.
+          let followUpViaChat = false;
+
+          // Prior turns only — the new user bubble was just queued via
+          // setMessages, so React state here is still the previous ring.
+          const conversationContextForSubmit = buildConversationContextFromMessages(messages);
+          // A prior user turn is enough: answers are `system` rows, and every
+          // answer follows a user row (typed, spoken or a quick-action label).
+          const hasPriorChat = messages.some((m) => m.role === 'user');
 
           if (currentAttachments.length > 0) {
             prompt = `You are a helper. The user has provided a screenshot and a spoken question/command.
 User said: "${question}"
-
+${conversationContextForSubmit ? `\nPrior conversation context:\n${conversationContextForSubmit}\n` : ''}
 Instructions:
 1. Analyze the screenshot in the context of what the user said.
 2. Provide a direct, helpful answer.
 3. Be concise.`;
           } else {
-            const ragResult = await window.electronAPI.ragQueryLive?.(question);
-            if (ragResult?.success) {
-              return;
+            // Issue #552: live RAG answers from transcript chunks alone and
+            // never sees prior chat. Referential follow-ups skip it and go the
+            // typed-chat route below; self-contained questions still hit
+            // ragQueryLive.
+            followUpViaChat = shouldSkipLiveRagForChatFollowUp(question, { hasPriorChat });
+            if (!followUpViaChat) {
+              const ragResult = await window.electronAPI.ragQueryLive?.(question);
+              if (ragResult?.success) {
+                return;
+              }
             }
 
             prompt = `You are a real-time interview assistant. The user just repeated or paraphrased a question from their interviewer.
@@ -9369,7 +9389,7 @@ Instructions:
 3. Keep the answer conversational but informative (2-4 sentences ideal)
 4. Do NOT include phrases like "The question is..." - just give the answer directly
 5. Format for speaking out loud, not for reading
-
+${conversationContextForSubmit ? `\nPrior conversation context:\n${conversationContextForSubmit}\n` : ''}
 Provide only the answer, nothing else.`;
           }
 
@@ -9385,11 +9405,11 @@ Provide only the answer, nothing else.`;
           await window.electronAPI.streamGeminiChat(
             question,
             currentAttachments.length > 0 ? currentAttachments.map((s) => s.path) : undefined,
-            prompt,
+            followUpViaChat ? conversationContextForSubmit : prompt,
             // `liveQuestion`: a turn of this session (unlike a question about a
             // past meeting), so main decides the diagram contract for it with
             // the design that is on the table.
-            { skipSystemPrompt: true, liveQuestion: true },
+            followUpViaChat ? { liveQuestion: true } : { skipSystemPrompt: true, liveQuestion: true },
           );
         } catch (err) {
           // R-17: a throw from invoke() never reaches the main process, so no
