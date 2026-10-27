@@ -42,9 +42,11 @@ export default function TopPill({
                         <button
                             onClick={onLogoClick}
                             aria-label="Natively"
-                            className="overlay-icon-surface interaction-base interaction-press w-8 h-8 rounded-full flex items-center justify-center"
+                            className="interaction-base interaction-press w-8 h-8 rounded-full flex items-center justify-center"
                         >
-                            <span aria-hidden="true" className="relative block h-[28px] w-[28px] bg-[#B0ABBB]" style={MARK_MASK} />
+                            {/* The mark fills the button: its own ring is the
+                                edge, with no chip showing around it. */}
+                            <span aria-hidden="true" className="relative block h-8 w-8 bg-[#B0ABBB]" style={MARK_MASK} />
                         </button>
                     </div>
                     <button
@@ -83,24 +85,22 @@ export default function TopPill({
                 style={appearance.pillStyle}
             >
                 <div className="draggable-area">
-                    {/* LOGO BUTTON */}
+                    {/* LOGO BUTTON: the mark fills the button, its own ring
+                        is the edge, with no chip showing around it. */}
                     <button
                         onClick={onLogoClick}
                         className={`
               w-7 h-7
               rounded-full
-              overlay-icon-surface
-              overlay-icon-surface-hover
               flex items-center justify-center
               relative overflow-hidden
               interaction-base interaction-press
             `}
-                        style={appearance.iconStyle}
                     >
                         <img
                             src={icon}
                             alt="Natively"
-                            className="w-[24px] h-[24px] object-contain opacity-95 scale-105 force-black-icon"
+                            className="top-pill-logo w-7 h-7 object-contain opacity-95 force-black-icon"
                             draggable="false"
                             onDragStart={(e) => e.preventDefault()}
                         />

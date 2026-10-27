@@ -90,11 +90,11 @@ export const OverlayMockup: React.FC<{
             ) : (
             <div className="flex justify-center mb-2 select-none z-50 pointer-events-none">
                 <div className="flex items-center gap-2 rounded-full overlay-pill-surface backdrop-blur-md pl-1.5 pr-1.5 py-1.5" style={appearance.pillStyle}>
-                    <div className="w-8 h-8 rounded-full flex items-center justify-center overflow-hidden overlay-icon-surface" style={appearance.iconStyle}>
+                    <div className="w-8 h-8 rounded-full flex items-center justify-center overflow-hidden">
                         <img
                             src={icon}
                             alt="Natively"
-                            className="w-[24px] h-[24px] object-contain opacity-95 scale-105 force-black-icon"
+                            className="top-pill-logo w-8 h-8 object-contain opacity-95 force-black-icon"
                             draggable="false"
                         />
                     </div>

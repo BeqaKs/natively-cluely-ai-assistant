@@ -96,7 +96,7 @@ const ROWS: Record<string, Row> = {
   ],
   'What should I say?': ['Что мне ответить?', '我该怎么说？', '何と答えればいいですか？', '¿Qué debería decir?'],
   'What should I say about this?': ['Что мне сказать об этом?', '关于这个我该怎么说？', 'これについて何と答えればいいですか？', '¿Qué debería decir sobre esto?'],
-  'Thinking...': ['Думаю...', '思考中...', '考え中...', 'Pensando...'],
+  'Thinking': ['Думаю', '思考中', '考え中', 'Pensando'],
   // "N screenshots attached": Russian counts take three forms, so it is phrased as a label and a number.
   '{n} screenshot attached': ['Прикреплено скриншотов: {n}', '已附加 {n} 张截图', 'スクリーンショット {n} 枚を添付', '{n} captura adjunta'],
   '{n} screenshots attached': ['Прикреплено скриншотов: {n}', '已附加 {n} 张截图', 'スクリーンショット {n} 枚を添付', '{n} capturas adjuntas'],

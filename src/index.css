@@ -456,6 +456,13 @@
   filter: brightness(0) invert(1) !important;
 }
 
+/* Default light: the top pill's logo is drawn 15% bolder (the owner's call).
+   Black on a pale pill read thin beside the Hide label; same outline, only
+   the ring, bars and diagonal are thicker. */
+[data-theme='light'] [data-interface-theme='default'] .top-pill-logo {
+  content: url('./components/ui/natively-mark-bold.svg');
+}
+
 /* liquid-glass and modern themes always have a dark background panel,
    so the logo must always render white regardless of system light/dark mode. */
 [data-interface-theme="liquid-glass"] .force-black-icon,

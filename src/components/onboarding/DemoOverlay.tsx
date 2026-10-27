@@ -215,7 +215,7 @@ export const DemoOverlay: React.FC<Props> = ({ isLight, hidden, answerKey, shotK
           ) : (
             <div key={msg.id} className="w-full ai-response-card my-2.5 min-h-[24px] text-[14px] leading-relaxed overlay-text-primary">
               {msg.shown === 0 ? (
-                <span className="natively-thinking-label text-[13px]">{tr('Thinking...')}</span>
+                <span className="natively-thinking-label text-[13px]">{tr('Thinking')}</span>
               ) : (
                 answerWords[msg.k].words.slice(0, msg.shown).map((w, i) => (
                   <React.Fragment key={i}>{i > 0 && answerWords[msg.k].sep}<span className="reveal-word-in">{w}</span></React.Fragment>

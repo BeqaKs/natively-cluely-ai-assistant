@@ -9833,7 +9833,7 @@ Provide only the answer, nothing else.`;
             >
               {isThinking ? (
                 <div className="flex items-center min-h-[24px] py-0.5">
-                  <span className="natively-thinking-label text-[13px]">{t('Thinking...')}</span>
+                  <span className="natively-thinking-label text-[13px]">{t('Thinking')}</span>
                 </div>
               ) : (
                 msg.text
@@ -9894,7 +9894,7 @@ Provide only the answer, nothing else.`;
                */}
               {!msg.text && (
                 <div className="flex items-center min-h-[24px] py-0.5">
-                  <span className="natively-thinking-label text-[13px]">{t('Thinking...')}</span>
+                  <span className="natively-thinking-label text-[13px]">{t('Thinking')}</span>
                 </div>
               )}
             </div>
@@ -12161,7 +12161,7 @@ Provide only the answer, nothing else.`;
                       (m) => m.role === 'system' && m.isStreaming,
                     ) && (
                     <div className="flex justify-start my-2.5 min-h-[24px] items-center">
-                      <span className="natively-thinking-label text-[13px]">{t('Thinking...')}</span>
+                      <span className="natively-thinking-label text-[13px]">{t('Thinking')}</span>
                     </div>
                   )}
                   <div ref={messagesEndRef} />

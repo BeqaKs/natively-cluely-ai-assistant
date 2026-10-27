@@ -619,6 +619,13 @@
   -webkit-backdrop-filter: blur(var(--lv-pill-blur)) saturate(190%);
   backdrop-filter: blur(var(--lv-pill-blur)) saturate(190%);
 }
+/* The resize toggle has its own 36px window (WindowHelper TOGGLE_WINDOW_SIZE),
+   4px around the 28px button. The long periwinkle drop ran past it and was
+   cut square at the window's bottom and right edges, so the button looked
+   lopsided. Its shadow stays inside those 4px. */
+[data-interface-theme="lavender"] button.overlay-resize-toggle-surface {
+  box-shadow: 0 1px 2px rgba(60, 30, 140, 0.12), var(--lv-hairline), var(--lv-rim);
+}
 [data-interface-theme="lavender"] .overlay-resize-toggle-surface::before,
 [data-interface-theme="lavender"] .overlay-icon-surface::before {
   opacity: 0.35;
@@ -638,9 +645,10 @@
   background: linear-gradient(var(--glass-inner-tint), var(--glass-inner-tint)), var(--lv-chip);
   color: var(--lv-ink);
 }
-/* The mark in the pill: dark enough to read as the logo, not a smudge. */
+/* The mark in the pill is in the same ink as Hide and stop. It fills its
+   button with no chip under it, so a lighter grey read as muted. */
 [data-interface-theme="lavender"] .overlay-resize-toggle-surface .bg-\[\#B0ABBB\] {
-  background-color: #8C84A6;
+  background-color: var(--lv-ink-2);
 }
 /* Stop says stop on hover. */
 [data-interface-theme="lavender"] .overlay-resize-toggle-surface .overlay-icon-surface-hover:hover .bg-current {
@@ -673,15 +681,23 @@
   text-align: left;
 }
 
-/* The buttons are flat periwinkle on the flat body: the question card's tint
-   and ink, but no sheen, rim, cap or drop. Eight raised pills on a flat sheet
-   read as stickers and left the question as just another button; now the
-   question is the one raised, glowing thing in the panel. */
+/* The buttons and the model chip wear your question's liquid glass (the
+   Usage tab's question card, .lg-bubble.lg-bubble-lavender, light): white
+   sheen on the top face, the site's white rim (::before) and cap shade
+   (::after), deep periwinkle ink. The owner wants them glass, not flat (a flat
+   pass was tried 2026-10-26 and reverted). One step lighter than the card (.18
+   against its .24) and no glow at rest: the question is the one thing that
+   glows, a button only while it is under the pointer. */
 [data-interface-theme="lavender"] .overlay-shell-surface .hlg-button.hlg-lavender.hero-pill {
   --glass-inner-tint: rgba(156, 111, 243, 0.18);
   --hlg-tint-hover: rgba(156, 111, 243, 0.30);
-  background: linear-gradient(var(--glass-inner-tint), var(--glass-inner-tint));
-  box-shadow: inset 0 0 0 1px rgba(124, 92, 255, 0.14);
+  --hlg-rim-1: rgba(255, 255, 255, 0.78);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.42) 0, rgba(255, 255, 255, 0.10) 6px, rgba(255, 255, 255, 0) 100%),
+    linear-gradient(var(--glass-inner-tint), var(--glass-inner-tint));
+  box-shadow:
+    inset 0 -1px 0 rgba(90, 43, 176, 0.14),
+    0 1px 1px rgba(78, 46, 150, 0.10);
   transition:
     transform 140ms cubic-bezier(0.23, 1, 0.32, 1),
     box-shadow 160ms ease,
@@ -691,10 +707,11 @@
 [data-interface-theme="lavender"] .hlg-button.hlg-lavender.hero-pill .hlg-icon {
   color: #3F2593;
 }
-/* No rim or cap layers, and the pointer lens stays off. */
+/* The rim and cap layers stay under the label; the pointer lens stays off,
+   as on the card. */
 [data-interface-theme="lavender"] .overlay-shell-surface .hlg-button.hero-pill::before,
 [data-interface-theme="lavender"] .overlay-shell-surface .hlg-button.hero-pill::after {
-  display: none;
+  z-index: -1;
 }
 [data-interface-theme="lavender"] .overlay-shell-surface .hlg-button.hero-pill .hlg-lens {
   display: none;
@@ -702,7 +719,10 @@
 @media (hover: hover) and (pointer: fine) {
   [data-interface-theme="lavender"] .overlay-shell-surface .hlg-button.hlg-lavender.hero-pill:not(:disabled):hover {
     --glass-inner-tint: rgba(156, 111, 243, 0.30);
-    box-shadow: inset 0 0 0 1px rgba(124, 92, 255, 0.22);
+    box-shadow:
+      inset 0 -1px 0 rgba(90, 43, 176, 0.16),
+      0 1px 2px rgba(78, 46, 150, 0.12),
+      0 10px 22px -10px rgba(156, 111, 243, 0.55);
   }
 }
 
@@ -897,19 +917,18 @@
 
 /* ── Small controls and quiet surfaces ─────────────────────────────────── */
 
-/* Settings beside the model chip: a 28px round button, flat like the
-   buttons, so the bottom row reads as one toolbar. */
+/* Settings beside the model chip: the icon alone, no container at rest or on
+   hover (the owner's call). It takes the buttons' periwinkle ink, and hover
+   or open only deepens the colour. */
 [data-interface-theme="lavender"] .overlay-shell-surface .overlay-bare-icon[data-settings-toggle] {
-  border-radius: 999px;
   color: #3F2593;
-  background: rgba(156, 111, 243, 0.18);
-  box-shadow: inset 0 0 0 1px rgba(124, 92, 255, 0.14);
+  background: transparent;
+  box-shadow: none;
 }
 [data-interface-theme="lavender"] .overlay-shell-surface .overlay-bare-icon[data-settings-toggle]:hover,
 [data-interface-theme="lavender"] .overlay-shell-surface .overlay-bare-icon[data-settings-toggle][data-state='open'] {
-  color: #3F2593;
-  background: rgba(156, 111, 243, 0.30);
-  box-shadow: inset 0 0 0 1px rgba(124, 92, 255, 0.22);
+  color: #5B3FD0;
+  background: transparent;
 }
 
 [data-interface-theme="lavender"] .overlay-bare-icon {
