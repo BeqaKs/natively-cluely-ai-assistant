@@ -17,6 +17,7 @@ import { getOrchestrator, type OrchestratorEvent, type UserState } from '../../l
 import type { ToasterId } from '../../lib/onboarding/orchestrator.ts';
 import { PermissionsToaster } from './PermissionsToaster';
 import { BrowserExtensionToaster } from './BrowserExtensionToaster';
+import { PlansToaster } from './PlansToaster';
 import { SupportToaster } from '../SupportToaster';
 import ReviewPromptHost from '../ReviewPromptHost';
 import {
@@ -169,6 +170,9 @@ export const OrchestratedToasterHost: React.FC<HostProps> = ({ onOpenSettings, o
           }}
         />
       );
+
+    case 'plans':
+      return <PlansToaster isOpen={true} onDismiss={closeWith('plans')} />;
 
     case 'browser_extension':
       // No onSkip: a card's waits live in the card ledger, never in a skip.

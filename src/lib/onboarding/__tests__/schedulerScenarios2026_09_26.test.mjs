@@ -109,7 +109,7 @@ const NO_KEYS = { hasNativelyKey: false, hasOwnAiKey: false, isPremium: false, p
 // starts with no AI (src/lib/trial/autoTrial.mjs). So a new user with no keys
 // meets Permissions and then the extension, and the Natively API offer takes
 // the onboarding slot only once that trial has been used.
-test('1. new user, no keys: Permissions → the extension on day 1; nothing more that day; no promo before 24 h', () => {
+test('1. new user, no keys: Permissions → Natively Plans on day 1; the extension on a later launch; no promo before 24 h', () => {
   const first = launch(policy.emptyLedger(Date.now()), { ...NO_KEYS, permsShown: false });
   first.run(5_000);
   assert.equal(first.active(), 'permissions');
@@ -117,12 +117,14 @@ test('1. new user, no keys: Permissions → the extension on day 1; nothing more
   first.run(55_000);
   assert.equal(first.active(), null, '60 s between cards');
   first.run(15_000);
-  assert.equal(first.active(), 'browser_extension');
+  assert.equal(first.active(), 'plans', 'the first card after getting started');
   first.close('later').run(10 * 60_000).end();
-  assert.deepEqual(first.seen, ['permissions', 'browser_extension'], 'one onboarding card per launch, no promo on day 1, no trial card');
+  assert.deepEqual(first.seen, ['permissions', 'plans'], 'one onboarding card per launch, no promo on day 1, no trial card');
 
-  const second = launch(age(first.ledger, 2 * H), NO_KEYS).run(10 * 60_000);
-  assert.deepEqual(second.seen, [], 'the extension was put off, the trial is still ahead of them, and no promo on day 1');
+  const second = launch(age(first.ledger, 2 * H), NO_KEYS).run(60_000);
+  assert.deepEqual(second.seen, ['browser_extension'], 'the extension on a later launch');
+  second.close('later').run(10 * 60_000);
+  assert.deepEqual(second.seen, ['browser_extension'], 'the slot is free, but no promo on day 1');
   second.end();
 
   const third = launch(age(second.ledger, 23 * H), NO_KEYS).run(2 * 60_000);
@@ -130,22 +132,28 @@ test('1. new user, no keys: Permissions → the extension on day 1; nothing more
   third.end();
 });
 
-test('1b. no keys, trial already used: the Natively API offer comes before the extension', () => {
+test('1b. no keys, trial already used: Natively Plans, then the Natively API offer, then the extension', () => {
   const used = { ...NO_KEYS, trialClaimed: true };
   const first = launch(policy.emptyLedger(Date.now()), used).run(60_000);
-  assert.deepEqual(first.seen, ['natively_api_new']);
+  assert.deepEqual(first.seen, ['plans']);
   first.close('later').run(10 * 60_000).end();
-  assert.deepEqual(first.seen, ['natively_api_new'], 'one onboarding card per launch');
+  assert.deepEqual(first.seen, ['plans'], 'one onboarding card per launch');
 
   const second = launch(age(first.ledger, 2 * H), used).run(60_000);
-  assert.deepEqual(second.seen, ['browser_extension'], 'the extension on a later launch');
-  second.end();
+  assert.deepEqual(second.seen, ['natively_api_new'], 'the API offer on the next launch');
+  second.close('later').end();
+
+  const third = launch(age(second.ledger, 2 * H), used).run(60_000);
+  assert.deepEqual(third.seen, ['browser_extension'], 'the extension after that');
+  third.end();
 });
 
 test('2. own keys on day 4: "Three services" shows; the next promo waits 72 h', () => {
   const user = { hasOwnAiKey: true, extensionConnected: true };
-  const first = launch(age(policy.emptyLedger(Date.now()), 4 * D), user).run(2 * 60_000);
-  assert.deepEqual(first.seen, ['natively_api_existing']);
+  const first = launch(age(policy.emptyLedger(Date.now()), 4 * D), user).run(60_000);
+  assert.deepEqual(first.seen, ['plans'], 'Natively Plans first: it is an onboarding card');
+  first.close('later').run(2 * 60_000);
+  assert.deepEqual(first.seen, ['plans', 'natively_api_existing'], 'then the one promo of the launch');
   first.close('later').end();
 
   const nextDay = launch(age(first.ledger, 1 * D), user).run(5 * 60_000);

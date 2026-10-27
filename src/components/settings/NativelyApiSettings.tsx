@@ -128,7 +128,7 @@ function setUsageCache(next: UsageData | null): void {
 // literal means the chooser still renders something sensible offline or before
 // the catalog arrives; letting it be the only value is what allowed the prices
 // and allowances in this file to drift away from the ones actually charged.
-const PLANS = [
+export const PLANS = [
   {
     id: 'natively_api_standard_monthly',
     name: 'Standard',

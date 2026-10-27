@@ -19,6 +19,7 @@ test('card classes and priorities match the spec', () => {
   assert.deepEqual(
     Object.fromEntries(Object.entries(CARDS).map(([id, c]) => [id, [c.cls, c.priority]])),
     {
+      plans: ['onboarding', null],
       browser_extension: ['onboarding', null],
       trial_promo: ['onboarding', null],
       natively_api_new: ['onboarding', null],
