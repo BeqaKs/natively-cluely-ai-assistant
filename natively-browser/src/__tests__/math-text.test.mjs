@@ -337,11 +337,79 @@ describe('#645 review follow-ups — automatic capture (Smart Browser Context v2
     const out = run(doc);
     assert.match(out.envelope.payload.problemStatement, /\$1 \\le T \\le 50\$/);
     assert.doesNotMatch(out.dom, /^FORMULAS:/m);
+    // The source <script> is read for the formula, not kept as text after it.
+    assert.equal(out.envelope.payload.problemStatement.split('1 \\le T \\le 50').length - 1, 1);
+    assert.equal(out.envelope.payload.constraints.split('1 \\le T \\le 50').length - 1, 1);
+  });
+
+  test('scripts and styles inside the statement are not read as text', () => {
+    const doc = parseHtml(
+      '<body><div class="challenge-body-html"><p>Rotate the matrix.</p>' +
+        '<script>window.hr = {track: true};</script><style>.x { color: red; }</style></div></body>',
+      { title: 'Script | HackerRank', url: HACKERRANK_URL },
+    );
+    const statement = run(doc).envelope.payload.problemStatement;
+    assert.match(statement, /Rotate the matrix\./);
+    assert.doesNotMatch(statement, /window\.hr|color: red/);
   });
 
   test('the live page is not changed', () => {
     const doc = hackerRankDoc();
     run(doc);
     assert.equal(doc.querySelectorAll('.MathJax_SVG').length, 7);
+  });
+});
+
+// LeetCode writes exponents and indices as HTML <sup>/<sub>, not as a formula.
+// Their textContent runs the parts together, so "10<sup>4</sup>" read "104" and
+// "-10<sup>9</sup>" read "-109": the bounds the model sees were wrong (seen on
+// https://leetcode.com/problems/two-sum/ on 2026-10-26, both capture paths).
+describe('HTML superscripts and subscripts', () => {
+  const LEETCODE_URL = 'https://leetcode.com/problems/two-sum/description/';
+  const leetCodeDoc = () =>
+    parseHtml(
+      '<body><div data-track-load="description_content" class="elfjS"><p>Given an array of integers nums.</p>' +
+        '<p><strong>Constraints:</strong></p><ul>' +
+        '<li><code>2 &lt;= nums.length &lt;= 10<sup>4</sup></code></li>' +
+        '<li><code>-10<sup>9</sup> &lt;= nums[i] &lt;= 10<sup>9</sup></code></li>' +
+        '<li><code>2<sup>n - 1</sup></code> and <code>a<sub>i</sub></code></li>' +
+        '</ul></div></body>',
+      { title: 'Two Sum - LeetCode', url: LEETCODE_URL },
+    );
+
+  test('manual capture keeps the exponent', () => {
+    const r = extractPageContent({ document: leetCodeDoc(), readabilityFactory: fakeReadability });
+    assert.match(r.text, /2 <= nums\.length <= 10\^4/);
+    assert.match(r.text, /-10\^9 <= nums\[i\] <= 10\^9/);
+    assert.match(r.text, /2\^\(n - 1\)/);
+    assert.match(r.text, /a_i/);
+    // CODE ON PAGE reads the same <code> snippets; no copy may say 104 or -109.
+    assert.doesNotMatch(r.text, /<= 104\b|-109\b/);
+    assert.equal(r.unreadableFormulas, 0);
+    assert.doesNotMatch(r.text, /FORMULAS:/);
+  });
+
+  test('automatic capture keeps the exponent', () => {
+    const doc = leetCodeDoc();
+    const host = 'leetcode.com';
+    const candidate = cls.classifyTab({
+      registry: reg.DEFAULT_REGISTRY, host, url: LEETCODE_URL, title: doc.title,
+      signals: { codeEditorPresent: true, ioConstraintSignals: true },
+    });
+    const out = ext.runExtractor({
+      document: doc, getSelection: () => '', contextId: 'ctx-sup', capturedAt: 1,
+      candidate, platform: reg.findPlatform(reg.DEFAULT_REGISTRY, host, LEETCODE_URL), captureMode: 'auto',
+    });
+    assert.match(out.envelope.payload.problemStatement, /nums\.length <= 10\^4/);
+    assert.match(out.envelope.payload.problemStatement, /-10\^9 <= nums\[i\] <= 10\^9/);
+    assert.doesNotMatch(out.dom, /^FORMULAS:/m);
+  });
+
+  test('footnotes, ordinals and marks are left as they are, and nothing is counted', () => {
+    const doc = parseHtml(
+      '<body><p>Founded on the 1<sup>st</sup> of May<sup><a href="#n1">[1]</a></sup>, Acme<sup>TM</sup> grew.<sup>[2]</sup></p></body>',
+    );
+    assert.deepEqual(inlineFormulas(doc), { found: 0, unreadable: 0 });
+    assert.equal(doc.body.textContent, 'Founded on the 1st of May[1], AcmeTM grew.[2]');
   });
 });

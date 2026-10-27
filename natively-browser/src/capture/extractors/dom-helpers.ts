@@ -24,13 +24,22 @@ export function collapseWhitespace(s: string): string {
 /**
  * textContent of `el` with rendered formulas replaced by their text, or by the
  * UNREADABLE_FORMULA marker when the page has none (#645). Reads a clone, so
- * the live page is untouched.
+ * the live page is untouched. Script/style text is dropped after the formulas
+ * are inlined: MathJax 2 keeps each TeX source in a <script> beside the formula,
+ * which would otherwise print every formula twice.
  */
 function textOf(el: Node | null | undefined): string {
   if (!el) return '';
   try {
     const clone = el.cloneNode(true);
     inlineFormulas(clone as never);
+    try {
+      (clone as ParentNode)
+        .querySelectorAll?.('script, style, noscript, template')
+        .forEach((n) => n.parentNode?.removeChild(n));
+    } catch {
+      /* shim without querySelectorAll */
+    }
     return clone.textContent || '';
   } catch {
     return el.textContent || '';
