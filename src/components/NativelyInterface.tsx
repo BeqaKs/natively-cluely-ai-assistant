@@ -9340,9 +9340,9 @@ const NativelyInterface: React.FC<NativelyInterfaceProps> = ({
           // Prior turns only — the new user bubble was just queued via
           // setMessages, so React state here is still the previous ring.
           const conversationContextForSubmit = buildConversationContextFromMessages(messages);
-          // A prior user turn is enough: assistant bubbles often use role
-          // `system` with intent `chat`, but the user row is the referent.
-          const hasPriorChat = messages.some((m) => m.role === 'user' || m.role === 'assistant');
+          // A prior user turn is enough: answers are `system` rows, and every
+          // answer follows a user row (typed, spoken or a quick-action label).
+          const hasPriorChat = messages.some((m) => m.role === 'user');
 
           if (currentAttachments.length > 0) {
             prompt = `You are a helper. The user has provided a screenshot and a spoken question/command.
