@@ -37,7 +37,11 @@ export function audioWarningAction(w) {
     // channel decides (an absent channel is compared with === 'system').
     const isMicTitle = title.includes('microphone');
     const isScreenTitle = title.includes('screen recording');
-    const isDeviceFault = title.includes('same device');
+    // Device faults are fixed by picking a device in Settings → Audio, not by a
+    // privacy pane: "Input and Output Are the Same Device", and "Meeting Audio
+    // on Another Device" (output-route-mismatch, sent on the system channel; its
+    // watcher is Windows-only today, so this keeps macOS right if it ever fires).
+    const isDeviceFault = title.includes('same device') || title.includes('another device');
     const wantsMic = isMicTitle
       || (!isScreenTitle && !isDeviceFault && w.kind === 'audio-capture-failure' && w.channel === 'mic');
     const wantsScreen = !wantsMic && !isDeviceFault
