@@ -38,6 +38,10 @@ export interface AppSettings {
     // while idle. Off by default — the hotkey's existing behavior is unchanged
     // until the user opts in from Settings > General.
     ambientChatEnabled?: boolean;
+    /** Ambient AI Chat was turned off once for installs upgraded from an older
+     *  build (turnAmbientChatOffOnce); set once, after which the user's own
+     *  choice stands. */
+    ambientChatResetOnUpgrade?: boolean;
     // Automatic answers after the interviewer finishes a question. Off by
     // default: until the user opts in from Settings > General, an answer is
     // produced only by the What-to-Answer hotkey, exactly as before. The
@@ -650,6 +654,22 @@ export class SettingsManager {
             console.error('[SettingsManager] Failed to read settings file; continuing READ-ONLY for this session:', e);
             this.settings = {};
             this.settingsUnreadable = true;
+        }
+        this.turnAmbientChatOffOnce();
+    }
+
+    // Ambient AI Chat skips capture and STT for every meeting, and builds before
+    // the overlay's "Ambient" chip showed nothing about it, so users who had
+    // switched it on read it as broken transcription (#679, #696). Turn it off
+    // once when this build first loads an older settings.json. The marker is set
+    // in memory on every path, including a fresh install, so it is persisted by
+    // the same write that turns the setting back on and the reset never repeats.
+    private turnAmbientChatOffOnce(): void {
+        if (this.settings.ambientChatResetOnUpgrade) return;
+        this.settings.ambientChatResetOnUpgrade = true;
+        if (this.settings.ambientChatEnabled === true) {
+            console.warn('[SettingsManager] Turning Ambient AI Chat off once after the upgrade');
+            this.set('ambientChatEnabled', false);
         }
     }
 

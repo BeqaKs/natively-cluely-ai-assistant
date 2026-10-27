@@ -315,6 +315,24 @@ function formulaText(el: MathNode, sources: Map<string, { type: string; text: st
   return oneLine(el.textContent);
 }
 
+// Superscript text that is a mark, not an exponent: ordinals, trademarks.
+const NOT_AN_EXPONENT = /^(st|nd|rd|th|tm|sm|®|©|™|\*+|†|‡)$/i;
+
+/**
+ * An HTML <sup>/<sub> as `^x` / `_x`. LeetCode writes 10^4 as
+ * `10<sup>4</sup>`, whose textContent reads "104". '' for anything that is not
+ * an exponent or index: footnote links, "[1]", ordinals, trademarks, or a
+ * script long enough to be prose.
+ */
+function scriptText(el: MathNode): string {
+  const t = tag(el);
+  if (t !== 'sup' && t !== 'sub') return '';
+  if (find(el, (n) => tag(n) === 'a')) return '';
+  const text = oneLine(el.textContent);
+  if (!text || text.length > 24 || /[[\]]/.test(text) || NOT_AN_EXPONENT.test(text)) return '';
+  return `${t === 'sup' ? '^' : '_'}${group(text)}`;
+}
+
 /** The text node that took `el`'s place, or null when it could not be replaced. */
 function replaceWithText(el: MathNode, text: string): { data: string } | null {
   const parent = el.parentNode;
@@ -377,6 +395,9 @@ export function inlineFormulas(
         }
         continue;
       }
+      // Not counted: an HTML exponent always has its text.
+      const script = scriptText(child);
+      if (script && replaceWithText(child, script)) continue;
       visit(child);
     }
   };

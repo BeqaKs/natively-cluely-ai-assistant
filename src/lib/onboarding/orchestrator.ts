@@ -40,6 +40,7 @@ export const CARD_SPACING_MS = 60_000;
 
 export type ToasterId =
   | 'permissions'
+  | 'plans'
   | 'browser_extension'
   | 'profile_intelligence'
   | 'modes_manager'

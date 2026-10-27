@@ -2205,7 +2205,7 @@ export const PHONE_MIRROR_HTML = `<!doctype html>
         function buildPending(entry) {
           var node = answerShell(entry, 'answer is-pending');
           var body = el('div', 'answer-body');
-          body.append(el('span', 'thinking', 'Thinking...'));
+          body.append(el('span', 'thinking', 'Thinking'));
           node.append(body);
           entry.el = node;
           return node;

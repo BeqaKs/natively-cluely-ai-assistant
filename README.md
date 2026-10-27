@@ -14,6 +14,18 @@ If you’re looking for a hosted desktop recording API, consider checking out [R
 **Now with the most advanced stealth of any tool we compare, Visual Answers that draw the system design for you, and an interface built to feel native on your Mac.**
 <br/>
 
+## Sponsored by Sidrune AI
+
+<a href="https://fluxionai.world/register?source=github&campaign=natively&promo=NATIVELY">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="assets/sponsors/sidrune-logo-white.svg">
+    <source media="(prefers-color-scheme: light)" srcset="assets/sponsors/sidrune-logo-black.svg">
+    <img src="assets/sponsors/sidrune-logo-black.svg" width="220" alt="Sidrune AI">
+  </picture>
+</a>
+
+**We recommend [Sidrune AI](https://fluxionai.world/register?source=github&campaign=natively&promo=NATIVELY): one API for GPT, Claude, and other leading AI models.** Get $3 in API credit through Natively. Sidrune is built into Natively as a provider, so you can pick it in Settings › AI Providers.
+
 <a href="#" style="pointer-events: none; cursor: default; color: inherit; text-decoration: none;" title="#1 Cluely clone · Free Cluely alternative · Source-available interview copilot · Free Interview Coder alternative · AI coding interview assistant · LeetCode AI solver · HackerRank AI cheat · Final Round AI free alternative · LockedIn AI alternative · Parakeet AI source-available · Undetectable interview AI · Stealth mode interview copilot.Cluely clone · Cluely alternative · Free Cluely · Cluely free version · source-available Cluely ·
     Final Round AI clone · Final Round AI alternative · Free Final Round AI · Final Round AI free version ·
     Interview Coder clone · Interview Coder alternative · Free Interview Coder · source-available Interview Coder ·
@@ -81,7 +93,7 @@ brew install --cask Natively-AI-assistant/tap/natively
 
 <br/>
 
-**<span style="color: #ef4444">👥 9,000+ Users</span>** &nbsp;·&nbsp; **<span style="color: #f97316">🔥 700+ DAU</span>** &nbsp;·&nbsp; **<span style="color: #22c55e">💸 $0 vs $149/mo rivals</span>** &nbsp;·&nbsp; **<span style="color: #3b82f6">⚡ <500ms latency</span>** &nbsp;·&nbsp; **<span style="color: #a855f7">🛡️ 0 data breaches</span>**
+**<span style="color: #ef4444">👥 40,000+ Users</span>** &nbsp;·&nbsp; **<span style="color: #f97316">🔥 1,000+ DAU</span>** &nbsp;·&nbsp; **<span style="color: #22c55e">💸 $0 vs $149/mo rivals</span>** &nbsp;·&nbsp; **<span style="color: #3b82f6">⚡ <500ms latency</span>** &nbsp;·&nbsp; **<span style="color: #a855f7">🛡️ 0 data breaches</span>**
 
 </div>
 

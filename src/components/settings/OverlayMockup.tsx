@@ -10,21 +10,35 @@ import { ChevronDown, ChevronUp, SlidersHorizontal } from 'lucide-react';
 import { useT } from '../../i18n';
 import { useResolvedTheme } from '../../hooks/useResolvedTheme';
 import { getGlassOverlayAppearance, getOverlayAppearance, type OverlayAppearance } from '../../lib/overlayAppearance';
-import type { MeetingInterfaceTheme } from '../../lib/meetingInterfaceTheme';
+import { isCssOwnedInterfaceTheme, type MeetingInterfaceTheme } from '../../lib/meetingInterfaceTheme';
 import { overlayRowOf, useOverlayButtonOrder, type OverlayButtonId } from '../../lib/overlayButtonOrder';
 import { OVERLAY_BUTTONS } from '../overlay/overlayButtons';
 import GlassEffectLayer from '../ui/GlassEffectLayer';
 import { ModelSelectorLabel } from '../ui/ModelSelectorLabel';
 import { MODEL_SELECTOR_WIDTH } from '../ui/modelSelectorLabelText';
 import icon from '../icon.png';
+import TopPill from '../ui/TopPill';
+// The Lavender style's pills are the website hero's button classes.
+import '../overlay/heroGlass/HeroGlassButton.css';
 
 /** One overlay button as the overlay draws it (its classes, glyph and label). */
-export const overlayChipClass = (id: OverlayButtonId) =>
-    `flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-medium border shrink-0 whitespace-nowrap overlay-chip-surface overlay-text-interactive${id === 'answer' ? ' justify-center min-w-[74px]' : ''}`;
+export const overlayChipClass = (id: OverlayButtonId, theme?: MeetingInterfaceTheme) =>
+    theme === 'lavender'
+        // The website hero's paper pill (overlay/heroGlass), as the overlay draws it.
+        ? `hlg-button hlg-lavender hlg-sm hero-pill hero-hotkey shrink-0 whitespace-nowrap${id === 'answer' ? ' min-w-[74px]' : ''}`
+        : `flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-medium border shrink-0 whitespace-nowrap overlay-chip-surface overlay-text-interactive${id === 'answer' ? ' justify-center min-w-[74px]' : ''}`;
 
-export const OverlayChipContent: React.FC<{ id: OverlayButtonId }> = ({ id }) => {
+export const OverlayChipContent: React.FC<{ id: OverlayButtonId; theme?: MeetingInterfaceTheme }> = ({ id, theme }) => {
     const t = useT();
     const { Icon, label } = OVERLAY_BUTTONS[id];
+    if (theme === 'lavender') {
+        return (
+            <span className="hlg-content">
+                <span className="hlg-icon"><Icon size={11} strokeWidth={2} /></span>
+                <span className="hlg-label">{t(label)}</span>
+            </span>
+        );
+    }
     return (
         <>
             <Icon className="w-3 h-3 opacity-70" /> {t(label)}
@@ -35,10 +49,10 @@ export const OverlayChipContent: React.FC<{ id: OverlayButtonId }> = ({ id }) =>
 /** The overlay's inline surface styles for a style and opacity, as NativelyInterface resolves them. */
 export function useOverlayAppearance(opacity: number, theme: MeetingInterfaceTheme): OverlayAppearance {
     const resolvedTheme = useResolvedTheme();
-    const isGlassTheme = theme === 'liquid-glass';
+    const cssOwned = isCssOwnedInterfaceTheme(theme);
     return useMemo(
-        () => (isGlassTheme ? getGlassOverlayAppearance() : getOverlayAppearance(opacity, resolvedTheme)),
-        [opacity, resolvedTheme, isGlassTheme]
+        () => (cssOwned ? getGlassOverlayAppearance() : getOverlayAppearance(opacity, resolvedTheme)),
+        [opacity, resolvedTheme, cssOwned]
     );
 }
 
@@ -53,14 +67,13 @@ export const OverlayMockup: React.FC<{
     const t = useT();
     const row = overlayRowOf(useOverlayButtonOrder());
     const isGlassTheme = theme === 'liquid-glass';
-    const isModernTheme = theme === 'modern';
     const shellRef = React.useRef<HTMLDivElement>(null);
     const appearance = useOverlayAppearance(opacity, theme);
 
     return (
         <div
             id={id}
-            data-interface-theme={isGlassTheme ? 'liquid-glass' : isModernTheme ? 'modern' : 'default'}
+            data-interface-theme={theme}
             className={`flex flex-col items-center ${className}`}
             // The "modern" theme's CSS (index.css [data-interface-theme="modern"]
             // .overlay-shell-surface etc.) reads --overlay-opacity directly via
@@ -69,14 +82,19 @@ export const OverlayMockup: React.FC<{
             // appearance.shellStyle.
             style={{ ['--overlay-opacity' as '--overlay-opacity']: String(opacity) } as React.CSSProperties}
         >
-            {/* TopPill Replica */}
+            {/* TopPill Replica (Lavender draws the website hero's pill itself) */}
+            {theme === 'lavender' ? (
+                <div className="mb-2 pointer-events-none">
+                    <TopPill expanded onToggle={() => {}} onQuit={() => {}} appearance={appearance} interfaceTheme="lavender" />
+                </div>
+            ) : (
             <div className="flex justify-center mb-2 select-none z-50 pointer-events-none">
                 <div className="flex items-center gap-2 rounded-full overlay-pill-surface backdrop-blur-md pl-1.5 pr-1.5 py-1.5" style={appearance.pillStyle}>
-                    <div className="w-8 h-8 rounded-full flex items-center justify-center overflow-hidden overlay-icon-surface" style={appearance.iconStyle}>
+                    <div className="w-8 h-8 rounded-full flex items-center justify-center overflow-hidden">
                         <img
                             src={icon}
                             alt="Natively"
-                            className="w-[24px] h-[24px] object-contain opacity-95 scale-105 force-black-icon"
+                            className="top-pill-logo w-8 h-8 object-contain opacity-95 force-black-icon"
                             draggable="false"
                         />
                     </div>
@@ -89,6 +107,8 @@ export const OverlayMockup: React.FC<{
                     </div>
                 </div>
             </div>
+
+            )}
 
             {/* Main Interface Window Replica */}
             <div ref={shellRef} className="relative w-[600px] max-w-full overlay-shell-surface overlay-text-primary backdrop-blur-2xl border rounded-[24px] overflow-hidden flex flex-col pt-2 pb-3" style={appearance.shellStyle}>
@@ -116,8 +136,8 @@ export const OverlayMockup: React.FC<{
                 {quickActions ? quickActions(appearance) : (
                     <div className="flex flex-nowrap justify-center items-center gap-1.5 px-4 pb-3 pt-3 pointer-events-none">
                         {row.map((buttonId) => (
-                            <div key={buttonId} className={overlayChipClass(buttonId)} style={appearance.chipStyle}>
-                                <OverlayChipContent id={buttonId} />
+                            <div key={buttonId} className={overlayChipClass(buttonId, theme)} style={appearance.chipStyle}>
+                                <OverlayChipContent id={buttonId} theme={theme} />
                             </div>
                         ))}
                     </div>
@@ -134,10 +154,19 @@ export const OverlayMockup: React.FC<{
                     {/* Bottom Row */}
                     <div className="flex items-center justify-between mt-3 px-0.5">
                         <div className="flex items-center gap-1.5">
+                            {theme === 'lavender' ? (
+                                <div className="hlg-button hlg-lavender hlg-sm hero-pill hero-mono shrink-0" style={{ width: MODEL_SELECTOR_WIDTH }}>
+                                    <span className="hlg-content">
+                                        <ModelSelectorLabel>Gemini 3 Flash</ModelSelectorLabel>
+                                        <svg className="shrink-0" width="8" height="8" viewBox="0 0 10 10" fill="none" aria-hidden="true"><path d="M3 4l2 2 2-2" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/></svg>
+                                    </span>
+                                </div>
+                            ) : (
                             <div className="flex items-center gap-1 pl-3 pr-1.5 h-7 border rounded-[9px] text-xs font-medium text-left shrink-0 overlay-control-surface overlay-text-interactive" style={{ ...appearance.controlStyle, width: MODEL_SELECTOR_WIDTH }}>
                                 <ModelSelectorLabel>Gemini 3 Flash</ModelSelectorLabel>
                                 <ChevronDown size={12} className="shrink-0" />
                             </div>
+                            )}
                             <div className="w-7 h-7 rounded-[9px] flex items-center justify-center overlay-bare-icon">
                                 <SlidersHorizontal className="w-3.5 h-3.5" />
                             </div>

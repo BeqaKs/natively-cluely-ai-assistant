@@ -1,6 +1,7 @@
 // Settings › Overlay (2026-10-20): the meeting overlay shows one row of five
-// buttons, picked and ordered by the user from ten. One list holds all ten;
-// the first five are the row, the rest wait in the page's tray.
+// buttons, picked and ordered by the user from nine (ten until the tray's
+// "Follow-up questions" was folded into Follow Up Question, 2026-10-27). One
+// list holds them all; the first five are the row, the rest wait in the tray.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
@@ -23,7 +24,7 @@ const ALL = [...DEFAULT_OVERLAY_BUTTON_ORDER];
 test('the default row is the five standard buttons; Brainstorm and the live helpers start in the tray', () => {
   assert.equal(OVERLAY_ROW_SIZE, 5);
   assert.deepEqual(overlayRowOf(ALL), ['what_to_answer', 'clarify', 'recap', 'follow_up', 'answer']);
-  assert.deepEqual(ALL.slice(OVERLAY_ROW_SIZE), ['brainstorm', 'catch_me_up', 'define', 'sound_smart', 'follow_up_questions']);
+  assert.deepEqual(ALL.slice(OVERLAY_ROW_SIZE), ['brainstorm', 'catch_me_up', 'define', 'sound_smart']);
 });
 
 test('normalize keeps known ids once each, appends the missing ones, never throws', () => {
@@ -33,10 +34,22 @@ test('normalize keeps known ids once each, appends the missing ones, never throw
   const old = ['answer', 'recap', 'clarify', 'what_to_answer', 'follow_up'];
   const n = normalizeOverlayButtonOrder(old);
   assert.deepEqual(overlayRowOf(n), old);
-  assert.deepEqual(n.slice(5), ['brainstorm', 'catch_me_up', 'define', 'sound_smart', 'follow_up_questions']);
+  assert.deepEqual(n.slice(5), ['brainstorm', 'catch_me_up', 'define', 'sound_smart']);
   // Duplicates and unknown ids dropped.
   assert.deepEqual(normalizeOverlayButtonOrder(['define', 'define', 'nope', 'answer']).slice(0, 2), ['define', 'answer']);
   assert.equal(new Set(normalizeOverlayButtonOrder(['define', 'define'])).size, ALL.length);
+});
+
+test('a saved order with the old Follow-up questions button shows Follow Up Question in its place', () => {
+  // It sat in the row: Follow Up Question (from the tray) takes that place.
+  const row = ['what_to_answer', 'follow_up_questions', 'recap', 'clarify', 'answer'];
+  const n = normalizeOverlayButtonOrder([...row, 'follow_up', 'brainstorm', 'catch_me_up', 'define', 'sound_smart']);
+  assert.deepEqual(overlayRowOf(n), ['what_to_answer', 'follow_up', 'recap', 'clarify', 'answer']);
+  assert.equal(n.length, ALL.length);
+  // Both in the row: one button, and the next one up fills the fifth place.
+  const both = normalizeOverlayButtonOrder(['follow_up', 'follow_up_questions', 'clarify', 'recap', 'answer', 'define']);
+  assert.deepEqual(overlayRowOf(both), ['follow_up', 'clarify', 'recap', 'answer', 'define']);
+  assert.ok(!normalizeOverlayButtonOrder(['follow_up_questions']).includes('follow_up_questions'));
 });
 
 test('swap trades two places, across the row and tray too', () => {
@@ -52,7 +65,7 @@ test('move steps within its group only', () => {
   assert.deepEqual(moveOverlayButton(ALL, 'answer', 1), ALL);
   assert.deepEqual(moveOverlayButton(ALL, 'brainstorm', -1), ALL);
   assert.deepEqual(moveOverlayButton(ALL, 'what_to_answer', -1), ALL);
-  assert.deepEqual(moveOverlayButton(ALL, 'follow_up_questions', 1), ALL);
+  assert.deepEqual(moveOverlayButton(ALL, 'sound_smart', 1), ALL);
   assert.ok(sameOverlayButtonOrder(moveOverlayButton(ALL, 'define', 1).slice(0, 5), ALL.slice(0, 5)));
 });
 
@@ -78,7 +91,6 @@ test('the overlay draws only the row, each button wired to its own handler', () 
     ['catch_me_up', "handleLiveHelper('catch_me_up')"],
     ['define', "handleLiveHelper('define')"],
     ['sound_smart', "handleLiveHelper('sound_smart')"],
-    ['follow_up_questions', "handleLiveHelper('follow_up_questions')"],
   ]) {
     assert.ok(overlay.includes(`${id}: () => void ${call},`), `${id} -> ${call}`);
   }

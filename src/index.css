@@ -456,6 +456,13 @@
   filter: brightness(0) invert(1) !important;
 }
 
+/* Default light: the top pill's logo is drawn 15% bolder (the owner's call).
+   Black on a pale pill read thin beside the Hide label; same outline, only
+   the ring, bars and diagonal are thicker. */
+[data-theme='light'] [data-interface-theme='default'] .top-pill-logo {
+  content: url('./components/ui/natively-mark-bold.svg');
+}
+
 /* liquid-glass and modern themes always have a dark background panel,
    so the logo must always render white regardless of system light/dark mode. */
 [data-interface-theme="liquid-glass"] .force-black-icon,
@@ -474,7 +481,7 @@
    CLOUD_PROVIDERS has no `natively` entry, and the sidebar's Natively API item
    uses the <NativelyLogoMark> SVG. The app icon is a WHITE monochrome glyph on
    transparency, drawn for the dark theme, and an <img> cannot take the tile's
-   own ink the way `.natively-key-mark` does with a mask. On the pale light
+   own ink the way a CSS mask can. On the pale light
    tile it was therefore an invisible ghost. Light theme flattens it to black;
    dark theme leaves the artwork untouched.
 
@@ -8651,26 +8658,6 @@ html[data-platform="linux"][data-window="launcher"] body {
     0 6px 20px rgba(0, 0, 0, 0.28) !important;
 }
 
-/* The same 24px blueprint grid the pricing surfaces carry, in neutral ink.
-   Individually invisible; it is one of the things that makes them read as a
-   set, and it costs no colour to keep. */
-.natively-key-card::before {
-  content: '' !important;
-  position: absolute !important;
-  inset: 0 !important;
-  background-image:
-    linear-gradient(rgba(255, 255, 255, 0.020) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255, 255, 255, 0.020) 1px, transparent 1px) !important;
-  background-size: 24px 24px !important;
-  pointer-events: none !important;
-  z-index: 0 !important;
-}
-
-.natively-key-card > * {
-  position: relative !important;
-  z-index: 1 !important;
-}
-
 /* Light: same construction, no hue — but CLEAN at the bottom. It used to fall
    to #EAECEF with an inner bottom shade and an 18px floor blur; on a white page
    those three stacked into a grey smudge along the lower edge (the owner's
@@ -8684,12 +8671,6 @@ html[data-platform="linux"][data-window="launcher"] body {
     inset 0 1px 0 rgba(255, 255, 255, 1),
     0 1px 2px rgba(0, 0, 0, 0.05),
     0 4px 12px rgba(0, 0, 0, 0.035) !important;
-}
-
-[data-theme='light'] .natively-key-card::before {
-  background-image:
-    linear-gradient(rgba(0, 0, 0, 0.028) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(0, 0, 0, 0.028) 1px, transparent 1px) !important;
 }
 
 /* ── 1b. The plaque as a group of rows (SettingsPlaque, SettingsRow.tsx) ──
@@ -9125,35 +9106,6 @@ html[data-platform="linux"][data-window="launcher"] body {
 
 [data-theme='light'] .natively-key-sub {
   color: var(--text-secondary) !important;
-}
-
-/* ── 5. The Natively mark ─────────────────────────────────────────────────
-   src/assets/logo.webp is a WHITE monochrome glyph on transparency, so on the
-   pale light plaque an <img> would be invisible. It is painted as a MASK
-   instead, which lets the mark take the plaque's own ink per theme. Both inks
-   are now achromatic: it was tier-card periwinkle in light theme, which made
-   the mark a second coloured element competing with the Activate button.
-
-   No squircle, no tinted well, no boxed header — just the mark, set on the
-   supporting-copy line. The URL arrives as a custom property set from the
-   TSX import so the bundler still fingerprints the asset. */
-.natively-key-mark {
-  width: 22px !important;
-  height: 22px !important;
-  flex-shrink: 0 !important;
-  background-color: rgba(255, 255, 255, 0.92) !important;
-  -webkit-mask-image: var(--natively-key-mark-src) !important;
-  mask-image: var(--natively-key-mark-src) !important;
-  -webkit-mask-size: contain !important;
-  mask-size: contain !important;
-  -webkit-mask-repeat: no-repeat !important;
-  mask-repeat: no-repeat !important;
-  -webkit-mask-position: center !important;
-  mask-position: center !important;
-}
-
-[data-theme='light'] .natively-key-mark {
-  background-color: #4B5563 !important;
 }
 
 /* ══ Pro License Active — the receipt, in the pricing cards' material ══════
@@ -12744,6 +12696,47 @@ html[data-tooltips='off'] .t-tt {
   --np-highlight-faint: #ffffff0a;
   --np-label: #acada8; --np-ink-soft: #eaebe5e6; --np-tile: #ffffff1f; --np-scrim: #00000099;
 }
+/* The Note templates gallery in Natively's own colours (2026-10-21), not
+   Granola's cream: lavender paper, violet ink, lavender rules and washes, white
+   cards, a periwinkle Apply (the website's colour doc: paper #FAF8FE, ink
+   #2E2A38 / #6B5F7D / #9C90AC, rule #DED4EB, core #9C6FF3, periwinkle #8050D4).
+   Only the gallery takes these; the notepad around it keeps its own. */
+.notepad .np-lavender {
+  --np-surface: #faf8fe; --np-elevated: #ffffff; --np-ink: #2e2a38; --np-ink-strong: #241f33;
+  --np-ink-secondary: #6b5f7d; --np-ink-tertiary: #9c90ac; --np-placeholder: #9c90ac; --np-label: #6b5f7d;
+  --np-ink-soft: #2e2a38e0; --np-hairline: #ded4eb; --np-ring: #ded4eb;
+  --np-wash: #9c6ff314; --np-wash-strong: #9c6ff324; --np-accent: #8050d4;
+  --np-tile: #efe6fd; --np-tile-ink: #643ea6;
+  --np-card: linear-gradient(176deg, #ffffff 0%, #fcfaff 60%, #f8f5fe 100%);
+  --np-cta: #8050d4; --np-cta-ink: #ffffff; --np-scrim: #241f3352;
+  --np-search-fill: #f1ecfb; --np-search-hover: #ebe4f9; --np-search-lift: 0 2px 8px -2px #4c2e7a1f;
+  --np-shadow-pop: 0 24px 60px -24px #4c2e7a59, 0 4px 12px -4px #4c2e7a1f;
+}
+.notepad[data-np-theme="dark"] .np-lavender {
+  --np-surface: #241f33; --np-elevated: #2e2843; --np-ink: #ece7f6; --np-ink-strong: #ffffff;
+  --np-ink-secondary: #a99ebd; --np-ink-tertiary: #7d7291; --np-placeholder: #7d7291; --np-label: #a99ebd;
+  --np-ink-soft: #ece7f6e0; --np-hairline: #ffffff1f; --np-ring: #ffffff1a;
+  --np-wash: #b9a1f61a; --np-wash-strong: #b9a1f629; --np-accent: #b9a1f6;
+  --np-tile: #b9a1f624; --np-tile-ink: #cdbdf9;
+  --np-card: #1c1829; --np-cta: #b9a1f6; --np-cta-ink: #241f33; --np-scrim: #000000a6;
+  --np-search-fill: #ffffff0f; --np-search-hover: #ffffff17; --np-search-lift: 0 2px 8px -2px #00000066;
+}
+/* The gallery's search: a filled pill, no outline at rest; typing lifts it to
+   the card colour with a hairline and a soft shadow (no focus ring). */
+.np-search {
+  background: var(--np-search-fill, var(--np-wash));
+  box-shadow: inset 0 0 0 1px transparent;
+  transition: background-color 150ms ease-out, box-shadow 150ms ease-out;
+}
+.np-search:hover { background: var(--np-search-hover, var(--np-wash-strong)); }
+.np-search:focus-within {
+  background: var(--np-elevated);
+  box-shadow: inset 0 0 0 1px var(--np-ring), var(--np-search-lift, 0 1px 2px #0000000f);
+}
+.np-search-clear { transition: background-color 120ms ease-out, transform 120ms ease-out; }
+.np-search-clear:hover { background: var(--np-wash-strong); }
+.np-search-clear:active { transform: scale(0.92); }
+@media (prefers-reduced-motion: reduce) { .np-search, .np-search-clear { transition: none; } }
 .notepad ::selection { background: var(--np-selection); }
 /* The pills, panels and popovers: the elevated surface with a 0.5px ring. */
 .np-elevated { background: var(--np-elevated); box-shadow: var(--np-shadow-pill), 0 0 0 0.5px var(--np-ring); }

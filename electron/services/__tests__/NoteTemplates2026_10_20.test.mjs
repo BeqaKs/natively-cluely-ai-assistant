@@ -283,3 +283,38 @@ describe('a mode\'s own default back from Use a template', () => {
         assert.match(mm, /modeDefault=\{modeDefault\}/);
     });
 });
+
+describe('each note template has its own icon in the gallery (2026-10-21)', () => {
+    test('every template id has a glyph, drawn on the neutral tile in secondary ink (no group colours)', () => {
+        const icons = src('src/components/notes/noteTemplateIcons.tsx');
+        for (const t of NOTE_TEMPLATES) assert.match(icons, new RegExp(`\\n    '?${t.id}'?: [A-Z]\\w+,`), t.id);
+        assert.doesNotMatch(icons, /#[0-9a-f]{6}|gradient|boxShadow/i);
+        const gallery = src('src/components/notes/NoteTemplateGallery.tsx');
+        assert.match(gallery, /const Glyph = noteTemplateGlyph\(t\.id\);/);
+        assert.match(gallery, /background: 'var\(--np-tile\)'[\s\S]{0,200}<Glyph [^>]*var\(--np-tile-ink, var\(--np-ink-secondary\)\)/);
+        assert.match(gallery, /<Tile t=\{t\} \/>/);
+        assert.match(gallery, /<Tile t=\{picked\} \/>/);
+    });
+
+    test("the gallery wears Natively's lavender, not Granola's cream, in both themes", () => {
+        const gallery = src('src/components/notes/NoteTemplateGallery.tsx');
+        const css = src('src/index.css');
+        assert.match(gallery, /className="np-lavender fixed inset-0/);
+        assert.match(gallery, /background: 'var\(--np-cta, var\(--np-ink\)\)'/);
+        // No rule under the title; the search is a filled pill with a clear button.
+        assert.doesNotMatch(gallery, /pl-6 pr-1\.5" style=\{\{ borderBottom/);
+        assert.match(gallery, /className="np-search h-8 [^"]*rounded-full"/);
+        assert.match(gallery, /aria-label="Clear search" onClick=\{\(\) => onQuery\(''\)\}/);
+        assert.match(css, /\.np-search:focus-within \{/);
+        const light = css.match(/\.notepad \.np-lavender \{([^}]*)\}/)?.[1] ?? '';
+        const dark = css.match(/\.notepad\[data-np-theme="dark"\] \.np-lavender \{([^}]*)\}/)?.[1] ?? '';
+        assert.match(light, /--np-surface: #faf8fe;/);
+        assert.match(light, /--np-ink: #2e2a38;/);
+        assert.match(light, /--np-ring: #ded4eb;/);
+        assert.match(light, /--np-cta: #8050d4;/);
+        for (const v of ['surface', 'ink', 'ring', 'wash', 'tile', 'tile-ink', 'card', 'cta', 'cta-ink', 'scrim']) {
+            assert.match(light, new RegExp(`--np-${v}:`), `light ${v}`);
+            assert.match(dark, new RegExp(`--np-${v}:`), `dark ${v}`);
+        }
+    });
+});

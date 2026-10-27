@@ -334,10 +334,24 @@ function extractCodeBlocks(doc: Document): string {
     }
   };
 
+  // A <sup>/<sub> inside code is an exponent or index, never a code character:
+  // LeetCode's `10<sup>4</sup>` would otherwise read "104". Only those blocks
+  // are read from a clone; the rest stay verbatim.
+  const codeText = (el: Element): string | null => {
+    try {
+      if (!el.querySelector?.('sup, sub')) return el.textContent;
+      const clone = el.cloneNode(true);
+      inlineFormulas(clone as never);
+      return clone.textContent;
+    } catch {
+      return el.textContent;
+    }
+  };
+
   // <pre> and standalone <code> (skip <code> nested in <pre> — already captured).
-  doc.querySelectorAll('pre').forEach((el) => push(el.textContent));
+  doc.querySelectorAll('pre').forEach((el) => push(codeText(el)));
   doc.querySelectorAll('code').forEach((el) => {
-    if (!el.closest('pre')) push(el.textContent);
+    if (!el.closest('pre')) push(codeText(el));
   });
 
   // Live editors. Monaco renders each line in .view-line; join with newlines.

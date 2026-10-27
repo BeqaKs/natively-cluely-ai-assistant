@@ -233,58 +233,54 @@ export const ActionArea: React.FC<{
 
 /**
  * A section that is read rather than worked in (Includes, How Gmail is used,
- * How it works): the heading, then its lines straight on the page, no card,
- * set in 4px so they line up with the footnote.
+ * How it works): Audio's heading, then its lines straight on the page, no
+ * card, each marked by a dot.
  */
 export const PlainSection: React.FC<{ title: string; children: React.ReactNode }> = ({ title, children }) => {
     const t = useT();
     return (
         <section className="mb-6">
             <SectionHeading title={t(title)} />
-            <div className="px-1">{children}</div>
+            <ul>{children}</ul>
         </section>
     );
 };
-
-/** The MCP card's small tile (its step numbers), holding a glyph. */
-const SmallTile: React.FC<{ children: React.ReactNode }> = ({ children }) => (
-    <span aria-hidden className="mt-px flex h-[18px] w-[18px] shrink-0 items-center justify-center rounded-md border border-border-subtle bg-bg-item-surface text-text-secondary">{children}</span>
-);
 
 /**
- * One thing a connector adds (Granola's "Includes"), as a line on the page:
- * its glyph in the small tile, the name over one grey line, and room for a
- * switch on the right. Stack them in a PlainSection with space-y-4.
+ * One line of a PlainSection, on SettingsRow's columns (px-4, a 40px leading
+ * column, gap-4) so its text starts where the account card's text does: a
+ * small grey dot alone in that column, the text, and room for a control on
+ * the right. A line is a sentence or two, not a 40px tile row, so lines sit
+ * 12px apart.
  */
-export const FeatureCard: React.FC<{ icon?: React.ReactNode; title: string; description: string; control?: React.ReactNode }> = ({ icon, title, description, control }) => {
+export const DotRow: React.FC<{ children: React.ReactNode; control?: React.ReactNode }> = ({ children, control }) => (
+    <li className="flex items-start gap-4 border-x border-transparent px-4 py-1.5">
+        <span aria-hidden className="flex h-5 w-10 shrink-0 items-center justify-center text-text-secondary">
+            <span className="h-1.5 w-1.5 rounded-full bg-current" />
+        </span>
+        <div className="min-w-0 flex-1 text-sm leading-5 text-text-primary">{children}</div>
+        {control ? <div className="shrink-0 self-center">{control}</div> : null}
+    </li>
+);
+
+/** One thing a connector adds (Granola's "Includes"): a dot line with the name over one grey line, and room for a switch. */
+export const FeatureCard: React.FC<{ title: string; description: string; control?: React.ReactNode }> = ({ title, description, control }) => {
     const t = useT();
     return (
-        <div className="flex items-start gap-3">
-            {icon ? <SmallTile>{icon}</SmallTile> : null}
-            <div className="min-w-0 flex-1">
-                <h5 className="text-xs font-semibold leading-5 text-text-primary">{t(title)}</h5>
-                <p className="text-xs leading-5 text-text-secondary">{t(description)}</p>
-            </div>
-            {control ? <div className="shrink-0 self-center">{control}</div> : null}
-        </div>
+        <DotRow control={control}>
+            <h5 className="text-sm font-semibold leading-5 text-text-primary">{t(title)}</h5>
+            <p className="text-xs leading-5 text-text-secondary">{t(description)}</p>
+        </DotRow>
     );
 };
 
-/** Granola's "How Gmail is used": plain promises straight on the page, no card, each with its glyph in the MCP card's small tile. */
-export const UsageList: React.FC<{ title: string; rows: { icon: React.ReactNode; text: string }[] }> = ({ title, rows }) => {
+/** Granola's "How Gmail is used": plain promises, one dot line each. */
+export const UsageList: React.FC<{ title: string; rows: string[] }> = ({ title, rows }) => {
     const t = useT();
     return (
-        <section className="mb-6">
-            <SectionHeading title={t(title)} />
-            <ul className="space-y-2.5 px-1">
-                {rows.map((row, i) => (
-                    <li key={i} className="flex items-start gap-3 text-xs leading-5 text-text-primary">
-                        <SmallTile>{row.icon}</SmallTile>
-                        <span className="min-w-0">{t(row.text)}</span>
-                    </li>
-                ))}
-            </ul>
-        </section>
+        <PlainSection title={title}>
+            {rows.map((row, i) => <DotRow key={i}>{t(row)}</DotRow>)}
+        </PlainSection>
     );
 };
 
@@ -305,29 +301,16 @@ export const DetailSection: React.FC<{ title: string; subtitle?: React.ReactNode
 };
 
 /**
- * "How it works", built as Plans builds its own How it works
- * (HowItWorksRefund's StepRow): Audio's section heading, then one row per
- * step on SettingsRow's columns (px-4, a 40px leading column, gap-4),
- * the number standing on its own in that column with no tile (a boxed "1"
- * read as a button in light mode). A step is one sentence, not a title and a
- * line, so rows are not padded out to the tile's 40px: they sit 12px apart.
- * No card around it and nothing staggers in. The text starts on the same
- * line as the account card's text above.
+ * "How it works", built on Plans' How it works (HowItWorksRefund's StepRow
+ * columns): one dot line per step, no numbers (three short steps need none; a
+ * boxed "1" read as a button in light mode), no card, nothing staggering in.
  */
 export const HowItWorks: React.FC<{ lines: string[] }> = ({ lines }) => {
     const t = useT();
     return (
-        <section className="mb-6">
-            <SectionHeading title={t('How it works')} />
-            <ol>
-                {lines.map((line, i) => (
-                    <li key={i} className="flex items-start gap-4 border-x border-transparent px-4 py-1.5">
-                        <span className="w-10 shrink-0 text-center text-sm font-semibold leading-5 tabular-nums text-text-primary">{i + 1}</span>
-                        <span className="min-w-0 text-sm leading-5 text-text-primary">{t(line)}</span>
-                    </li>
-                ))}
-            </ol>
-        </section>
+        <PlainSection title="How it works">
+            {lines.map((line, i) => <DotRow key={i}>{t(line)}</DotRow>)}
+        </PlainSection>
     );
 };
 

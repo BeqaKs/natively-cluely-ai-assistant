@@ -42,6 +42,16 @@ test('darwin: device faults and unknown channels open Settings → Audio (no lon
   assert.deepEqual(audioWarningAction(fail({ platform: 'darwin' })), { type: 'settings-tab', tab: 'audio' });
 });
 
+test('both platforms: "Meeting Audio on Another Device" opens Settings → Audio, never Screen Recording', () => {
+  // output-route-mismatch arrives on the system channel; its message says
+  // "Choose <device> as the output in Settings → Audio".
+  const w = { kind: 'audio-capture-failure', channel: 'system', titleKey: 'Meeting Audio on Another Device',
+    message: 'Audio is playing on Speakers, but Natively is listening to Headphones. Choose Speakers as the output in Settings → Audio.' };
+  for (const platform of ['darwin', 'win32']) {
+    assert.deepEqual(audioWarningAction({ ...w, platform }), { type: 'settings-tab', tab: 'audio' }, platform);
+  }
+});
+
 test('other platforms never get a macOS or Windows privacy link', () => {
   assert.deepEqual(audioWarningAction(fail({ platform: 'linux', channel: 'mic', titleKey: 'Microphone Is Silent' })), { type: 'settings-tab', tab: 'audio' });
 });

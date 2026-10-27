@@ -168,11 +168,16 @@ test('Connectors: every page opens on the same heading and account card', () => 
     assert.match(parts, /export const ActionArea/);
     assert.match(parts, /\{page && <SectionHeading title=\{t\(page\.title\)\} subtitle=\{t\(page\.description\)\} \/>\}/);
     assert.match(parts, /\{page && <Tile>\{page\.mark\}<\/Tile>\}/);
-    // How it works is Plans' own (HowItWorksRefund's StepRow): the number alone in the 40px column, no tile, no card, no stagger.
-    assert.match(parts, /<SectionHeading title=\{t\('How it works'\)\} \/>\s*<ol>/);
-    assert.match(parts, /<span className="w-10 shrink-0 text-center text-sm font-semibold leading-5 tabular-nums text-text-primary">\{i \+ 1\}<\/span>/);
+    // How it works, Includes and How Gmail is used are read, not worked in: dot lines on Plans' row
+    // columns (a dot alone in the 40px column, no numbers, no icons, no tiles), no card, no stagger.
+    assert.match(parts, /export const PlainSection[\s\S]*?<SectionHeading title=\{t\(title\)\} \/>\s*<ul>\{children\}<\/ul>/);
+    assert.match(parts, /export const DotRow[\s\S]*?<span aria-hidden className="flex h-5 w-10 shrink-0 items-center justify-center text-text-secondary">\s*<span className="h-1\.5 w-1\.5 rounded-full bg-current" \/>/);
+    for (const name of ['HowItWorks', 'UsageList', 'FeatureCard']) {
+        assert.match(parts, new RegExp(`export const ${name}[\\s\\S]*?<DotRow`), `${name} is not built from DotRow`);
+    }
+    assert.doesNotMatch(parts, /SmallTile|\{i \+ 1\}<\/span>\s*<span className="min-w-0 text-sm/);
+    assert.doesNotMatch(read('src/components/settings/connectors/GmailPanel.tsx'), /icon: <|icon=\{<(Send|FileText)/);
     assert.doesNotMatch(css, /\.cx-step/);
-    assert.match(parts, /<SectionHeading title=\{t\(title\)\} \/>\s*<ul className="space-y-2\.5 px-1">/);
     assert.match(parts, /export const FOLD = 'border-t border-border-subtle px-4 py-4';/);
     assert.match(parts, /state === 'on' \? <LiveDot \/> : state === 'busy' \? <Loader2/);
     assert.match(pane, /<ConnectorPageContext\.Provider value=\{pageInfo\}>/);

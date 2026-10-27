@@ -21,8 +21,7 @@ export type OverlayButtonId =
     | 'brainstorm'
     | 'catch_me_up'
     | 'define'
-    | 'sound_smart'
-    | 'follow_up_questions';
+    | 'sound_smart';
 
 /** How many buttons the overlay's row holds. */
 export const OVERLAY_ROW_SIZE = 5;
@@ -37,13 +36,22 @@ export const DEFAULT_OVERLAY_BUTTON_ORDER: readonly OverlayButtonId[] = [
     'catch_me_up',
     'define',
     'sound_smart',
-    'follow_up_questions',
 ];
 
 /** The overlay's row: the first OVERLAY_ROW_SIZE of an order. */
 export const overlayRowOf = (order: readonly OverlayButtonId[]): OverlayButtonId[] => order.slice(0, OVERLAY_ROW_SIZE);
 
 export const OVERLAY_BUTTON_ORDER_KEY = 'natively_overlay_button_order';
+
+/**
+ * Ids an older version saved that now name another button. The tray's
+ * "Follow-up questions" (2026-10-16) did what Follow Up Question does, so the
+ * two became one (2026-10-27): a saved row that showed it shows Follow Up
+ * Question in its place.
+ */
+const RENAMED_OVERLAY_BUTTON_IDS: Readonly<Record<string, OverlayButtonId>> = {
+    follow_up_questions: 'follow_up',
+};
 
 /**
  * Any stored or sent value, made into a full order: known ids once each, in
@@ -53,7 +61,8 @@ export const OVERLAY_BUTTON_ORDER_KEY = 'natively_overlay_button_order';
 export function normalizeOverlayButtonOrder(value: unknown): OverlayButtonId[] {
     const out: OverlayButtonId[] = [];
     if (Array.isArray(value)) {
-        for (const id of value) {
+        for (const raw of value) {
+            const id = (typeof raw === 'string' && RENAMED_OVERLAY_BUTTON_IDS[raw]) || raw;
             if (DEFAULT_OVERLAY_BUTTON_ORDER.includes(id as OverlayButtonId) && !out.includes(id as OverlayButtonId)) {
                 out.push(id as OverlayButtonId);
             }

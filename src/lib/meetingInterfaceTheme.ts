@@ -1,4 +1,4 @@
-export type MeetingInterfaceTheme = 'default' | 'liquid-glass' | 'modern';
+export type MeetingInterfaceTheme = 'default' | 'liquid-glass' | 'modern' | 'lavender';
 
 const STORAGE_KEY = 'natively_meeting_interface_theme';
 
@@ -6,7 +6,26 @@ const VALID_THEMES: ReadonlySet<MeetingInterfaceTheme> = new Set([
     'default',
     'liquid-glass',
     'modern',
+    'lavender',
 ]);
+
+/**
+ * Whether the style paints its own surfaces in index.css, so the overlay's
+ * inline opacity styles (getOverlayAppearance) must stay out of its way.
+ */
+export function isCssOwnedInterfaceTheme(theme: MeetingInterfaceTheme): boolean {
+    return theme === 'liquid-glass' || theme === 'lavender';
+}
+
+/**
+ * The panel the style paints, whatever the app's colour theme: liquid glass
+ * and modern are always dark, lavender always light, default follows the app.
+ */
+export function interfaceThemeSurface(theme: MeetingInterfaceTheme, appTheme: 'light' | 'dark'): 'light' | 'dark' {
+    if (theme === 'liquid-glass' || theme === 'modern') return 'dark';
+    if (theme === 'lavender') return 'light';
+    return appTheme;
+}
 
 export function getMeetingInterfaceTheme(): MeetingInterfaceTheme {
     const stored = localStorage.getItem(STORAGE_KEY) as MeetingInterfaceTheme | null;

@@ -70,6 +70,7 @@ const promoAudience = (s: UserState) => !s.hasTrialToken && s.planTier !== 'max'
 
 export const STAGE_ORDER: ToasterId[] = [
   'permissions',
+  'plans',
   'natively_api_new',
   'browser_extension',
   'profile_intelligence',
@@ -99,6 +100,18 @@ export const STAGES: StageConfig[] = [
   },
 
   // ── Onboarding (day 1 allowed, one per launch) ────────────────
+  // Natively Plans: the first card after getting started (welcome → tour →
+  // permissions), for anyone not on a plan, a trial or a Natively key. Same
+  // 6 s deadline as the cards after it, so `order` decides between them.
+  {
+    id: 'plans',
+    order: 2,
+    card: 'plans',
+    triggers: home(6_000),
+    requiresStages: ['permissions'],
+    customPredicate: ({ userState: s }) => promoAudience(s) && !s.isPremium && !s.hasNativelyKey,
+  },
+
   // There is no free-trial card: the trial starts by itself when a meeting
   // starts with no AI (src/lib/trial/autoTrial.mjs), and the overlay says so.
   // The card reached about one new install in twelve; half of them started

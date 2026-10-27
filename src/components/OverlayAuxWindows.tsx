@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import TopPill from './ui/TopPill';
 import ResizeToggle from './ui/ResizeToggle';
 import { getGlassOverlayAppearance, getOverlayAppearance } from '../lib/overlayAppearance';
+import { isCssOwnedInterfaceTheme, type MeetingInterfaceTheme } from '../lib/meetingInterfaceTheme';
 
 // ── Overlay auxiliary window roots ──────────────────────────────────────────
 // The TopPill and the resize toggle each live in their OWN tiny BrowserWindow
@@ -28,7 +29,7 @@ export interface OverlayUiState {
   hasContent?: boolean;
   overlayOpacity?: number;
   themeMode?: 'light' | 'dark';
-  interfaceTheme?: 'default' | 'liquid-glass' | 'modern';
+  interfaceTheme?: MeetingInterfaceTheme;
 }
 
 const DEFAULT_STATE: Required<Omit<OverlayUiState, 'hasContent'>> & OverlayUiState = {
@@ -81,7 +82,7 @@ function useOverlayAuxAppearance(state: OverlayUiState) {
   const { interfaceTheme, overlayOpacity, themeMode } = state;
   return useMemo(
     () =>
-      interfaceTheme === 'liquid-glass'
+      isCssOwnedInterfaceTheme(interfaceTheme ?? 'default')
         ? getGlassOverlayAppearance()
         : getOverlayAppearance(overlayOpacity ?? 1, themeMode === 'light' ? 'light' : 'dark'),
     [interfaceTheme, overlayOpacity, themeMode],
@@ -305,6 +306,7 @@ export function OverlayPillWindow() {
           onQuit={() => sendAction('end-meeting')}
           appearance={appearance}
           onLogoClick={() => window.electronAPI?.setWindowMode?.('launcher')}
+          interfaceTheme={state.interfaceTheme}
         />
       </div>
     </div>

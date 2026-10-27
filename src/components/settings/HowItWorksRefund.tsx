@@ -468,7 +468,7 @@ export const HowItWorksRefund: React.FC = () => {
     <AccordionSection
       title="How it works & refund policy"
       description="Setup steps, refund rules and how to cancel."
-      className="bg-bg-item-surface rounded-2xl border-border-subtle !mb-0"
+      className="natively-key-card bg-bg-item-surface rounded-2xl border-border-subtle !mb-0"
       divider={false}
       hoverFill={false}
     >
@@ -511,7 +511,7 @@ export const PartnerPrograms: React.FC = () => {
     <AccordionSection
       title="Earn with Natively"
       description="Share Natively and get paid, or get Ultra free."
-      className="bg-bg-item-surface rounded-2xl border-border-subtle !mb-0"
+      className="natively-key-card bg-bg-item-surface rounded-2xl border-border-subtle !mb-0"
       divider={false}
       hoverFill={false}
     >
