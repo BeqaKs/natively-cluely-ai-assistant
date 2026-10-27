@@ -408,7 +408,7 @@ import { registerPrismLanguages } from '../utils/registerPrismLanguages';
 import { useShortcuts } from '../hooks/useShortcuts';
 import ClickThroughToggle from './ui/ClickThroughToggle';
 import { analytics, detectProviderType, reportAnswerFailed } from '../lib/analytics/analytics.service';
-import type { MeetingInterfaceTheme } from '../lib/meetingInterfaceTheme';
+import { interfaceThemeSurface, isCssOwnedInterfaceTheme, type MeetingInterfaceTheme } from '../lib/meetingInterfaceTheme';
 import { overlayRowOf, useOverlayButtonOrder, type OverlayButtonId } from '../lib/overlayButtonOrder';
 import { OVERLAY_BUTTONS } from './overlay/overlayButtons';
 import {
@@ -442,6 +442,7 @@ import { AmbientChip } from './overlay/AmbientChip';
 import { LastTimeRecapBanner, useLastTimeRecap } from './overlay/LastTimeRecapNotice';
 import type { LiveHelperAction } from '../types/assist';
 import { useMeetingMute } from './overlay/useMeetingMute';
+import { HeroGlassButton } from './overlay/heroGlass/HeroGlassButton';
 
 // PERF: hoisted plugin arrays. ReactMarkdown receives `remarkPlugins` and
 // `rehypePlugins` as new array literals if defined inline at the call site —
@@ -1026,6 +1027,8 @@ export const StreamingHighlightedCode = React.memo(
 interface MessageRowProps {
   msg: Message;
   isLightTheme: boolean;
+  /** Lavender: your question is the hero's lavender pill (overlay/heroGlass). */
+  isLavenderTheme?: boolean;
   appearance: any;
   renderMessageText: (msg: Message) => React.ReactNode;
 }
@@ -1172,6 +1175,7 @@ const MessageRow = React.memo(
   function MessageRow({
     msg,
     isLightTheme,
+    isLavenderTheme = false,
     appearance: _appearance,
     renderMessageText,
   }: MessageRowProps) {
@@ -1221,7 +1225,9 @@ const MessageRow = React.memo(
               }
               ${
                 msg.role === 'user'
-                  ? isLightTheme
+                  ? isLavenderTheme
+                    ? 'hlg-button hlg-lavender hlg-sm hero-bubble'
+                    : isLightTheme
                     ? 'bg-blue-500/10 backdrop-blur-md border border-blue-500/20 text-blue-900 rounded-[20px] rounded-tr-[4px] shadow-sm font-medium'
                     : 'bg-blue-600/20 backdrop-blur-md border border-blue-500/30 text-blue-100 rounded-[20px] rounded-tr-[4px] shadow-sm font-medium'
                   : ''
@@ -1408,6 +1414,7 @@ const MessageRow = React.memo(
   (prev, next) =>
     prev.msg === next.msg &&
     prev.isLightTheme === next.isLightTheme &&
+    prev.isLavenderTheme === next.isLavenderTheme &&
     prev.appearance === next.appearance &&
     prev.renderMessageText === next.renderMessageText,
 );
@@ -1422,9 +1429,14 @@ const NativelyInterface: React.FC<NativelyInterfaceProps> = ({
   overlayOpacity = OVERLAY_OPACITY_DEFAULT,
   interfaceTheme = 'default',
 }) => {
-  const isLightTheme = useResolvedTheme() === 'light';
+  // Lavender paints a light panel under the dark app theme too, so every
+  // light/dark class choice below follows the panel, not the app.
+  const isLightTheme = interfaceTheme === 'lavender' || useResolvedTheme() === 'light';
   const isGlassTheme = interfaceTheme === 'liquid-glass';
   const isModernTheme = interfaceTheme === 'modern';
+  // Lavender draws its buttons with the website hero's own button
+  // (overlay/heroGlass), not the chip classes the other styles share.
+  const isLavenderTheme = interfaceTheme === 'lavender';
   const shellRef = React.useRef<HTMLDivElement>(null);
   const t = useT();
   const [isExpanded, setIsExpanded] = useState(true);
@@ -2379,10 +2391,11 @@ const NativelyInterface: React.FC<NativelyInterfaceProps> = ({
     };
   }, []);
 
-  const useDarkCodeTheme = !isLightTheme || isGlassTheme || isModernTheme;
-  // Glass and modern keep a dark panel under the light app theme, so only the
-  // default interface theme ever puts the chat's content on a light surface.
-  const isLightSurface = isLightTheme && !isGlassTheme && !isModernTheme;
+  // Glass and modern keep a dark panel under the light app theme and lavender
+  // a light one under the dark theme; only default follows the app.
+  const isLightSurface = interfaceThemeSurface(interfaceTheme, isLightTheme ? 'light' : 'dark') === 'light';
+  // Lavender keeps the website theme's dark code well on its light panel.
+  const useDarkCodeTheme = !isLightSurface || isLavenderTheme;
   const codeTheme = useDarkCodeTheme ? vividDarkCodeTheme : oneLight;
   const codeLineNumberColor = useDarkCodeTheme ? VIVID_DARK_LINE_NUMBER_COLOR : 'rgba(24,24,24,0.4)';
   // Header only shows for the light theme and the modern/glass interface
@@ -2390,13 +2403,13 @@ const NativelyInterface: React.FC<NativelyInterfaceProps> = ({
   // [data-interface-theme] variables) — the new vivid-black default dark
   // theme drops the header row in favor of a floating hover-reveal language
   // tag + copy button (see HighlightedCode / StreamingHighlightedCode).
-  const showCodeHeader = !useDarkCodeTheme || isModernTheme || isGlassTheme;
+  const showCodeHeader = !useDarkCodeTheme || isModernTheme || isGlassTheme || isLavenderTheme;
   const appearance = useMemo(
     () =>
-      isGlassTheme
+      isCssOwnedInterfaceTheme(interfaceTheme)
         ? getGlassOverlayAppearance()
         : getOverlayAppearance(overlayOpacity, isLightTheme ? 'light' : 'dark'),
-    [overlayOpacity, isLightTheme, isGlassTheme],
+    [overlayOpacity, isLightTheme, interfaceTheme],
   );
   const overlayPanelClass = 'overlay-text-primary';
   const codeBlockClass = 'overlay-code-block-surface';
@@ -4768,7 +4781,7 @@ const NativelyInterface: React.FC<NativelyInterfaceProps> = ({
         hasContent: messages.length > 0,
         overlayOpacity,
         themeMode: isLightTheme ? 'light' : 'dark',
-        interfaceTheme: isGlassTheme ? 'liquid-glass' : isModernTheme ? 'modern' : 'default',
+        interfaceTheme,
       })
       .catch(() => {});
   }, [
@@ -4777,8 +4790,7 @@ const NativelyInterface: React.FC<NativelyInterfaceProps> = ({
     messages.length,
     overlayOpacity,
     isLightTheme,
-    isGlassTheme,
-    isModernTheme,
+    interfaceTheme,
   ]);
 
   useEffect(() => {
@@ -11365,7 +11377,7 @@ Provide only the answer, nothing else.`;
         process around this window. This window is exactly the shell card. */}
     <div
       ref={contentRef}
-      data-interface-theme={isGlassTheme ? 'liquid-glass' : isModernTheme ? 'modern' : 'default'}
+      data-interface-theme={interfaceTheme}
       // CENTERED (mx-auto) in the fixed-width window: the window never
       // width-resizes, so centering is stable — the panel's center (and the
       // pill window centered over this window) never moves as the panel
@@ -12089,6 +12101,7 @@ Provide only the answer, nothing else.`;
                       key={msg.id}
                       msg={msg}
                       isLightTheme={isLightTheme}
+                      isLavenderTheme={isLavenderTheme}
                       appearance={appearance}
                       renderMessageText={renderMessageText}
                     />
@@ -12224,7 +12237,7 @@ Provide only the answer, nothing else.`;
                       onClick={handleJumpToLatest}
                       aria-label={t('Jump to latest')}
                       title={t('Jump to latest')}
-                      data-interface-theme={isGlassTheme ? 'liquid-glass' : isModernTheme ? 'modern' : 'default'}
+                      data-interface-theme={interfaceTheme}
                       // NOT overlay-resize-toggle-surface/appearance.shellStyle
                       // despite matching ResizeToggle everywhere else on this
                       // button (motion, size, gloss sheen): that surface is
@@ -12390,7 +12403,14 @@ Provide only the answer, nothing else.`;
                   // not DOM text, so the copies never show up in textContent,
                   // text queries or text search.
                   const ghost = (text: string) => <span className="ov-ghost-label" data-label={text} />;
-                  const answerContent = (
+                  // Lavender: the hero's paper pill (hlg-*), icon and label in its slots.
+                  const heroChipClass = 'hlg-sm hero-pill hero-hotkey interaction-base interaction-press shrink-0';
+                  const heroIcon = (Icon: typeof Mic) => <Icon size={11} strokeWidth={2} />;
+                  const answerContent = isLavenderTheme ? (
+                    <span className="flex items-center gap-[5px]">
+                      <Mic size={11} strokeWidth={2} /> {t('Answer')}
+                    </span>
+                  ) : (
                     <span className="flex items-center gap-1.5">
                       <Mic className="w-3 h-3 opacity-70" /> {t('Answer')}
                     </span>
@@ -12421,6 +12441,23 @@ Provide only the answer, nothing else.`;
                   // effect). Same classes and icons as the real chips; spans,
                   // not buttons, and CSS-drawn labels.
                   const measureChip = (id: OverlayButtonId) => {
+                    if (isLavenderTheme) {
+                      const { Icon, label } = OVERLAY_BUTTONS[id];
+                      return (
+                        <span key={id} className={`hlg-button hlg-lavender ${heroChipClass}${id === 'answer' ? ' min-w-[74px]' : ''}`}>
+                          <span className="hlg-content">
+                            {id === 'answer' ? (
+                              <span className="hlg-label"><span className="ov-chip-stack">{answerSizers}</span></span>
+                            ) : (
+                              <>
+                                <span className="hlg-icon">{heroIcon(Icon)}</span>
+                                <span className="hlg-label">{ghost(t(label))}</span>
+                              </>
+                            )}
+                          </span>
+                        </span>
+                      );
+                    }
                     if (id === 'answer') {
                       return (
                         <span key={id} className={answerChipClass(false)} style={appearance.chipStyle}>
@@ -12448,6 +12485,33 @@ Provide only the answer, nothing else.`;
                     follow_up_questions: () => void handleLiveHelper('follow_up_questions'),
                   };
                   const chip = (id: OverlayButtonId) => {
+                    if (isLavenderTheme) {
+                      if (id === 'answer') {
+                        return (
+                          <HeroGlassButton
+                            key={id}
+                            variant="lavender"
+                            onClick={handleAnswerNow}
+                            className={`${heroChipClass} min-w-[74px]${isManualRecording ? ' hero-recording' : ''}`}
+                          >
+                            <span className="ov-chip-stack">
+                              {answerSizers}
+                              <span className="flex justify-center">
+                                <SwapText swapKey={isManualRecording ? 'stop' : 'answer'}>
+                                  {isManualRecording ? stopContent : answerContent}
+                                </SwapText>
+                              </span>
+                            </span>
+                          </HeroGlassButton>
+                        );
+                      }
+                      const { Icon, label } = OVERLAY_BUTTONS[id];
+                      return (
+                        <HeroGlassButton key={id} variant="lavender" onClick={onChip[id]} className={heroChipClass} icon={heroIcon(Icon)}>
+                          {t(label)}
+                        </HeroGlassButton>
+                      );
+                    }
                     if (id === 'answer') {
                       return (
                         <button
@@ -12478,7 +12542,7 @@ Provide only the answer, nothing else.`;
                     <>
                       <div
                         ref={quickRowRef}
-                        className={`ov-chip-row ov-quickrow-pad flex flex-wrap justify-center items-center gap-1.5 px-4 pb-3 max-w-full overflow-visible ${rollingTranscript && showTranscript ? 'pt-1' : 'pt-3 is-bare'}`}
+                        className={`ov-chip-row ov-quickrow-pad flex flex-wrap justify-center px-4 items-center gap-1.5 pb-3 max-w-full overflow-visible ${rollingTranscript && showTranscript ? 'pt-1' : 'pt-3 is-bare'}`}
                       >
                         {/* One row: the five buttons picked in Settings ›
                             Overlay, in its order. */}
@@ -12616,6 +12680,9 @@ Provide only the answer, nothing else.`;
                   {/* Custom Rich Placeholder */}
                   {!inputValue && (
                     <div className="absolute inset-x-3 top-1/2 -translate-y-1/2 min-w-0 overflow-hidden whitespace-nowrap pointer-events-none text-[13px] overlay-text-muted">
+                      {isLavenderTheme ? (
+                      <span className="overlay-input-placeholder-full">{t('Ask anything on screen or conversation')}</span>
+                      ) : (
                       <span className="overlay-input-placeholder-full inline-flex items-center gap-1.5">
                         <span>{t('Ask anything on screen or conversation, or')}</span>
                       <span className="flex items-center gap-1 opacity-80">
@@ -12635,6 +12702,7 @@ Provide only the answer, nothing else.`;
                       </span>
                       <span>{t('for selective screenshot')}</span>
                       </span>
+                      )}
                       <span className="overlay-input-placeholder-compact">{t('Ask anything…')}</span>
                     </div>
                   )}
@@ -12666,15 +12734,20 @@ Provide only the answer, nothing else.`;
 
                         window.electronAPI.toggleModelSelector({ x, y, activate: false });
                       }}
-                      className={`
+                      className={isLavenderTheme
+                        // The hero's model chip: a paper pill in the mono face.
+                        ? 'hlg-button hlg-lavender hlg-sm hero-pill hero-mono shrink-0 interaction-base interaction-press'
+                        : `
                                                 flex items-center gap-1 pl-3 pr-1.5 h-7
                                                 border rounded-[9px] transition-colors
                                                 text-xs font-medium text-left shrink-0
                                                 interaction-base interaction-press
                                                 ${controlSurfaceClass}
                                             `}
-                      style={{ ...appearance.controlStyle, width: MODEL_SELECTOR_WIDTH }}
+                      style={isLavenderTheme ? { width: MODEL_SELECTOR_WIDTH } : { ...appearance.controlStyle, width: MODEL_SELECTOR_WIDTH }}
                     >
+                      {isLavenderTheme && <span className="hlg-lens" aria-hidden="true" />}
+                      <span className={isLavenderTheme ? 'hlg-content' : 'contents'}>
                       <ModelSelectorLabel>
                         {(() => {
                           const m = currentModel;
@@ -12733,7 +12806,12 @@ Provide only the answer, nothing else.`;
                           return m;
                         })()}
                       </ModelSelectorLabel>
-                      <ChevronDown size={12} className="shrink-0 transition-transform" />
+                      {isLavenderTheme ? (
+                        <svg className="shrink-0" width="8" height="8" viewBox="0 0 10 10" fill="none" aria-hidden="true"><path d="M3 4l2 2 2-2" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/></svg>
+                      ) : (
+                        <ChevronDown size={12} className="shrink-0 transition-transform" />
+                      )}
+                      </span>
                     </button>
 
                     <div className="relative">
@@ -12777,7 +12855,10 @@ Provide only the answer, nothing else.`;
                     )}
 
                     {/* Notes: the notes window, where the user types their own notes for
-                        this meeting; they go into the meeting notes at Stop. */}
+                        this meeting; they go into the meeting notes at Stop. Lavender's
+                        row is the hero's, without Notes and Passthrough (owner request);
+                        passthrough keeps its global shortcut there. */}
+                    {!isLavenderTheme && (<>
                     <div className="relative">
                       <button
                         onClick={() => { void window.electronAPI?.notesWindowToggle?.(); }}
@@ -12807,24 +12888,38 @@ Provide only the answer, nothing else.`;
                         ariaLabel={t('Toggle Mouse Passthrough')}
                       />
                     </div>
+                    </>)}
                   </div>
 
-                  <button
-                    onClick={handleManualSubmit}
-                    disabled={!inputValue.trim()}
-                    className={`
-                                    w-7 h-7 rounded-full flex items-center justify-center
-                                    interaction-base interaction-press
-                                    ${
-                                      inputValue.trim()
-                                        ? 'bg-[#007AFF] text-white shadow-lg shadow-blue-500/20 hover:bg-[#0071E3]'
-                                        : 'overlay-icon-surface overlay-text-muted cursor-not-allowed'
-                                    }
-                                `}
-                    style={inputValue.trim() ? undefined : appearance.iconStyle}
-                  >
-                    <ArrowRight className="w-3.5 h-3.5" />
-                  </button>
+                  {isLavenderTheme ? (
+                    // The hero's send bead (its SEND_STYLE and arrow glyph).
+                    <HeroGlassButton
+                      variant="lavender"
+                      onClick={handleManualSubmit}
+                      disabled={!inputValue.trim()}
+                      className="hlg-sm hero-send interaction-base interaction-press"
+                      aria-label={t('Send')}
+                    >
+                      <svg width="10" height="10" viewBox="0 0 11 11" fill="none" aria-hidden="true"><path d="M2.5 5.5H8.5M6 3l2.5 2.5L6 8" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                    </HeroGlassButton>
+                  ) : (
+                    <button
+                      onClick={handleManualSubmit}
+                      disabled={!inputValue.trim()}
+                      className={`
+                                      w-7 h-7 rounded-full flex items-center justify-center
+                                      interaction-base interaction-press
+                                      ${
+                                        inputValue.trim()
+                                          ? 'bg-[#007AFF] text-white shadow-lg shadow-blue-500/20 hover:bg-[#0071E3]'
+                                          : 'overlay-icon-surface overlay-text-muted cursor-not-allowed'
+                                      }
+                                  `}
+                      style={inputValue.trim() ? undefined : appearance.iconStyle}
+                    >
+                      <ArrowRight className="w-3.5 h-3.5" />
+                    </button>
+                  )}
                 </div>
               </div>
 

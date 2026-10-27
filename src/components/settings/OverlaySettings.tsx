@@ -44,6 +44,7 @@ const THEMES: { mode: MeetingInterfaceTheme; label: string; description: string 
     { mode: 'default', label: 'Default', description: 'Default overlay appearance' },
     { mode: 'liquid-glass', label: 'Liquid Glass', description: 'Liquid glass — Apple-inspired transparent overlay' },
     { mode: 'modern', label: 'Modern', description: 'Modern — polished dark glass with cobalt accents' },
+    { mode: 'lavender', label: 'Lavender', description: 'Lavender — white glass with lavender buttons, as on the website' },
 ];
 
 type Drag = {
@@ -241,13 +242,13 @@ function useButtonEditor(scale: number) {
 type Editor = ReturnType<typeof useButtonEditor>;
 
 /** One draggable button, drawn as the overlay draws it. */
-const EditorChip: React.FC<{ id: OverlayButtonId; editor: Editor; appearance: OverlayAppearance; label: string }> = ({ id, editor, appearance, label }) => {
+const EditorChip: React.FC<{ id: OverlayButtonId; editor: Editor; appearance: OverlayAppearance; label: string; theme: MeetingInterfaceTheme }> = ({ id, editor, appearance, label, theme }) => {
     const dragging = editor.dragId === id;
     const target = editor.targetId === id;
     return (
         <div
             {...editor.chipProps(id, label)}
-            className={`${overlayChipClass(id)} relative select-none touch-none ${dragging ? 'z-20 cursor-grabbing' : 'cursor-grab'}`}
+            className={`${overlayChipClass(id, theme)} relative select-none touch-none ${dragging ? 'z-20 cursor-grabbing' : 'cursor-grab'}`}
             style={{
                 ...appearance.chipStyle,
                 ...(dragging ? { boxShadow: '0 8px 20px rgba(0,0,0,0.22)' } : null),
@@ -257,7 +258,7 @@ const EditorChip: React.FC<{ id: OverlayButtonId; editor: Editor; appearance: Ov
                 ...(target ? { outline: '1.5px solid currentColor', outlineOffset: 2, opacity: 0.35 } : null),
             }}
         >
-            <OverlayChipContent id={id} />
+            <OverlayChipContent id={id} theme={theme} />
         </div>
     );
 };
@@ -304,7 +305,7 @@ const Preview: React.FC<{ opacity: number; theme: MeetingInterfaceTheme }> = ({ 
                         quickActions={() => (
                             <div role="list" aria-label={t('Overlay buttons')} className="relative flex flex-nowrap justify-center items-center gap-1.5 px-4 pb-3 pt-3">
                                 {row.map((id, i) => (
-                                    <EditorChip key={id} id={id} editor={editor} appearance={appearance} label={label(id, `${i + 1} / ${OVERLAY_ROW_SIZE}`)} />
+                                    <EditorChip key={id} id={id} editor={editor} appearance={appearance} theme={theme} label={label(id, `${i + 1} / ${OVERLAY_ROW_SIZE}`)} />
                                 ))}
                             </div>
                         )}
@@ -312,7 +313,7 @@ const Preview: React.FC<{ opacity: number; theme: MeetingInterfaceTheme }> = ({ 
                     {/* The tray: the buttons the overlay is not showing, on a
                         small panel of the overlay's own surface. */}
                     <div
-                        data-interface-theme={isGlassTheme ? 'liquid-glass' : theme === 'modern' ? 'modern' : 'default'}
+                        data-interface-theme={theme}
                         style={{ ['--overlay-opacity' as '--overlay-opacity']: String(opacity) } as React.CSSProperties}
                         className="mt-4 flex justify-center"
                     >
@@ -323,7 +324,7 @@ const Preview: React.FC<{ opacity: number; theme: MeetingInterfaceTheme }> = ({ 
                             style={appearance.shellStyle}
                         >
                             {tray.map((id) => (
-                                <EditorChip key={id} id={id} editor={editor} appearance={appearance} label={label(id, t('in the tray'))} />
+                                <EditorChip key={id} id={id} editor={editor} appearance={appearance} theme={theme} label={label(id, t('in the tray'))} />
                             ))}
                         </div>
                     </div>

@@ -72,7 +72,7 @@ const PanelShell: React.FC<{ context: string; className: string; children: React
     const onStorage = () => setTheme(getMeetingInterfaceTheme());
     window.addEventListener('storage', onStorage);
     const off = window.electronAPI?.onMeetingInterfaceThemeChanged?.((next) => {
-      const valid: MeetingInterfaceTheme[] = ['default', 'liquid-glass', 'modern'];
+      const valid: MeetingInterfaceTheme[] = ['default', 'liquid-glass', 'modern', 'lavender'];
       if (valid.includes(next as MeetingInterfaceTheme)) setTheme(next as MeetingInterfaceTheme);
     });
     return () => {

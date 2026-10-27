@@ -8994,7 +8994,7 @@ export function initializeIpcHandlers(appState: AppState): void {
   // mismatch (overlay falls back to default), at worst an attribute-injection
   // vector if any consumer ever switched from `setAttribute` to template
   // literals. Hardening the trust boundary at the broadcast point is cheap.
-  const VALID_INTERFACE_THEMES = new Set(['default', 'liquid-glass', 'modern']);
+  const VALID_INTERFACE_THEMES = new Set(['default', 'liquid-glass', 'modern', 'lavender']);
   /**
    * The launcher's boot reveal has fully landed — restore background throttling.
    *

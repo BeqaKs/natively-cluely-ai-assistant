@@ -948,7 +948,7 @@ export const CalendarSettings: React.FC = () => {
                       type="button"
                       role="radio"
                       aria-checked={reminderLead === m}
-                      className={`cp-pill cp-pill--sm${reminderLead === m ? ' cp-pill--start' : ''}`}
+                      className={`cp-pill cp-pill--sm${reminderLead === m ? ' is-selected' : ''}`}
                       onClick={() => chooseReminderLead(m)}
                       disabled={reminderLead === null}
                     >

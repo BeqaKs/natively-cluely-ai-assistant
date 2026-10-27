@@ -1,5 +1,6 @@
 import { ChevronUp, ChevronDown } from "lucide-react";
 import icon from "../icon.png";
+import nativelyMark from "../overlay/heroGlass/natively-mark-black.svg";
 import type { OverlayAppearance } from "../../lib/overlayAppearance";
 
 interface TopPillProps {
@@ -8,7 +9,20 @@ interface TopPillProps {
     onQuit: () => void;
     appearance: OverlayAppearance;
     onLogoClick?: () => void;
+    /** Lavender draws the website hero's pill (NativelyInterfaceCard) instead. */
+    interfaceTheme?: string;
 }
+
+const MARK_MASK = {
+    maskImage: `url("${nativelyMark}")`,
+    WebkitMaskImage: `url("${nativelyMark}")`,
+    maskSize: "contain",
+    WebkitMaskSize: "contain",
+    maskRepeat: "no-repeat",
+    WebkitMaskRepeat: "no-repeat",
+    maskPosition: "center",
+    WebkitMaskPosition: "center",
+} as const;
 
 export default function TopPill({
     expanded,
@@ -16,7 +30,43 @@ export default function TopPill({
     onQuit,
     appearance,
     onLogoClick,
+    interfaceTheme,
 }: TopPillProps) {
+    if (interfaceTheme === "lavender") {
+        // The hero card's pill markup, as the website draws it, with the
+        // app's three actions wired to it.
+        return (
+            <div className="flex justify-center select-none z-50">
+                <div className="draggable-area overlay-resize-toggle-surface flex items-center gap-1 rounded-full p-1">
+                    <div className="draggable-area">
+                        <button
+                            onClick={onLogoClick}
+                            aria-label="Natively"
+                            className="overlay-icon-surface interaction-base interaction-press w-8 h-8 rounded-full flex items-center justify-center"
+                        >
+                            <span aria-hidden="true" className="relative block h-[28px] w-[28px] bg-[#B0ABBB]" style={MARK_MASK} />
+                        </button>
+                    </div>
+                    <button
+                        onClick={onToggle}
+                        className="overlay-chip-surface overlay-text-secondary interaction-base interaction-press flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[12px] font-medium tracking-[0.02em] relative overflow-hidden"
+                    >
+                        <svg width="12" height="12" viewBox="0 0 12 12" fill="none" className="opacity-70 relative" aria-hidden="true">
+                            <path d={expanded ? "M3 7.5L6 4.5L9 7.5" : "M3 4.5L6 7.5L9 4.5"} stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
+                        </svg>
+                        <span className="relative">{expanded ? "Hide" : "Show"}</span>
+                    </button>
+                    <button
+                        onClick={onQuit}
+                        aria-label="Stop"
+                        className="overlay-icon-surface overlay-icon-surface-hover interaction-base interaction-press overlay-text-muted w-8 h-8 rounded-full flex items-center justify-center"
+                    >
+                        <div className="w-3 h-3 rounded-[2px] bg-current opacity-90 relative" />
+                    </button>
+                </div>
+            </div>
+        );
+    }
     return (
         <div className="flex justify-center select-none z-50">
             <div

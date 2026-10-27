@@ -23,10 +23,6 @@ import { useTrialRemaining } from '../trial/useTrialRemaining';
 import { getMeetingInterfaceTheme, type MeetingInterfaceTheme } from '../../lib/meetingInterfaceTheme';
 import { BEAT, EASE_ENTER, EASE_LEAVE, INK, SETTLE } from '../../lib/plansMotion';
 import { Presence, SettingsMotionReady, SwapLabel } from './SettingsRow';
-// Painted as a CSS mask, not rendered as an <img>: the asset is a white
-// monochrome glyph, so on the light theme's pale plaque an <img> would be
-// invisible. See `.natively-key-mark` in index.css.
-import nativelyLogo from '../../assets/logo.webp';
 import { isTrialClaimedLocally, markTrialClaimedLocally } from '../../lib/trialCampaign.mjs';
 import { trialRefusal } from '../../lib/trial/trialStart.mjs';
 import {
@@ -572,7 +568,7 @@ function ActiveTrialCard({ expiresAt, onOptions }: { expiresAt: string; onOption
   return (
     <div>
       <SectionLabel>Free trial active</SectionLabel>
-      <Card className="natively-key-card">
+      <Card>
         <div className="px-4 py-4">
           <div className="flex items-center gap-3">
             <div className="min-w-0 flex-1">
@@ -639,10 +635,12 @@ function CtaLabel({ id, children }: { id: string; children: React.ReactNode }) {
   );
 }
 
+// Every container in this tab wears the `natively-key-card` plaque, so none of
+// them falls back to the grey item surface in light theme.
 function Card({ children, className = '' }: { children: React.ReactNode; className?: string }) {
   return (
     <div
-      className={`bg-bg-item-surface rounded-2xl border border-border-subtle overflow-hidden ${className}`}
+      className={`natively-key-card bg-bg-item-surface rounded-2xl border border-border-subtle overflow-hidden ${className}`}
     >
       {children}
     </div>
@@ -1580,7 +1578,7 @@ export const NativelyApiSettings: React.FC<NativelyApiSettingsProps> = ({ initia
                shape; the two halves of one feature no longer disagree. */
             <div>
               <SectionLabel>Free trial</SectionLabel>
-              <Card className="natively-key-card">
+              <Card>
                 <div className="px-4 py-4 space-y-3">
                   {/* The ORIGINAL shape: offer on the left, one compact action
                       on the right, a single row. It reads as an offer rather
@@ -1713,30 +1711,20 @@ export const NativelyApiSettings: React.FC<NativelyApiSettingsProps> = ({ initia
         </SectionLabel>
 
         {/* `natively-key-card` gives the flat box the same MATERIAL as the
-            rest of this tab — layered fill, specular top hairline, 24px
-            blueprint grid, raised floor shadow — without its COLOUR. The
+            rest of this tab — layered fill, specular top hairline, raised
+            floor shadow — without its COLOUR. The
             plaque and its well are achromatic; the Activate button is the only
             saturated thing in the section, and only once it has something to
             act on. See the "tactile credential plaque" block in index.css. */}
-        <Card className="natively-key-card">
+        <Card>
           <div className="px-4 py-4 space-y-3">
             {/* Says the quiet part out loud: one box, EITHER credential. The
                 placeholder alone was carrying that, and a placeholder
-                disappears the moment you type.
-
-                The mark sits ON this line rather than in a header of its own:
-                no squircle, no tinted well, no title + sub-label block. The
-                section label above is still the heading. */}
-            <div className="flex items-center gap-2.5">
-              <span
-                aria-hidden="true"
-                className="natively-key-mark"
-                style={{ ['--natively-key-mark-src' as string]: `url(${nativelyLogo})` } as React.CSSProperties}
-              />
-              <p className="natively-key-sub text-[12px] leading-snug">
-                Activate with a Natively API key or a Natively Pro license.
-              </p>
-            </div>
+                disappears the moment you type. No mark beside it: the section
+                label above is still the heading. */}
+            <p className="natively-key-sub text-[12px] leading-snug">
+              Activate with a Natively API key or a Natively Pro license.
+            </p>
 
             {/* The input is the subject of this card. It's now a pressed-in
                 well rather than a hairline box — same inset vocabulary as the
@@ -2067,7 +2055,7 @@ export const NativelyApiSettings: React.FC<NativelyApiSettingsProps> = ({ initia
                 top padding down to How it works' spacing. */}
             <AccordionSection
               title="Change plan"
-              className="bg-bg-item-surface rounded-2xl border-border-subtle !mb-0"
+              className="natively-key-card bg-bg-item-surface rounded-2xl border-border-subtle !mb-0"
               divider={false}
               hoverFill={false}
             >

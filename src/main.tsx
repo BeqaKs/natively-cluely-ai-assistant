@@ -1,6 +1,7 @@
 import React from "react"
 import ReactDOM from "react-dom/client"
 import "./index.css"
+import "./overlayLavenderTheme.css"
 import { THEME_CACHE_KEY, applyResolvedTheme } from "./lib/themeTransition.mjs"
 import { createSwitchableTooltipGuard, installNativeTooltipGuard, shouldSuppressNativeTooltips } from "./lib/nativeTooltipGuard.mjs"
 import { wireStealthTooltips } from "./lib/stealthTooltips.mjs"

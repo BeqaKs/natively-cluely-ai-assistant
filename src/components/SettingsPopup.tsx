@@ -3,7 +3,7 @@ import { MessageSquare, Camera, Zap, Eye } from 'lucide-react';
 import { useShortcuts } from '../hooks/useShortcuts';
 import { useResolvedTheme } from '../hooks/useResolvedTheme';
 import { getModifierSymbol } from '../utils/platformUtils';
-import { getMeetingInterfaceTheme, type MeetingInterfaceTheme } from '../lib/meetingInterfaceTheme';
+import { getMeetingInterfaceTheme, type MeetingInterfaceTheme, interfaceThemeSurface, isCssOwnedInterfaceTheme } from '../lib/meetingInterfaceTheme';
 import {
     clampOverlayOpacity,
     getDefaultOverlayOpacity,
@@ -161,7 +161,7 @@ const SettingsPopup = () => {
         window.addEventListener('storage', handleStorage);
         // @ts-ignore
         const unsubscribe = window.electronAPI?.onMeetingInterfaceThemeChanged?.((theme: string) => {
-            const valid: MeetingInterfaceTheme[] = ['default', 'liquid-glass', 'modern'];
+            const valid: MeetingInterfaceTheme[] = ['default', 'liquid-glass', 'modern', 'lavender'];
             if (valid.includes(theme as MeetingInterfaceTheme)) {
                 setInterfaceTheme(theme as MeetingInterfaceTheme);
             }
@@ -306,7 +306,7 @@ const SettingsPopup = () => {
     }, []);
 
     // Determine if the background is dark (glass themes are always dark glass)
-    const isDarkBg = interfaceTheme === 'liquid-glass' || interfaceTheme === 'modern' || !isLightTheme;
+    const isDarkBg = interfaceThemeSurface(interfaceTheme, isLightTheme ? 'light' : 'dark') === 'dark';
 
     const popupPanelClass = isDarkBg
         ? 'bg-[#1E1E1E]/80 border-white/10'
@@ -334,7 +334,7 @@ const SettingsPopup = () => {
     // [data-interface-theme="liquid-glass"] .overlay-shell-surface !important
     // rule governs; for modern its own !important rule wins over the inline
     // style the same way.
-    const isGlassTheme = interfaceTheme === 'liquid-glass';
+    const isGlassTheme = isCssOwnedInterfaceTheme(interfaceTheme);
     const appearance = useMemo(
         () =>
             isGlassTheme

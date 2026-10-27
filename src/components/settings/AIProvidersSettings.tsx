@@ -244,15 +244,14 @@ export const AIP_CSS = `
     --aip-border-strong: rgba(0,0,0,0.13);
     --aip-divider:       rgba(0,0,0,0.06);
 
-    /* --aip-card-bg and --aip-card-border are NOT redeclared here. Both are
-       expressions over tokens that already split by theme, so the single
-       declaration in ".aip-root" resolves to #EAECEF behind a rgba(0,0,0,0.07)
-       hairline here. Re-stating them would only create somewhere to drift.
-       #FFFFFF was considered and rejected: this panel renders on --bg-main
-       (#fafafa) inside a --bg-elevated (#FFFFFF) modal frame, so a white card
-       separates from its canvas by 5 steps and from the frame by 0 — it would
-       be carried entirely by the 7% hairline, which is the same skeleton
-       failure the dark side had. #EAECEF separates by 16. */
+    /* Light cards are the white plaque Plans & Billing uses (.natively-key-card
+       in index.css): near-white top to bottom, an 8% hairline and a soft floor
+       shadow (.aip-root[data-theme='light'] .aip-card below). The grey
+       --bg-item-surface fill read as unfinished next to it. White was once
+       rejected here because the canvas was #fafafa; it is #F2F2F7 now, so the
+       card lifts off it the same way the plaque does. */
+    --aip-card-bg:       linear-gradient(180deg, #FFFFFF 0%, #F8F8FA 100%);
+    --aip-card-border:   rgba(0,0,0,0.08);
     /* Unconsumed, as in dark. Held EQUAL to the card fill, which is what it has
        always meant here: cards in this panel have no light hover state. */
     --aip-card-bg-hover: var(--bg-item-surface);
@@ -448,7 +447,7 @@ export const AIP_CSS = `
       near-white hairline on a #1E1E21 canvas is a bug to inherit, not a
       grammar to match. Dividers here use --aip-divider.
 
-      No box-shadow. General has none in either theme, and the pair this rule
+      No box-shadow in dark (light takes the plaque's, below). The pair this rule
       used to carry never rendered anyway: "box-shadow" is "none | <shadow>#",
       so both "inset 0 1px 0 rgba(...), none" (dark) and "none, 0 1px 1px
       rgba(...)" (light) were invalid declarations and were dropped whole.
@@ -463,6 +462,12 @@ export const AIP_CSS = `
                 background   var(--aip-dur-travel) var(--aip-ease-out),
                 opacity      var(--aip-dur-travel) var(--aip-ease-out),
                 filter       var(--aip-dur-travel) var(--aip-ease-out);
+}
+/* The plaque's floor shadow, light only: dark cards are drawn by their fill. */
+.aip-root[data-theme='light'] .aip-card {
+    box-shadow: inset 0 1px 0 rgba(255,255,255,1),
+                0 1px 2px rgba(0,0,0,0.05),
+                0 4px 12px rgba(0,0,0,0.035);
 }
 /* NOTE: do not re-add a ".aip-card + .aip-card { margin-top }" rule. Every card stack
    in this file also carries a Tailwind "space-y-*", whose
