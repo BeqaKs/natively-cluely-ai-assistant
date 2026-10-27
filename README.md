@@ -2,18 +2,6 @@
 
 If you’re looking for a hosted desktop recording API, consider checking out [Recall.ai](https://docs.recall.ai/docs/desktop-sdk?utm_source=github&utm_medium=sponsorship&utm_campaign=evinjohnn-natively-ai-assistant), an API that records Zoom, Google Meet, Microsoft Teams, in-person meetings, and more.
 
-## Sponsored by Sidrune AI
-
-<a href="https://fluxionai.world/register?source=github&campaign=natively&promo=NATIVELY">
-  <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="assets/sponsors/sidrune-logo-white.svg">
-    <source media="(prefers-color-scheme: light)" srcset="assets/sponsors/sidrune-logo-black.svg">
-    <img src="assets/sponsors/sidrune-logo-black.svg" width="220" alt="Sidrune AI">
-  </picture>
-</a>
-
-**We recommend [Sidrune AI](https://fluxionai.world/register?source=github&campaign=natively&promo=NATIVELY): one API for GPT, Claude, and other leading AI models.** Get $3 in API credit through Natively. Sidrune is built into Natively as a provider, so you can pick it in Settings › AI Providers.
-
 <div align="center">
   <img src="assets/icon.png" width="150" alt="Natively AI Assistant Logo">
 
@@ -25,6 +13,18 @@ If you’re looking for a hosted desktop recording API, consider checking out [R
 <br/>
 **Now with the most advanced stealth of any tool we compare, Visual Answers that draw the system design for you, and an interface built to feel native on your Mac.**
 <br/>
+
+## Sponsored by Sidrune AI
+
+<a href="https://fluxionai.world/register?source=github&campaign=natively&promo=NATIVELY">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="assets/sponsors/sidrune-logo-white.svg">
+    <source media="(prefers-color-scheme: light)" srcset="assets/sponsors/sidrune-logo-black.svg">
+    <img src="assets/sponsors/sidrune-logo-black.svg" width="220" alt="Sidrune AI">
+  </picture>
+</a>
+
+**We recommend [Sidrune AI](https://fluxionai.world/register?source=github&campaign=natively&promo=NATIVELY): one API for GPT, Claude, and other leading AI models.** Get $3 in API credit through Natively. Sidrune is built into Natively as a provider, so you can pick it in Settings › AI Providers.
 
 <a href="#" style="pointer-events: none; cursor: default; color: inherit; text-decoration: none;" title="#1 Cluely clone · Free Cluely alternative · Source-available interview copilot · Free Interview Coder alternative · AI coding interview assistant · LeetCode AI solver · HackerRank AI cheat · Final Round AI free alternative · LockedIn AI alternative · Parakeet AI source-available · Undetectable interview AI · Stealth mode interview copilot.Cluely clone · Cluely alternative · Free Cluely · Cluely free version · source-available Cluely ·
     Final Round AI clone · Final Round AI alternative · Free Final Round AI · Final Round AI free version ·
