@@ -343,7 +343,7 @@ import {
   type DirectAssistFallbackNotice,
 } from '../lib/directAssistFailure.mjs';
 import { addAttachment, withoutFormulaImages } from '../lib/attachmentTray.mjs';
-import { imageFilesFromDrop } from '../lib/overlayImageDrop.mjs';
+import { imageFilesFromDrop, overlayPasteAction } from '../lib/overlayImageDrop.mjs';
 import {
   applyFirstStreamingToken,
   commitStreamingFlush,
@@ -10947,7 +10947,8 @@ Provide only the answer, nothing else.`;
             // Not after the session ended (Esc, a submit on macOS), and on top
             // of any keys typed while the clipboard was read.
             if (!pastedText(text) && stealthTapActiveRef.current && !escSuppressUntilNextActive) {
-              await window.electronAPI.attachClipboardImage?.();
+              const result = await window.electronAPI.attachClipboardImage?.();
+              if (result?.error) console.warn('[stealth] pasted image not attached:', result.error);
               return;
             }
             if (!stealthTapActiveRef.current || escSuppressUntilNextActive || !pastedText(text)) return;
@@ -12541,13 +12542,15 @@ Provide only the answer, nothing else.`;
                   onDrop={(e) => {
                     e.preventDefault();
                     const files = imageFilesFromDrop(e.dataTransfer.files);
-                    if (files.length === 0) return;
                     void Promise.all(
-                      files.map((file) =>
-                        window.electronAPI.attachLocalImage?.(file).catch((err) => {
+                      files.map(async (file) => {
+                        try {
+                          const result = await window.electronAPI.attachLocalImage?.(file);
+                          if (result && !result.success) console.warn('[overlay] dropped image not attached:', result.error);
+                        } catch (err) {
                           console.warn('[overlay] attachLocalImage failed:', err);
-                        }),
-                      ),
+                        }
+                      }),
                     );
                   }}
                 >
@@ -12559,18 +12562,28 @@ Provide only the answer, nothing else.`;
                     onChange={(e) => { setInputValue(e.target.value); setSkillPickerIndex(0); }}
                     onPaste={(e) => {
                       // Issue #351: Cmd/Ctrl+V with only an image on the
-                      // clipboard attaches it like a screenshot. Any text
-                      // pastes natively, even beside an image (Excel, Word and
-                      // PowerPoint copy a picture of the text too).
-                      if (e.clipboardData?.getData('text/plain')) return;
-                      const hasImageItem = [...(e.clipboardData?.items ?? [])].some(
-                        (item) => item.type.startsWith('image/'),
-                      );
-                      if (!hasImageItem || !window.electronAPI.attachClipboardImage) return;
+                      // clipboard attaches it like a screenshot; any text
+                      // pastes natively (see overlayPasteAction).
+                      const action = overlayPasteAction(e.clipboardData);
+                      const attachClipboardImage = window.electronAPI.attachClipboardImage;
+                      if (action.kind !== 'image' || !attachClipboardImage) return;
                       e.preventDefault();
-                      window.electronAPI.attachClipboardImage().catch((err) => {
-                        console.warn('[overlay] attachClipboardImage failed:', err);
-                      });
+                      void (async () => {
+                        try {
+                          const result = await attachClipboardImage();
+                          if (result?.success) return;
+                          // Windows: a file copied in Explorer is a file
+                          // reference, not a picture, so readImage is empty.
+                          const fromFiles = await Promise.all(
+                            action.files.map((file) => window.electronAPI.attachLocalImage?.(file)),
+                          );
+                          if (!fromFiles.some((r) => r?.success)) {
+                            console.warn('[overlay] pasted image not attached:', result?.error ?? 'no image on the clipboard');
+                          }
+                        } catch (err) {
+                          console.warn('[overlay] attachClipboardImage failed:', err);
+                        }
+                      })();
                     }}
                     onKeyDown={(e) => {
                       if (filteredSkills.length > 0 && skillPickerQuery !== null) {

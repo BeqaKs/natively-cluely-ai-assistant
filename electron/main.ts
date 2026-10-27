@@ -1402,6 +1402,7 @@ import { buildTelemetrySinks } from "./services/telemetry/telemetrySinks"
 import { PhoneMirrorService, shouldStartPhoneMirrorOnBoot } from "./services/PhoneMirrorService"
 import { PHONE_IMAGE_PREFIX } from "./utils/phoneImage"
 import {
+  imageExtFromBytes,
   imageExtFromPath,
   OVERLAY_ATTACH_IMAGE_MAX_BYTES,
   OVERLAY_DROP_IMAGE_PREFIX,
@@ -9196,7 +9197,7 @@ export class AppState {
     const imagePath = await this.screenshotHelper.addExternalImage(Buffer.from(png), 'png', {
       namePrefix: OVERLAY_PASTE_IMAGE_PREFIX,
     })
-    await this.attachImageToMeeting(imagePath)
+    await this.sendAttachedImage(imagePath)
     return { success: true, path: imagePath }
   }
 
@@ -9206,19 +9207,21 @@ export class AppState {
    * copied into the screenshot queue so the original file can move or delete.
    */
   public async attachLocalImageFile(filePath: string): Promise<{ success: true; path: string }> {
-    const ext = imageExtFromPath(filePath)
-    if (!ext) throw new Error('Unsupported image type')
+    if (!imageExtFromPath(filePath)) throw new Error('Unsupported image type')
     // A dropped file is read whole into memory, so a folder or a huge file
     // named .png stops here.
     const stat = await fs.promises.stat(filePath)
     if (!stat.isFile()) throw new Error('Not a file')
     if (stat.size > OVERLAY_ATTACH_IMAGE_MAX_BYTES) throw new Error('Image too large')
     const data = await fs.promises.readFile(filePath)
-    if (!data.length) throw new Error('Empty image file')
+    // The bytes decide, not the name: a HEIC or a PDF renamed .png would fail
+    // the thumbnail and every vision request later.
+    const ext = imageExtFromBytes(data)
+    if (!ext) throw new Error('Not a PNG, JPEG or WebP image')
     const imagePath = await this.screenshotHelper.addExternalImage(data, ext, {
       namePrefix: OVERLAY_DROP_IMAGE_PREFIX,
     })
-    await this.attachImageToMeeting(imagePath)
+    await this.sendAttachedImage(imagePath)
     return { success: true, path: imagePath }
   }
 
@@ -9229,6 +9232,18 @@ export class AppState {
    * received it.
    */
   public async attachImageToMeeting(imagePath: string): Promise<boolean> {
+    const delivered = await this.sendAttachedImage(imagePath)
+    this.phoneImages.push({ path: imagePath, at: Date.now(), used: false })
+    if (this.phoneImages.length > 5) this.phoneImages = this.phoneImages.slice(-5)
+    return delivered
+  }
+
+  /**
+   * List an image on the launcher's and overlay's trays so the next answer
+   * sends it. A pasted or dropped image (#351) stops here: phoneImages holds
+   * what the phone sent, and a phone question must not carry a desktop paste.
+   */
+  private async sendAttachedImage(imagePath: string): Promise<boolean> {
     let preview = ''
     try {
       preview = await this.getImagePreview(imagePath)
@@ -9245,8 +9260,6 @@ export class AppState {
         delivered = true
       }
     }
-    this.phoneImages.push({ path: imagePath, at: Date.now(), used: false })
-    if (this.phoneImages.length > 5) this.phoneImages = this.phoneImages.slice(-5)
     return delivered
   }
 

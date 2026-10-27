@@ -5,39 +5,37 @@
 
 import path from 'node:path';
 
+export type OverlayImageExt = 'png' | 'jpg' | 'webp';
+
 export const OVERLAY_PASTE_IMAGE_PREFIX = 'paste-';
 export const OVERLAY_DROP_IMAGE_PREFIX = 'drop-';
 /** Largest dropped file the overlay reads (the phone upload cap is 12 MB). */
 export const OVERLAY_ATTACH_IMAGE_MAX_BYTES = 25 * 1024 * 1024;
 
-const EXT_BY_MIME: Record<string, 'png' | 'jpg' | 'webp'> = {
-  'image/png': 'png',
-  'image/jpeg': 'jpg',
-  'image/jpg': 'jpg',
-  'image/webp': 'webp',
-};
-
-const EXT_BY_SUFFIX: Record<string, 'png' | 'jpg' | 'webp'> = {
+/** The names the overlay accepts; src/lib/overlayImageDrop.mjs filters drops by the same list. */
+export const OVERLAY_IMAGE_SUFFIXES: Record<string, OverlayImageExt> = {
   '.png': 'png',
   '.jpg': 'jpg',
   '.jpeg': 'jpg',
   '.webp': 'webp',
 };
 
-/** Map a MIME type from a paste/drop item to a supported image extension. */
-export function imageExtFromMime(mime: string | undefined | null): 'png' | 'jpg' | 'webp' | null {
-  if (!mime) return null;
-  return EXT_BY_MIME[mime.toLowerCase()] ?? null;
-}
+const PNG_MAGIC = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]);
 
 /** Map a file path suffix to a supported image extension. */
-export function imageExtFromPath(filePath: string | undefined | null): 'png' | 'jpg' | 'webp' | null {
+export function imageExtFromPath(filePath: string | undefined | null): OverlayImageExt | null {
   if (!filePath) return null;
   const ext = path.extname(filePath).toLowerCase();
-  return EXT_BY_SUFFIX[ext] ?? null;
+  return OVERLAY_IMAGE_SUFFIXES[ext] ?? null;
 }
 
-/** True when the path looks like a supported still image for overlay attach. */
-export function isOverlayAttachableImagePath(filePath: string): boolean {
-  return imageExtFromPath(filePath) !== null;
+/**
+ * What the bytes really are. A name can say .png over a HEIC, a PDF or a
+ * truncated download; the saved copy is named by this, never by the name.
+ */
+export function imageExtFromBytes(data: Buffer): OverlayImageExt | null {
+  if (data.length >= 8 && data.subarray(0, 8).equals(PNG_MAGIC)) return 'png';
+  if (data.length >= 3 && data[0] === 0xff && data[1] === 0xd8 && data[2] === 0xff) return 'jpg';
+  if (data.length >= 12 && data.toString('ascii', 0, 4) === 'RIFF' && data.toString('ascii', 8, 12) === 'WEBP') return 'webp';
+  return null;
 }

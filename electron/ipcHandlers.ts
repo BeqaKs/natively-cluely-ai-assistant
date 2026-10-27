@@ -1594,10 +1594,6 @@ export function initializeIpcHandlers(appState: AppState): void {
       return { success: false, error: 'invalid_path' };
     }
     try {
-      const { isOverlayAttachableImagePath } = require('./utils/overlayImageAttach') as typeof import('./utils/overlayImageAttach');
-      if (!isOverlayAttachableImagePath(filePath)) {
-        return { success: false, error: 'unsupported_type' };
-      }
       return await appState.attachLocalImageFile(filePath);
     } catch (error) {
       console.warn('[IPC] attach-local-image failed:', error);

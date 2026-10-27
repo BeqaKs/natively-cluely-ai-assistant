@@ -11,6 +11,15 @@ import { fileURLToPath } from 'node:url';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../..');
 const read = (rel) => fs.readFileSync(path.join(root, rel), 'utf8');
+// The source between two anchors, so a comment or a reformat inside the block
+// never moves an assertion out of range.
+const between = (src, start, end) => {
+  const from = src.indexOf(start);
+  assert.ok(from >= 0, `missing ${start}`);
+  const to = src.indexOf(end, from + start.length);
+  assert.ok(to > from, `missing ${end} after ${start}`);
+  return src.slice(from, to);
+};
 
 describe('overlay paste/drop image attach (issue #351)', () => {
   const ipc = read('electron/ipcHandlers.ts');
@@ -39,33 +48,50 @@ describe('overlay paste/drop image attach (issue #351)', () => {
       preload,
       /attachLocalImage:\s*\(file:\s*File\)\s*=>\s*ipcRenderer\.invoke\('attach-local-image',\s*webUtils\.getPathForFile\(file\)\)/,
     );
-    assert.doesNotMatch(ui, /\.path\b[^\n]*dataTransfer|file\.path/);
+    assert.doesNotMatch(between(ui, 'onDrop={', 'onPaste={'), /\.path\b/, 'File.path is undefined since Electron 32');
   });
 
-  test('main checks a dropped file is a file under the size cap before reading it', () => {
-    const body = main.slice(main.indexOf('public async attachLocalImageFile('), main.indexOf('public async attachLocalImageFile(') + 900);
+  test('main reads a dropped file only when it is a file under the cap, and trusts its bytes over its name', () => {
+    const body = between(main, 'public async attachLocalImageFile(', '\n  }\n');
     assert.match(body, /stat\.isFile\(\)/);
-    assert.match(body, /OVERLAY_ATTACH_IMAGE_MAX_BYTES/);
+    assert.match(body, /stat\.size > OVERLAY_ATTACH_IMAGE_MAX_BYTES/);
     assert.ok(body.indexOf('stat.size') < body.indexOf('readFile'), 'size is checked before the file is read');
+    assert.match(body, /const ext = imageExtFromBytes\(data\)/);
+    assert.match(body, /addExternalImage\(data, ext,/);
   });
 
-  test('overlay input pastes images, drops files, and text wins over an image', () => {
-    assert.match(ui, /imageFilesFromDrop/);
-    assert.match(ui, /attachClipboardImage/);
-    assert.match(ui, /attachLocalImage/);
-    assert.match(ui, /onPaste=\{/);
-    assert.match(ui, /onDrop=\{/);
-    assert.match(ui, /onDragOver=\{/);
-    // Office apps copy a picture beside the text: the text must be pasted.
-    const onPaste = ui.slice(ui.indexOf('onPaste={'), ui.indexOf('onPaste={') + 900);
+  test('a pasted or dropped image reaches the trays but never a phone question', () => {
+    for (const method of ['public async attachClipboardImage(', 'public async attachLocalImageFile(']) {
+      const body = between(main, method, '\n  }\n');
+      assert.match(body, /this\.sendAttachedImage\(imagePath\)/, method);
+      assert.doesNotMatch(body, /attachImageToMeeting|phoneImages/, method);
+    }
+    const toMeeting = between(main, 'public async attachImageToMeeting(', '\n  }\n');
+    assert.match(toMeeting, /this\.sendAttachedImage\(imagePath\)/);
+    assert.match(toMeeting, /this\.phoneImages\.push/);
+    assert.doesNotMatch(between(main, 'private async sendAttachedImage(', '\n  }\n'), /phoneImages/);
+  });
+
+  test('the overlay paste follows overlayPasteAction and falls back to copied files', () => {
+    const onPaste = between(ui, 'onPaste={', 'onKeyDown={');
+    assert.match(onPaste, /const action = overlayPasteAction\(e\.clipboardData\)/);
+    assert.match(onPaste, /if \(action\.kind !== 'image' \|\| !attachClipboardImage\) return;\s*e\.preventDefault\(\);/);
     assert.ok(
-      onPaste.indexOf("getData('text/plain')") < onPaste.indexOf('electronAPI.attachClipboardImage'),
-      'clipboard text must be checked before an image is attached',
+      onPaste.indexOf('await attachClipboardImage()') < onPaste.indexOf('action.files.map'),
+      'the clipboard picture is tried before the copied files',
     );
-    const stealthV = ui.slice(ui.indexOf("editLetter === 'v'"), ui.indexOf("editLetter === 'v'") + 1400);
-    assert.ok(
-      stealthV.indexOf('electronAPI.stealthReadClipboard') < stealthV.indexOf('electronAPI.attachClipboardImage'),
-      'stealth Ctrl+V must paste clipboard text before trying an image',
-    );
+    assert.match(onPaste, /if \(result\?\.success\) return;/, 'only a successful picture paste skips the file fallback');
+    const onDrop = between(ui, 'onDrop={', 'onPaste={');
+    assert.match(onDrop, /imageFilesFromDrop\(e\.dataTransfer\.files\)/);
+    assert.match(onDrop, /attachLocalImage\?\.\(file\)/);
+    assert.match(onDrop, /!result\.success\) console\.warn/, 'a refused drop is reported, not dropped silently');
+  });
+
+  test('stealth Ctrl+V pastes clipboard text first and tries an image only without text', () => {
+    const stealthV = between(ui, "editLetter === 'v'", 'if (editLetter) {');
+    const read = stealthV.indexOf('electronAPI.stealthReadClipboard');
+    const image = stealthV.indexOf('electronAPI.attachClipboardImage');
+    assert.ok(read >= 0 && image > read, 'stealth Ctrl+V must read clipboard text before trying an image');
+    assert.match(stealthV, /if \(!pastedText\(text\) && stealthTapActiveRef\.current && !escSuppressUntilNextActive\) \{/);
   });
 });
