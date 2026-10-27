@@ -36,6 +36,7 @@ export const CHECKOUT_PRODUCTS = Object.freeze([
 export const SURFACES = Object.freeze([
   'trial_card',            // the end-of-trial / see-your-options card
   'trial_promo',           // the "try Natively" card
+  'plans_card',            // the Natively Plans card after getting started
   'api_promo',             // the Natively API cards
   'api_settings',          // Settings › Plans, Natively API
   'pro_settings',          // Settings › Plans, Natively Pro
@@ -57,7 +58,7 @@ export const SURFACES = Object.freeze([
  * being added here.
  */
 export const CARD_IDS = Object.freeze([
-  'browser_extension', 'trial_promo', 'natively_api_new', 'max_ultra',
+  'plans', 'browser_extension', 'trial_promo', 'natively_api_new', 'max_ultra',
   'natively_api_existing', 'profile_ad', 'jd_ad', 'review_prompt', 'support',
 ])
 
