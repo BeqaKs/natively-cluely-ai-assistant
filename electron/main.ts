@@ -1403,6 +1403,7 @@ import { PhoneMirrorService, shouldStartPhoneMirrorOnBoot } from "./services/Pho
 import { PHONE_IMAGE_PREFIX } from "./utils/phoneImage"
 import {
   imageExtFromPath,
+  OVERLAY_ATTACH_IMAGE_MAX_BYTES,
   OVERLAY_DROP_IMAGE_PREFIX,
   OVERLAY_PASTE_IMAGE_PREFIX,
 } from "./utils/overlayImageAttach"
@@ -9207,6 +9208,11 @@ export class AppState {
   public async attachLocalImageFile(filePath: string): Promise<{ success: true; path: string }> {
     const ext = imageExtFromPath(filePath)
     if (!ext) throw new Error('Unsupported image type')
+    // A dropped file is read whole into memory, so a folder or a huge file
+    // named .png stops here.
+    const stat = await fs.promises.stat(filePath)
+    if (!stat.isFile()) throw new Error('Not a file')
+    if (stat.size > OVERLAY_ATTACH_IMAGE_MAX_BYTES) throw new Error('Image too large')
     const data = await fs.promises.readFile(filePath)
     if (!data.length) throw new Error('Empty image file')
     const imagePath = await this.screenshotHelper.addExternalImage(data, ext, {

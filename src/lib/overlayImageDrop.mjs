@@ -1,22 +1,16 @@
 /**
- * Extract absolute image paths from a drag-drop event for overlay attach
- * (issue #351). Electron exposes `File.path`; browsers do not.
+ * The dropped files the overlay can attach (issue #351): PNG, JPEG and WebP,
+ * by name. Electron 32 removed `File.path`; preload's attachLocalImage turns
+ * each File into its path with webUtils.getPathForFile.
  *
- * @param {FileList | File[] | null | undefined} files
+ * @template {{ name?: unknown }} F
+ * @param {ArrayLike<F> | null | undefined} files
  * @param {(name: string) => boolean} [isImageName]
- * @returns {string[]}
+ * @returns {F[]}
  */
-export function imagePathsFromDropFiles(files, isImageName = defaultIsImageName) {
+export function imageFilesFromDrop(files, isImageName = defaultIsImageName) {
   if (!files || files.length === 0) return [];
-  const list = Array.from(files);
-  const paths = [];
-  for (const file of list) {
-    const name = typeof file?.name === 'string' ? file.name : '';
-    if (!isImageName(name)) continue;
-    const filePath = typeof file?.path === 'string' ? file.path : '';
-    if (filePath) paths.push(filePath);
-  }
-  return paths;
+  return Array.from(files).filter((file) => isImageName(typeof file?.name === 'string' ? file.name : ''));
 }
 
 function defaultIsImageName(name) {

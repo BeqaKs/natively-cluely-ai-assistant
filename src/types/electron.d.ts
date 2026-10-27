@@ -214,7 +214,7 @@ export interface ElectronAPI {
   /** Paste a clipboard image into the overlay tray (issue #351). */
   attachClipboardImage: () => Promise<{ empty?: true; success?: true; path?: string; error?: string }>
   /** Drag-drop a local image file into the overlay tray (issue #351). */
-  attachLocalImage: (filePath: string) => Promise<{ success?: boolean; path?: string; error?: string }>
+  attachLocalImage: (file: File) => Promise<{ success?: boolean; path?: string; error?: string }>
   moveWindowLeft: () => Promise<void>
   moveWindowRight: () => Promise<void>
   moveWindowUp: () => Promise<void>

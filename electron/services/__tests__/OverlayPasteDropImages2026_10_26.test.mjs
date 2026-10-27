@@ -32,27 +32,40 @@ describe('overlay paste/drop image attach (issue #351)', () => {
     assert.match(ipc, /attachLocalImageFile\(/);
   });
 
-  test('preload exposes attachClipboardImage and attachLocalImage', () => {
+  test('preload resolves the dropped File to its path with webUtils (File.path is gone since Electron 32)', () => {
+    assert.match(preload, /import \{[^}]*\bwebUtils\b[^}]*\} from 'electron'/);
     assert.match(preload, /attachClipboardImage:\s*\(\)\s*=>\s*ipcRenderer\.invoke\('attach-clipboard-image'\)/);
     assert.match(
       preload,
-      /attachLocalImage:\s*\(filePath:\s*string\)\s*=>\s*ipcRenderer\.invoke\('attach-local-image',\s*filePath\)/,
+      /attachLocalImage:\s*\(file:\s*File\)\s*=>\s*ipcRenderer\.invoke\('attach-local-image',\s*webUtils\.getPathForFile\(file\)\)/,
     );
+    assert.doesNotMatch(ui, /\.path\b[^\n]*dataTransfer|file\.path/);
   });
 
-  test('overlay input pastes images, drops files, and stealth Ctrl+V prefers images', () => {
-    assert.match(ui, /imagePathsFromDropFiles/);
+  test('main checks a dropped file is a file under the size cap before reading it', () => {
+    const body = main.slice(main.indexOf('public async attachLocalImageFile('), main.indexOf('public async attachLocalImageFile(') + 900);
+    assert.match(body, /stat\.isFile\(\)/);
+    assert.match(body, /OVERLAY_ATTACH_IMAGE_MAX_BYTES/);
+    assert.ok(body.indexOf('stat.size') < body.indexOf('readFile'), 'size is checked before the file is read');
+  });
+
+  test('overlay input pastes images, drops files, and text wins over an image', () => {
+    assert.match(ui, /imageFilesFromDrop/);
     assert.match(ui, /attachClipboardImage/);
     assert.match(ui, /attachLocalImage/);
     assert.match(ui, /onPaste=\{/);
     assert.match(ui, /onDrop=\{/);
     assert.match(ui, /onDragOver=\{/);
-    // Stealth V tries the image IPC before stealthReadClipboard text paste.
-    const stealthV = ui.slice(ui.indexOf("editLetter === 'v'"), ui.indexOf("editLetter === 'v'") + 900);
-    assert.match(stealthV, /attachClipboardImage/);
+    // Office apps copy a picture beside the text: the text must be pasted.
+    const onPaste = ui.slice(ui.indexOf('onPaste={'), ui.indexOf('onPaste={') + 900);
     assert.ok(
-      stealthV.indexOf('attachClipboardImage') < stealthV.indexOf('stealthReadClipboard'),
-      'clipboard image must be tried before text paste in stealth Ctrl+V',
+      onPaste.indexOf("getData('text/plain')") < onPaste.indexOf('electronAPI.attachClipboardImage'),
+      'clipboard text must be checked before an image is attached',
+    );
+    const stealthV = ui.slice(ui.indexOf("editLetter === 'v'"), ui.indexOf("editLetter === 'v'") + 1400);
+    assert.ok(
+      stealthV.indexOf('electronAPI.stealthReadClipboard') < stealthV.indexOf('electronAPI.attachClipboardImage'),
+      'stealth Ctrl+V must paste clipboard text before trying an image',
     );
   });
 });

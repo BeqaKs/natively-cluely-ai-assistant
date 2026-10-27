@@ -7,6 +7,8 @@ import path from 'node:path';
 
 export const OVERLAY_PASTE_IMAGE_PREFIX = 'paste-';
 export const OVERLAY_DROP_IMAGE_PREFIX = 'drop-';
+/** Largest dropped file the overlay reads (the phone upload cap is 12 MB). */
+export const OVERLAY_ATTACH_IMAGE_MAX_BYTES = 25 * 1024 * 1024;
 
 const EXT_BY_MIME: Record<string, 'png' | 'jpg' | 'webp'> = {
   'image/png': 'png',
