@@ -9336,6 +9336,11 @@ const NativelyInterface: React.FC<NativelyInterfaceProps> = ({
 
         try {
           let prompt = '';
+          // A follow-up skipped past live RAG goes the way typed chat does (V3:
+          // conversation ring + live-meeting evidence). On the caller-owned
+          // speaking prompt it kept the history but lost the transcript the
+          // previous answer came from, and disowned that answer.
+          let followUpViaChat = false;
 
           // Prior turns only — the new user bubble was just queued via
           // setMessages, so React state here is still the previous ring.
@@ -9354,11 +9359,11 @@ Instructions:
 3. Be concise.`;
           } else {
             // Issue #552: live RAG answers from transcript chunks alone and
-            // never sees prior chat. Skip it for referential follow-ups so the
-            // speaking prompt below can carry conversationContextForSubmit.
-            // Self-contained first questions still hit ragQueryLive.
-            const skipLiveRag = shouldSkipLiveRagForChatFollowUp(question, { hasPriorChat });
-            if (!skipLiveRag) {
+            // never sees prior chat. Referential follow-ups skip it and go the
+            // typed-chat route below; self-contained questions still hit
+            // ragQueryLive.
+            followUpViaChat = shouldSkipLiveRagForChatFollowUp(question, { hasPriorChat });
+            if (!followUpViaChat) {
               const ragResult = await window.electronAPI.ragQueryLive?.(question);
               if (ragResult?.success) {
                 return;
@@ -9388,11 +9393,11 @@ Provide only the answer, nothing else.`;
           await window.electronAPI.streamGeminiChat(
             question,
             currentAttachments.length > 0 ? currentAttachments.map((s) => s.path) : undefined,
-            prompt,
+            followUpViaChat ? conversationContextForSubmit : prompt,
             // `liveQuestion`: a turn of this session (unlike a question about a
             // past meeting), so main decides the diagram contract for it with
             // the design that is on the table.
-            { skipSystemPrompt: true, liveQuestion: true },
+            followUpViaChat ? { liveQuestion: true } : { skipSystemPrompt: true, liveQuestion: true },
           );
         } catch (err) {
           // R-17: a throw from invoke() never reaches the main process, so no
