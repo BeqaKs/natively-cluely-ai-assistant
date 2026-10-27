@@ -9080,7 +9080,7 @@ export function initializeIpcHandlers(appState: AppState): void {
   // re-normalises whatever arrives (src/lib/overlayButtonOrder.ts).
   const OVERLAY_BUTTON_IDS = new Set([
     'what_to_answer', 'clarify', 'recap', 'follow_up', 'answer',
-    'brainstorm', 'catch_me_up', 'define', 'sound_smart', 'follow_up_questions',
+    'brainstorm', 'catch_me_up', 'define', 'sound_smart',
   ]);
   safeOn('overlay-buttons:set', (_event, order: unknown) => {
     if (

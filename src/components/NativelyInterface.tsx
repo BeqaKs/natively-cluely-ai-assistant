@@ -12482,7 +12482,6 @@ Provide only the answer, nothing else.`;
                     catch_me_up: () => void handleLiveHelper('catch_me_up'),
                     define: () => void handleLiveHelper('define'),
                     sound_smart: () => void handleLiveHelper('sound_smart'),
-                    follow_up_questions: () => void handleLiveHelper('follow_up_questions'),
                   };
                   const chip = (id: OverlayButtonId) => {
                     if (isLavenderTheme) {
